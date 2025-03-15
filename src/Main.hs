@@ -21,6 +21,10 @@ handleInput :: String -> IO Bool
 handleInput "exit" = do
   putStrLn "Goodbye!"
   pure False
+handleInput "add" = do
+  putStrLn "Enter task:"
+  task <- getLine
+  pure True
 handleInput input = do
   putStrLn $ "You entered: " ++ input
   pure True
