@@ -25,6 +25,9 @@ handleInput ts "add" = do
   putStrLn "Enter task:"
   name <- getLine
   pure (True, Task False name:ts)
+handleInput ts "view" = do
+  sequenceA $ (putStrLn.show) <$> ts 
+  pure (True, ts)
 handleInput ts input = do
   putStrLn $ "You entered: " ++ input
   pure (True, ts)
