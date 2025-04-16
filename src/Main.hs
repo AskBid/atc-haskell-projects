@@ -5,29 +5,29 @@ import System.IO (hFlush, stdout)
 main :: IO ()
 main = do
   putStrLn "Welcome to my TODO List Manager!"
-  loop
+  loop []
 
-loop :: IO ()
-loop = do
+loop :: [Task] -> IO ()
+loop ts = do
   putStr "Enter command: "
-  hFlush stdout
+  hFlush stdout -- insures output is printed immediately rather than wait in buffer
   input <- getLine
-  isLooping <- handleInput input
+  (isLooping, tsNew) <- handleInput ts input
   if isLooping
-    then loop
+    then loop tsNew
     else return ()
 
-handleInput :: String -> IO Bool
-handleInput "exit" = do
+handleInput :: [Task] -> String -> IO (Bool, [Task])
+handleInput ts "exit" = do
   putStrLn "Goodbye!"
-  pure False
-handleInput "add" = do
+  pure (False, ts)
+handleInput ts "add" = do
   putStrLn "Enter task:"
-  task <- getLine
-  pure True
-handleInput input = do
+  name <- getLine
+  pure (True, Task False name:ts)
+handleInput ts input = do
   putStrLn $ "You entered: " ++ input
-  pure True
+  pure (True, ts)
 
 data Task = Task
   { completed :: Bool
