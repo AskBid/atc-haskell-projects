@@ -28,3 +28,8 @@ handleInput "add" = do
 handleInput input = do
   putStrLn $ "You entered: " ++ input
   pure True
+
+data Task = Task
+  { completed :: Bool
+  , name      :: String
+  } deriving Show
