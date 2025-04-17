@@ -54,7 +54,7 @@ data Task = Task
   { completed :: Bool
   , name      :: String
   , description :: String
-  } deriving Show
+  } deriving (Show, Eq)
 
 getTask :: String -> [Task] -> Either String Task
 getTask name ts = case filter' ts of  
@@ -62,3 +62,9 @@ getTask name ts = case filter' ts of
   (t:_) -> Right t
   where 
     filter' = filter (\(Task False name' _) -> name' == name)
+
+replaceTask :: Task -> Task -> [Task] -> [Task]
+replaceTask _ _ [] = []
+replaceTask old new (t:ts)
+  | old == t  = old:ts
+  | otherwise = t:(replaceTask old new ts)
