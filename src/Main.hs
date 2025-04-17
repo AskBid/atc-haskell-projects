@@ -53,7 +53,8 @@ data Task = Task
   } deriving Show
 
 getTask :: String -> [Task] -> Maybe Task
--- getTask _ [] = Nothing
-getTask name ts = case (filter (\(Task _ name' _) -> name' == name) ts) of  
+getTask name ts = case filter' ts of  
   []    -> Nothing
   (t:_) -> Just t
+  where 
+    filter' = filter (\(Task False name' _) -> name' == name)
