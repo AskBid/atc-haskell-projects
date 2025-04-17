@@ -34,8 +34,10 @@ handleInput ts "mark" = do
   name <- getLine
   let task = getTask name ts
   case task of
-    Nothing           -> undefined
-    Just (Task _ _ _) -> do
+    Left err           -> do
+      putStrLn err
+      pure (True, ts)
+    Right (Task _ _ _) -> do
       newTS <- undefined -- replace in [Task]
       pure (True, newTS)
 handleInput ts "delete" = do
@@ -54,9 +56,9 @@ data Task = Task
   , description :: String
   } deriving Show
 
-getTask :: String -> [Task] -> Maybe Task
+getTask :: String -> [Task] -> Either String Task
 getTask name ts = case filter' ts of  
-  []    -> Nothing
-  (t:_) -> Just t
+  []    -> Left $ "No task " ++ name ++ " was found, or it was already completed"
+  (t:_) -> Right t
   where 
     filter' = filter (\(Task False name' _) -> name' == name)
