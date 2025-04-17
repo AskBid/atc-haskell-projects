@@ -66,5 +66,11 @@ getTask name ts = case filter' ts of
 replaceTask :: Task -> Task -> [Task] -> [Task]
 replaceTask _ _ [] = []
 replaceTask old new (t:ts)
-  | old == t  = old:ts
+  | old == t  = new:ts
   | otherwise = t:(replaceTask old new ts)
+
+testTs :: [Task]
+testTs = [Task False "task1" "desc1", Task True "task2" "desc2", Task False "" ""]
+
+testT :: Task
+testT = head testTs
