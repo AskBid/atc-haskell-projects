@@ -30,7 +30,11 @@ handleInput ts "view" = do
   sequenceA $ (putStrLn.show) <$> ts 
   pure (True, ts)
 handleInput ts "mark" = do
-  undefined
+  putStrLn "Enter completed task:"
+  name <- getLine
+  task <- getTask name ts
+  -- mark completed
+  -- replace in [Task]
   pure (True, ts)
 handleInput ts "delete" = do
   undefined
@@ -47,3 +51,9 @@ data Task = Task
   , name      :: String
   , description :: String
   } deriving Show
+
+getTask :: String -> [Task] -> Maybe Task
+-- getTask _ [] = Nothing
+getTask name ts = case (filter (\(Task _ name' _) -> name' == name) ts) of  
+  []    -> Nothing
+  (t:_) -> Just t
