@@ -32,10 +32,12 @@ handleInput ts "view" = do
 handleInput ts "mark" = do
   putStrLn "Enter completed task:"
   name <- getLine
-  task <- getTask name ts
-  -- mark completed
-  -- replace in [Task]
-  pure (True, ts)
+  let task = getTask name ts
+  case task of
+    Nothing           -> undefined
+    Just (Task _ _ _) -> do
+      newTS <- undefined -- replace in [Task]
+      pure (True, newTS)
 handleInput ts "delete" = do
   undefined
   pure (True, ts)
