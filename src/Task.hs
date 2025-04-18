@@ -4,14 +4,17 @@ data Task = Task
   { completed :: Bool
   , name      :: String
   , description :: String
-  } deriving (Show, Eq)
+  } deriving (Show)
 
-getTask :: String -> [Task] -> Either String Task
-getTask name ts = case filter' ts of  
-  []    -> Left $ "No task " ++ name ++ " was found, or it was already completed"
+instance Eq Task where
+  (Task completed name _) == (Task completed' name' _) = completed == completed' && name' == name
+
+getTask :: Task -> [Task] -> Either String Task
+getTask tSearch ts = case filter' ts of  
+  []    -> Left $ "No task " ++ (name tSearch) ++ " was found, or it was already completed"
   (t:_) -> Right t
   where 
-    filter' = filter (\(Task False name' _) -> name' == name)
+    filter' = filter (\t -> tSearch == t)
 
 replaceTask :: Task -> Task -> [Task] -> [Task]
 replaceTask _ _ [] = []
