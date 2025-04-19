@@ -3,9 +3,11 @@ module Interface where
 import System.IO (hFlush, stdout)
 
 import Task
+import File
 
 loop :: [Task] -> IO ()
 loop ts = do
+  -- read file
   putStr "Enter command: "
   hFlush stdout -- insures output is printed immediately rather than wait in buffer
   input <- getLine
@@ -16,7 +18,7 @@ loop ts = do
 
 handleInput :: [Task] -> String -> IO (Bool, [Task])
 handleInput ts "exit" = do
-  --write
+  -- write
   putStrLn "Goodbye!"
   pure (False, ts)
 
