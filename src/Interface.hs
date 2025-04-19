@@ -32,7 +32,8 @@ handleInput ts "view" = do
 handleInput ts "mark" = do
   putStrLn "Enter completed task:"
   nameInput <- getLine
-  let etask = getTask (Task False nameInput "") ts
+  let taskSearch = Task False nameInput ""
+  let etask = getTask (\t -> t == taskSearch) ts
   case etask of
     Left err   -> do
       putStrLn err
@@ -46,7 +47,7 @@ handleInput ts "mark" = do
 handleInput ts "delete" = do
   putStrLn "Enter task to delete:"
   nameInput <- getLine
-  let etask = getTask (Task False nameInput "") ts
+  let etask = getTask (\t -> (name t) == nameInput) ts
   pure (True, ts)
 
 handleInput ts "edit" = do

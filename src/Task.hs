@@ -9,9 +9,9 @@ data Task = Task
 instance Eq Task where
   (Task completed name _) == (Task completed' name' _) = completed == completed' && name' == name
 
-getTask :: Task -> [Task] -> Either String Task
-getTask tSearch ts = case filter (\t -> tSearch == t) ts of
-  []    -> Left $ "No task \"" ++ (name tSearch) ++ "\" was found. "
+getTask :: (Task -> Bool) -> [Task] -> Either String Task
+getTask predicate ts = case filter predicate ts of
+  []    -> Left $ "No matching task was found."
   (t:_) -> Right t
 
 replaceTask :: Task -> Task -> [Task] -> [Task]
