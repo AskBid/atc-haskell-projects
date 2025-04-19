@@ -11,7 +11,7 @@ instance Eq Task where
 
 getTask :: Task -> [Task] -> Either String Task
 getTask tSearch ts = case filter (\t -> tSearch == t) ts of
-  []    -> Left $ "No task " ++ (name tSearch) ++ " was found, or it was already completed"
+  []    -> Left $ "No task \"" ++ (name tSearch) ++ "\" was found. "
   (t:_) -> Right t
 
 replaceTask :: Task -> Task -> [Task] -> [Task]

@@ -28,14 +28,15 @@ handleInput ts "view" = do
   pure (True, ts)
 handleInput ts "mark" = do
   putStrLn "Enter completed task:"
-  name <- getLine
-  let task = getTask (Task False name "") ts
-  case task of
+  nameInput <- getLine
+  let etask = getTask (Task False nameInput "") ts
+  case etask of
     Left err           -> do
-      putStrLn err
+      putStr err
+      putStrLn "Or the task was already completed."
       pure (True, ts)
-    Right (Task _ _ _) -> do
-      newTS <- undefined -- replace in [Task]
+    Right task -> do
+      let newTS = replaceTask task (Task True (name task) (description task)) ts 
       pure (True, newTS)
 handleInput ts "delete" = do
   undefined
