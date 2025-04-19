@@ -34,7 +34,7 @@ handleInput ts "mark" = do
   nameInput <- getLine
   let etask = getTask (Task False nameInput "") ts
   case etask of
-    Left err           -> do
+    Left err   -> do
       putStrLn err
       putStrLn "(or the task was already completed)"
       pure (True, ts)
@@ -44,7 +44,9 @@ handleInput ts "mark" = do
       pure (True, newTS)
 
 handleInput ts "delete" = do
-  undefined
+  putStrLn "Enter task to delete:"
+  nameInput <- getLine
+  let etask = getTask (Task False nameInput "") ts
   pure (True, ts)
 
 handleInput ts "edit" = do
