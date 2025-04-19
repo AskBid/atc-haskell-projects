@@ -68,13 +68,11 @@ handleInput ts "edit" = do
       putStrLn err
       pure (True, ts)
     Right task -> do
-      putStrLn "Current task name:"
-      putStrLn $ name task
       putStrLn "Current task description:"
       putStrLn $ description task
       putStrLn "Enter new name or leave empty to keep the same:"
       nameIO <- getLine
-      let newName = if nameInput == "" then name task else nameIO
+      let newName = if nameIO == "" then name task else nameIO
       putStrLn "Enter new description or leave empty to keep the same:"
       descriptionIO <- getLine
       let newDescription = if descriptionIO == "" then description task else descriptionIO
