@@ -19,31 +19,38 @@ handleInput ts "exit" = do
   --write
   putStrLn "Goodbye!"
   pure (False, ts)
+
 handleInput ts "add" = do
   putStrLn "Enter task:"
   name <- getLine
   pure (True, Task False name "desc":ts)
+
 handleInput ts "view" = do
   sequenceA $ (putStrLn.show) <$> ts 
   pure (True, ts)
+
 handleInput ts "mark" = do
   putStrLn "Enter completed task:"
   nameInput <- getLine
   let etask = getTask (Task False nameInput "") ts
   case etask of
     Left err           -> do
-      putStr err
-      putStrLn "Or the task was already completed."
+      putStrLn err
+      putStrLn "(or the task was already completed)"
       pure (True, ts)
     Right task -> do
       let newTS = replaceTask task (Task True (name task) (description task)) ts 
+      putStrLn $ (name task) ++ "task marked as completed."
       pure (True, newTS)
+
 handleInput ts "delete" = do
   undefined
   pure (True, ts)
+
 handleInput ts "edit" = do
   undefined
   pure (True, ts)
+
 handleInput ts input = do
   putStrLn $ "You entered: " ++ input
   pure (True, ts)
