@@ -1,10 +1,15 @@
+-- | This module provides all types and function to handle Tasks
 module Task where
 
 data Task = Task
   { completed :: Bool
   , name      :: String
   , description :: String
+  -- , priority :: Priority
   } deriving (Show)
+
+data Priority = High | Medium | Low
+  deriving (Show, Enum)
 
 instance Eq Task where
   (Task completed name _) == (Task completed' name' _) = completed == completed' && name' == name
@@ -29,7 +34,5 @@ deleteTask task (t:ts)
 testTs :: [Task]
 testTs = [Task False "task1" "desc1", Task True "task2" "desc2", Task False "" ""]
 
-testT :: Task
-testT = head testTs
 
 
