@@ -52,7 +52,7 @@ handleInput ts "delete" = do
   case etask of
     Left err   -> do
       putStrLn err
-      putStrLn "You can delete a task that doesn't exist"
+      putStrLn "You can't delete a task that doesn't exist"
       pure (True, ts)
     Right task -> do
       let newTS = deleteTask task ts 
@@ -61,7 +61,28 @@ handleInput ts "delete" = do
 
 handleInput ts "edit" = do
   putStrLn "Enter task to edit:"
-  pure (True, ts)
+  nameInput <- getLine
+  let etask = getTask (\t -> (name t) == nameInput) ts
+  case etask of
+    Left err   -> do
+      putStrLn err
+      pure (True, ts)
+    Right task -> do
+      putStrLn "Current task name:"
+      putStrLn $ name task
+      putStrLn "Current task description:"
+      putStrLn $ description task
+      putStrLn "Enter new name or leave empty to keep the same:"
+      nameIO <- getLine
+      let newName = if nameInput == "" then name task else nameIO
+      putStrLn "Enter new description or leave empty to keep the same:"
+      descriptionIO <- getLine
+      let newDescription = if descriptionIO == "" then description task else descriptionIO
+      let newTask = Task (completed task) newName newDescription
+      let newTS = replaceTask task newTask ts
+      putStrLn "Task edited:"
+      putStrLn $ show newTask
+      pure (True, newTS)
 
 handleInput ts input = do
   putStrLn $ "You entered: " ++ input
