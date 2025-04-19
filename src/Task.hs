@@ -20,6 +20,12 @@ replaceTask old new (t:ts)
   | old == t  = new:ts
   | otherwise = t:(replaceTask old new ts)
 
+deleteTask :: Task -> [Task] -> [Task]
+deleteTask _ [] = []
+deleteTask task (t:ts)
+  | task == t = ts
+  | otherwise = t:(deleteTask task ts)
+
 testTs :: [Task]
 testTs = [Task False "task1" "desc1", Task True "task2" "desc2", Task False "" ""]
 

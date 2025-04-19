@@ -40,7 +40,8 @@ handleInput ts "mark" = do
       putStrLn "(or the task was already completed)"
       pure (True, ts)
     Right task -> do
-      let newTS = replaceTask task (Task True (name task) (description task)) ts 
+      let markTask = Task True (name task) (description task)
+      let newTS = replaceTask task markTask ts 
       putStrLn $ (name task) ++ "task marked as completed."
       pure (True, newTS)
 
@@ -48,14 +49,23 @@ handleInput ts "delete" = do
   putStrLn "Enter task to delete:"
   nameInput <- getLine
   let etask = getTask (\t -> (name t) == nameInput) ts
-  pure (True, ts)
+  case etask of
+    Left err   -> do
+      putStrLn err
+      putStrLn "You can delete a task that doesn't exist"
+      pure (True, ts)
+    Right task -> do
+      let newTS = deleteTask task ts 
+      putStrLn $ nameInput ++ " task was deleted."
+      pure (True, newTS)
 
 handleInput ts "edit" = do
-  undefined
+  putStrLn "Enter task to edit:"
   pure (True, ts)
 
 handleInput ts input = do
   putStrLn $ "You entered: " ++ input
+  putStrLn "Not a command."
   pure (True, ts)
 
 
