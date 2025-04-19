@@ -29,7 +29,7 @@ handleInput ts "view" = do
 handleInput ts "mark" = do
   putStrLn "Enter completed task:"
   name <- getLine
-  let task = getTask name ts
+  let task = getTask (Task False name "") ts
   case task of
     Left err           -> do
       putStrLn err

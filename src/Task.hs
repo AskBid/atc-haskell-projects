@@ -10,11 +10,9 @@ instance Eq Task where
   (Task completed name _) == (Task completed' name' _) = completed == completed' && name' == name
 
 getTask :: Task -> [Task] -> Either String Task
-getTask tSearch ts = case filter' ts of  
+getTask tSearch ts = case filter (\t -> tSearch == t) ts of
   []    -> Left $ "No task " ++ (name tSearch) ++ " was found, or it was already completed"
   (t:_) -> Right t
-  where 
-    filter' = filter (\t -> tSearch == t)
 
 replaceTask :: Task -> Task -> [Task] -> [Task]
 replaceTask _ _ [] = []
