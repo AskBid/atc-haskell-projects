@@ -13,4 +13,4 @@ executable todo-manager
   build-depends:       base >=4.7 && <5,
                        parsec,
                        time
-  other-modules:       Task, Interface, File
+  other-modules:       Task, Interface, File, Parser

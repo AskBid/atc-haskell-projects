@@ -5,6 +5,7 @@ import Text.Parsec (parse)
 
 import Task
 import File
+import Parser
 
 loop :: [Task] -> IO ()
 loop ts = do
