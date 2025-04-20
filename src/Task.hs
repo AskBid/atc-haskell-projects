@@ -6,10 +6,15 @@ data Task = Task
   , name      :: String
   , description :: String
   -- , priority :: Priority
-  } deriving (Show)
+  } 
 
 data Priority = High | Medium | Low
   deriving (Show, Enum)
+
+instance Show Task where
+  show t = "Task name: " ++ (name t) ++ "\n" ++ 
+    "Status: " ++ if (completed t) then "un" else "" ++ "complete" ++ "\n" ++
+    "Description:\n" ++ (description t)
 
 -- | Custom instantiation to keep the equality to the identity attributes only.
 instance Eq Task where
@@ -33,7 +38,7 @@ replaceTask old new (t:ts)
   | old == t  = new:ts
   | otherwise = t:(replaceTask old new ts)
 
--- | deleteTask takes a Task to be found and deleted from a list @[Task]@
+-- | deleteTask takes a Task to be deleted from a list @[Task]@
 deleteTask :: Task -> [Task] -> [Task]
 deleteTask _ [] = []
 deleteTask task (t:ts)

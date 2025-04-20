@@ -16,6 +16,9 @@ loop ts = do
     then loop tsNew
     else return ()
 
+-- | handleInput to dispatch the input command from CLI interface.
+--   @etask@ stands for eitherTask, as all modification to the TodoList
+--   try to find the Task first and later replace it with a modified Task.
 handleInput :: [Task] -> String -> IO (Bool, [Task])
 handleInput ts "exit" = do
   -- write
