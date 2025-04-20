@@ -1,7 +1,7 @@
 module Main where
 
-import File
-import Interface
+import File (readTasks)
+import Interface (loop)
 
 main :: IO ()
 main = do

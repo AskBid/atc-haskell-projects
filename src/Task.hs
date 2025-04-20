@@ -1,19 +1,31 @@
 -- | This module provides all types and function to handle Tasks
 module Task where
 
+import Data.Time
+
 data Task = Task
-  { completed :: Bool
-  , name      :: String
+  { completed   :: Bool
+  , name        :: String
+  , priority    :: Priority
+  , date        :: Day
   , description :: String
-  -- , priority :: Priority
   } 
+
+mkTask :: String -> Task
+mkTask name = Task 
+  { completed = False
+  , name      = name
+  , priority  = Low
+  , date      = utctDay <$> getCurrentTime
+  , description = ""
+  }
 
 data Priority = High | Medium | Low
   deriving (Show, Enum)
 
 instance Show Task where
-  show t = "\nTASK NAME: " ++ (name t) ++ "\n" ++ 
-    "STATUS: " ++ (if (completed t) then "un" else "") ++ "completed" ++ "\n" ++
+  show t = "\n\nTASK NAME:\n" ++ (name t) ++ "\n\n" ++ 
+    "STATUS:\n" ++ (if (completed t) then "un" else "") ++ "completed" ++ "\n\n" ++
     "DESCRIPTION:\n" ++ (description t) ++ "\n----------------"
 
 -- | Custom instantiation to keep the equality to the identity attributes only.
