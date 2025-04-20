@@ -9,6 +9,7 @@ import Task
 saveTasks :: [Task] -> IO ()
 saveTasks ts = writeFile "todo.txt" $ concatMap writeTask ts
 
+-- | writeTask is almost as a @show@ function but used to save a Task to file
 writeTask :: Task -> String
 writeTask t = (name t) ++
   "," ++ (show $ completed t) ++ 
@@ -18,15 +19,18 @@ writeTask t = (name t) ++
 -- but I was willing to put to practice the Parsec library I just read on.
 parserTask :: Parser Task
 parserTask = do
-  name <- many letter
+  mark <- parserCompleted
   char ','
-  description <- many letter
-  return (Task False name description)
+  name <- parserTaskName
+  char ','
+  description <- parserDescription
+  notFollowedBy (noneOf "\n") <|> eof
+  return (Task mark name description)
 
 parserTaskName :: Parser String
 parserTaskName = do
   name <- many1 $ letter <|> digit <|> oneOf "-. "
-  eof
+  notFollowedBy (noneOf ",") <|> eof
   return name
 
 parserDescription :: Parser String
@@ -37,5 +41,5 @@ parserDescription = do
 parserCompleted :: Parser Bool
 parserCompleted = do
   mark <- string "True" <|> string "False"
-  eof
+  notFollowedBy (noneOf ",") <|> eof
   return $ read mark
