@@ -1,6 +1,7 @@
 module Interface where
 
 import System.IO (hFlush, stdout)
+import Text.Parsec (parse)
 
 import Task
 import File
@@ -16,6 +17,17 @@ loop ts = do
     then loop tsNew
     else return ()
 
+nameCheck :: IO (String)
+nameCheck = do
+  name <- getLine
+  let check = parse parserTaskName "" name
+  case check of 
+    Left e -> do
+      putStrLn "Only letters and `-.` or spaces are accepted for names."
+      putStrLn "Enter name again:"
+      nameCheck
+    Right n -> pure n
+
 -- | handleInput to dispatch the input command from CLI interface.
 --   @etask@ stands for eitherTask, as all modification to the TodoList
 --   try to find the Task first and later replace it with a modified Task.
@@ -27,8 +39,11 @@ handleInput ts "exit" = do
 
 handleInput ts "add" = do
   putStrLn "Enter task:"
-  name <- getLine
-  pure (True, Task False name "desc":ts)
+  name <- nameCheck
+  let task = Task False name "desc"
+  putStrLn "new task created:"
+  putStr $ show task
+  pure (True, task:ts)
 
 handleInput ts "view" = do
   sequenceA $ (putStrLn.show) <$> ts 
@@ -76,7 +91,7 @@ handleInput ts "edit" = do
       putStrLn "Current task description:"
       putStrLn $ description task
       putStrLn "Enter new name or leave empty to keep the same:"
-      nameIO <- getLine
+      nameIO <- nameCheck
       let newName = if nameIO == "" then name task else nameIO
       putStrLn "Enter new description or leave empty to keep the same:"
       descriptionIO <- getLine
@@ -91,7 +106,3 @@ handleInput ts input = do
   putStrLn $ "You entered: " ++ input
   putStrLn "Not a command."
   pure (True, ts)
-
-
-
-
