@@ -11,8 +11,8 @@ saveTasks ts = writeFile "todo.txt" $ concatMap writeTask ts
 
 -- | writeTask is almost as a @show@ function but used to save a Task to file
 writeTask :: Task -> String
-writeTask t = (name t) ++
-  "," ++ (show $ completed t) ++ 
+writeTask t = (show $ completed t) ++
+  "," ++ (name t) ++ 
   "," ++ (description t) ++ "\n"
 
 readTasks :: IO ([Task])
