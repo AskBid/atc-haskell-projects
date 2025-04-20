@@ -8,7 +8,6 @@ import File
 
 loop :: [Task] -> IO ()
 loop ts = do
-  -- read file
   putStr "Enter command: "
   hFlush stdout -- insures output is printed immediately rather than wait in buffer
   input <- getLine

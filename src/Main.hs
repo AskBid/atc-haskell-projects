@@ -1,11 +1,13 @@
 module Main where
 
-import Task
+import File
 import Interface
 
 main :: IO ()
 main = do
   putStrLn "Welcome to my TODO List Manager!"
-  loop testTs
+  ts <- readTasks
+  putStrLn $ "miaooo " ++ (show ts)
+  loop ts
 
 

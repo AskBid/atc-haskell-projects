@@ -38,7 +38,8 @@ parserTask = do
   name <- parserTaskName
   char ','
   description <- parserDescription
-  notFollowedBy (noneOf "\n") <|> eof
+  char '\n'
+  notFollowedBy eof --(noneOf "\n") <|> eof
   return (Task mark name description)
 
 -- | parserTaskName checks validity of Task name. 
@@ -52,7 +53,7 @@ parserTaskName = do
 
 parserDescription :: Parser String
 parserDescription = do
-  description <- many anyChar
+  description <- many (noneOf "\n")-- anyChar
   return description
 
 parserCompleted :: Parser Bool
