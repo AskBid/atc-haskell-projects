@@ -3,6 +3,7 @@ module File where
 import System.IO
 import Text.Parsec
 import Text.Parsec.String (Parser)
+import Data.Time
 
 import Task
 
@@ -37,10 +38,14 @@ parserTask = do
   char ','
   name <- parserTaskName
   char ','
+  priority <- parserPriority
+  char ','
+  date <- parserDate
+  char ','
   description <- parserDescription
   char '\n'
   notFollowedBy eof --(noneOf "\n") <|> eof
-  return (Task mark name description)
+  return (Task mark name priority date description)
 
 -- | parserTaskName checks validity of Task name. 
 --   Allows for empty name for now as it comes handy with CLI when nochange is wanted,  
@@ -63,3 +68,19 @@ parserCompleted = do
   mark <- string "True" <|> string "False"
   notFollowedBy (noneOf ",") <|> eof
   return $ read mark
+
+-- | Date parser (YYYY-MM-DD)
+parserDate :: Parser Day
+parserDate = do
+  year  <- count 4 digit
+  char '-'
+  month <- count 2 digit
+  char '-'
+  day   <- count 2 digit
+  return $ fromGregorian (read year) (read month) (read day)
+
+parserPriority :: Parser Priority
+parserPriority = do
+  priority <- string "High" <|> string "Medium" <|> string "Low"
+  notFollowedBy (noneOf ",") <|> eof
+  return $ read priority

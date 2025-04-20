@@ -22,7 +22,7 @@ mkTask name = do
     , description = "" }
 
 data Priority = High | Medium | Low
-  deriving (Show, Enum)
+  deriving (Show, Enum, Read)
 
 instance Show Task where
   show t = "\n\nTASK NAME:\n" ++ (name t) ++ "\n\n" ++ 
