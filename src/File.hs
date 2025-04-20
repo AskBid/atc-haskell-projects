@@ -14,6 +14,8 @@ saveTasks ts = writeFile "todo.txt" $ concatMap writeTask ts
 writeTask :: Task -> String
 writeTask t = (show $ completed t) ++
   "," ++ (name t) ++ 
+  "," ++ (show $ priority t) ++ 
+  "," ++ (show $ date t) ++ 
   ",\"" ++ (description t) ++ "\"\n"
 
 readTasks :: IO ([Task])
