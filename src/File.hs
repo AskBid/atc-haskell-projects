@@ -29,7 +29,7 @@ parserTask = do
 
 parserTaskName :: Parser String
 parserTaskName = do
-  name <- many1 $ letter <|> digit <|> oneOf "-. "
+  name <- many $ letter <|> digit <|> oneOf "-. "
   notFollowedBy (noneOf ",") <|> eof
   return name
 
