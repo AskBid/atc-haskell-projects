@@ -11,14 +11,15 @@ data Task = Task
   , description :: String
   } 
 
-mkTask :: String -> Task
-mkTask name = Task 
-  { completed = False
-  , name      = name
-  , priority  = Low
-  , date      = utctDay <$> getCurrentTime
-  , description = ""
-  }
+mkTask :: String -> IO Task
+mkTask name = do
+  currentDay <- utctDay <$> getCurrentTime
+  return Task 
+    { completed = False
+    , name      = name
+    , priority  = Low
+    , date      = addDays 1 currentDay 
+    , description = "" }
 
 data Priority = High | Medium | Low
   deriving (Show, Enum)
@@ -30,7 +31,7 @@ instance Show Task where
 
 -- | Custom instantiation to keep the equality to the identity attributes only.
 instance Eq Task where
-  (Task completed name _) == (Task completed' name' _) = 
+  (Task completed name _ _ _) == (Task completed' name' _ _ _) = 
     completed == completed' && name' == name
 
 -- | getTask finds a task in the todo list @[Task]@.

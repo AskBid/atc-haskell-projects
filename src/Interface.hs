@@ -41,7 +41,7 @@ handleInput ts "exit" = do
 handleInput ts "add" = do
   putStrLn "Enter task:"
   name <- nameCheck
-  let task = Task False name "desc"
+  task <- mkTask name
   putStrLn "new task created:"
   putStr $ show task
   pure (True, task:ts)
@@ -54,7 +54,7 @@ handleInput ts "mark" = do
   putStrLn "Enter completed task:"
   nameInput <- getLine
   let taskSearch = Task False nameInput ""
-  let etask = getTask (\t -> t == taskSearch) ts
+  let etask = getTask (\t -> t == taskSearch) ts -- Task Eq checks on Completed and Name attributes.
   case etask of
     Left err   -> do
       putStrLn err
