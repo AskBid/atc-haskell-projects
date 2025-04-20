@@ -17,6 +17,8 @@ loop ts = do
     then loop tsNew
     else return ()
 
+-- | nameCheck uses the Parser to read from file "todo.txt" for checking CLI inputs have 
+--   a compatible format. It does loop if no copatible input is given.
 nameCheck :: IO (String)
 nameCheck = do
   name <- getLine
@@ -33,9 +35,9 @@ nameCheck = do
 --   try to find the Task first and later replace it with a modified Task.
 handleInput :: [Task] -> String -> IO (Bool, [Task])
 handleInput ts "exit" = do
-  -- write
+  saveTasks ts
   putStrLn "Goodbye!"
-  pure (False, ts)
+  pure (False, [])
 
 handleInput ts "add" = do
   putStrLn "Enter task:"
