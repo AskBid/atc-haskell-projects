@@ -75,9 +75,9 @@ parserCompleted = do
 parserDate :: Parser Day
 parserDate = do
   year  <- count 4 digit
-  char '-'
+  oneOf "-/. "
   month <- count 2 digit
-  char '-'
+  oneOf "-/. "
   day   <- count 2 digit
   return $ fromGregorian (read year) (read month) (read day)
 
