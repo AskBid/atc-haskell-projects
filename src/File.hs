@@ -13,7 +13,7 @@ saveTasks ts = writeFile "todo.txt" $ concatMap writeTask ts
 writeTask :: Task -> String
 writeTask t = (show $ completed t) ++
   "," ++ (name t) ++ 
-  "," ++ (description t) ++ "\n"
+  ",\"" ++ (description t) ++ "\"\n"
 
 readTasks :: IO ([Task])
 readTasks = do 
@@ -53,7 +53,9 @@ parserTaskName = do
 
 parserDescription :: Parser String
 parserDescription = do
-  description <- many (noneOf "\n")-- anyChar
+  char '"'
+  description <- many (noneOf "\"")
+  char '"'-- anyChar
   return description
 
 parserCompleted :: Parser Bool
