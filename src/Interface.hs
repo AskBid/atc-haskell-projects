@@ -25,7 +25,7 @@ nameCheck = do
   let check = parse parserTaskName "" name
   case check of 
     Left e -> do
-      putStrLn "Only letters and `-.` or spaces are accepted for names."
+      putStrLn "Only letters, `-`, `.` and spaces are accepted for names."
       putStrLn "Enter name again:"
       nameCheck
     Right n -> pure n

@@ -15,6 +15,18 @@ writeTask t = (name t) ++
   "," ++ (show $ completed t) ++ 
   "," ++ (description t) ++ "\n"
 
+readTasks :: IO ([Task])
+readTasks = do 
+  string <- readFile "todo.txt"
+  let tasks = parse (many parserTask) "" string
+  case tasks of
+    Left err -> do
+      putStrLn "Something went wrong while reading todo list from file."
+      pure []
+    Right ts -> do
+      putStrLn "Todo list read from file."
+      pure ts
+
 -- probably no need for a parser here as a @split ','@ would be enough..
 -- but I was willing to put to practice the Parsec library I just read on.
 -- | parserCheck given a string.row from the todo.txt file converts it into Task type.
