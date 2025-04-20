@@ -26,6 +26,7 @@ parserTask = do
 parserTaskName :: Parser String
 parserTaskName = do
   name <- many1 $ letter <|> digit <|> oneOf "-. "
+  eof
   return name
 
 parserDescription :: Parser String
@@ -36,4 +37,5 @@ parserDescription = do
 parserCompleted :: Parser Bool
 parserCompleted = do
   mark <- string "True" <|> string "False"
+  eof
   return $ read mark
