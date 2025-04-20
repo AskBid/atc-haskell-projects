@@ -12,9 +12,9 @@ data Priority = High | Medium | Low
   deriving (Show, Enum)
 
 instance Show Task where
-  show t = "Task name: " ++ (name t) ++ "\n" ++ 
-    "Status: " ++ if (completed t) then "un" else "" ++ "complete" ++ "\n" ++
-    "Description:\n" ++ (description t)
+  show t = "TASK NAME: " ++ (name t) ++ "\n" ++ 
+    "STATUS: " ++ (if (completed t) then "un" else "") ++ "completed" ++ "\n" ++
+    "DESCRIPTION:\n" ++ (description t)
 
 -- | Custom instantiation to keep the equality to the identity attributes only.
 instance Eq Task where
