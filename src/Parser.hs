@@ -4,6 +4,7 @@ module Parser where
 import Text.Parsec
 import Text.Parsec.String (Parser)
 import Data.Time
+import Control.Monad.IO.Class (liftIO)
 
 import Task (Task(..), Priority)
 
@@ -79,3 +80,9 @@ processCurrentDay = do
   currentTime <- getCurrentTime
   return $ utctDay currentTime
 
+-- fun :: ParsecT String () IO Day
+-- fun = do
+--   num <- many1 digit
+--   currentTime <- liftIO getCurrentTime
+--   let currentDay = utctDay currentTime
+--   return $ addDays (read num) currentDay

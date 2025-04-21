@@ -92,4 +92,63 @@ parserDueDateInt = do
 
 unfortunately this won't work because `num <- many digit` because is of the Parser Monad type, while `getCurrentTime` is of type IO Monad.
 
+using a `let` or a `case getCurrentTime of` won't work because `getCurrentTime` is an impure value `IO` not like an `Either` that despite being a structure, withing as a pure value.
 
+```
+parserDueDateInt :: Day -> Parser Int
+parserDueDateInt = do
+  num <- many1 digit
+  let currentTime = getCurrentTime
+```
+
+a way to solve it is:
+
+```haskell
+parserDueDate :: Day -> Parser Day
+parserDueDate d = do
+  input <- parserDate <|> (parserDueDateFromInt d) 
+  return input
+
+parserDueDateFromInt :: Day -> Parser Day
+parserDueDateFromInt d = do
+  num <- many1 digit
+  return $ addDays (read num) d
+
+processCurrentDay :: IO Day
+processCurrentDay = do
+  currentTime <- getCurrentTime
+  return $ utctDay currentTime
+```
+
+
+but could also be done by `liftIO` that exchange a monad IO for another one that is although istanceo MonadIO as the parsers are.
+
+```haskell
+fun :: Parser Day
+fun = do
+  num <- many1 digit
+  currentTime <- liftIO getCurrentTime
+  let currentDay = utctDay currentTime
+  return $ addDays (read num) currentDay
+```
+
+still doesn't work, because `getCurrentTime` is an `IO` monad while `Parser` is an `Identity` monad.
+
+```haskell
+fun :: Parser Day
+fun :: Parsec String () Day
+fun :: ParsecT String () Identity Day
+```
+
+those above are infact all the same thing, and we need to change the function signature to have an `IO` monad for that to work:
+
+```haskell
+fun :: ParsecT String () IO Day
+fun = do
+  num <- many1 digit
+  currentTime <- liftIO getCurrentTime
+  let currentDay = utctDay currentTime
+  return $ addDays (read num) currentDay
+```
+
+Although keeping the `Parser` pure is porbably the best option.
