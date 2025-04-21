@@ -1,4 +1,4 @@
-module File where
+module File (saveTasks, readTasks) where
 
 import System.IO
 import Text.Parsec

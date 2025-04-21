@@ -25,9 +25,9 @@ data Priority = High | Medium | Low
   deriving (Show, Enum, Read)
 
 instance Show Task where
-  show t = "\n\nTASK NAME:\n" ++ (name t) ++ "\n" ++ 
-    "\nSTATUS:\n" ++ (if (completed t) then "" else "un") ++ "completed" ++ "\n" ++
-    "\nDATE: " ++ (show $ date t) ++ " " ++ (show $ priority t) ++ "\n" ++ 
+  show t = "\nTASK NAME: " ++ (name t) ++
+    "\nSTATUS: " ++ (if (completed t) then "" else "un") ++ "completed" ++
+    "\nDATE: " ++ (show $ date t) ++ " " ++ (show $ priority t) ++ 
     "\nDESCRIPTION:\n" ++ (description t) ++ "\n----------------"
 
 -- | Custom instantiation to keep the equality to the identity attributes only.
