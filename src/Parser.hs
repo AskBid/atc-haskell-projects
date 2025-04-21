@@ -39,7 +39,7 @@ parserDescription :: Parser String
 parserDescription = do
   char '"'
   description <- many (noneOf "\"")
-  char '"'-- anyChar
+  char '"'
   return description
 
 parserCompleted :: Parser Bool
@@ -63,3 +63,15 @@ parserPriority = do
   priority <- string "High" <|> string "Medium" <|> string "Low"
   notFollowedBy (noneOf ",") <|> eof
   return $ read priority
+
+parserDueDate :: Parser Day
+parserDueDate = do
+  input <- parserDate <|> many1 digit
+  return input
+
+parserDueDateInt :: Parser Int
+parserDueDateInt = do
+  num <- many1 digit
+  currentTime <- getCurrentTime
+  return num
+
