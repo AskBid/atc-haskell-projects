@@ -64,14 +64,18 @@ parserPriority = do
   notFollowedBy (noneOf ",") <|> eof
   return $ read priority
 
-parserDueDate :: Parser Day
-parserDueDate = do
-  input <- parserDate <|> many1 digit
+parserDueDate :: Day -> Parser Day
+parserDueDate d = do
+  input <- parserDate <|> (parserDueDateFromInt d) 
   return input
 
-parserDueDateInt :: Parser Int
-parserDueDateInt = do
+parserDueDateFromInt :: Day -> Parser Day
+parserDueDateFromInt d = do
   num <- many1 digit
+  return $ addDays (read num) d
+
+processCurrentDay :: IO Day
+processCurrentDay = do
   currentTime <- getCurrentTime
-  return num
+  return $ utctDay currentTime
 
