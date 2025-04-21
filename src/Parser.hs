@@ -3,8 +3,7 @@ module Parser where
 
 import Text.Parsec
 import Text.Parsec.String (Parser)
-import Data.Time
-import Control.Monad.IO.Class (liftIO)
+import Data.Time (addDays, fromGregorian, Day)
 
 import Task (Task(..), Priority)
 
@@ -65,24 +64,20 @@ parserPriority = do
   notFollowedBy (noneOf ",") <|> eof
   return $ read priority
 
+-- | parserDueDate gives the ability to parse both dates (YYYY-MM-DD) and 
+--   Integers as Strings to convert into Day dates. The integer as amount
+--   of days to add to the current date to get the due date.
+--   The first argument of type @Day@ is today's date and can be given 
+--   through the use of @Interface.processCurrentDay@.
 parserDueDate :: Day -> Parser Day
 parserDueDate d = do
   input <- parserDate <|> (parserDueDateFromInt d) 
   return input
 
+-- | @parserDueDateFromInt@ is used within the @parserDueDate@ and the sole 
+--   scope is to make the @Integer@ Parser with the same type as the 
+--   @Parser Day@ from the date parser @parserDate@ so that we can use @(<|>)@
 parserDueDateFromInt :: Day -> Parser Day
 parserDueDateFromInt d = do
   num <- many1 digit
   return $ addDays (read num) d
-
-processCurrentDay :: IO Day
-processCurrentDay = do
-  currentTime <- getCurrentTime
-  return $ utctDay currentTime
-
--- fun :: ParsecT String () IO Day
--- fun = do
---   num <- many1 digit
---   currentTime <- liftIO getCurrentTime
---   let currentDay = utctDay currentTime
---   return $ addDays (read num) currentDay

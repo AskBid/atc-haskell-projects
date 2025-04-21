@@ -2,6 +2,7 @@ module Interface where
 
 import System.IO (hFlush, stdout)
 import Text.Parsec (parse)
+import Data.Time (getCurrentTime, utctDay, Day)
 
 import Task
 import File
@@ -29,6 +30,14 @@ nameCheck = do
       putStrLn "Enter name again:"
       nameCheck
     Right n -> pure n
+
+-- | processCurrentDay is used as argument for the @Parser.parserDueDate@ to get
+--   today's date in Day type format, so that we can enter a nuber of days to set
+--   the due date from today's date.
+processCurrentDay :: IO Day
+processCurrentDay = do
+  currentTime <- getCurrentTime
+  return $ utctDay currentTime
 
 -- | handleInput to dispatch the input command from CLI interface.
 --   all modification to the TodoList try to find the Task first and 
