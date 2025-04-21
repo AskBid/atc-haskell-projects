@@ -65,3 +65,31 @@ handleInput ts "mark" = do
 The `case .. of` handles the `Maybe Task` purely, and each branch produces an `IO (Bool, [Task])` using `IO` actions (`putStrLn`, `pure`).
 
 By using `let` and `case`, you avoid trying to bind `Maybe Task` with `(>>=)` in the `IO` monad, sidestepping the monad mismatch.
+
+
+## How to Combine Two Parsers with Different Type
+
+trying to get a Parser that reckognises date and integers as number of days I started from this type of pseudo code:
+
+```haskell
+parserDueDate :: Parser Day
+parserDueDate = do
+  input <- parserDate <|> many1 digit
+  return input
+```
+
+This doesn't work because one parser returns `Parser Day` and the other `Parser [Char]`
+
+we need to handle the `Parser [Char]` to return `Day` so that it can be combined later.
+
+```haskell
+parserDueDateInt :: Parser Int
+parserDueDateInt = do
+  num <- many1 digit
+  currentTime <- getCurrentTime
+  return num
+```
+
+unfortunately this won't work because `num <- many digit` because is of the Parser Monad type, while `getCurrentTime` is of type IO Monad.
+
+
