@@ -94,6 +94,7 @@ enterTaskAttributes :: Task -> IO Task
 enterTaskAttributes task = do 
   --
   -- Enter or edit name.
+  putStrLn ":::"
   putStrLn $ "Current task name: " ++ (name task) ++ " <---" 
   putStrLn "Enter new name or leave empty to keep it the same:"
   nameIO <- entryAndCheck parserTaskName "error: Only letters, `-`, `.` and spaces are accepted for names."
@@ -101,20 +102,24 @@ enterTaskAttributes task = do
   --
   -- Enter or edit date.
   today <- processCurrentDay
+  putStrLn ":::"
   putStrLn $ "Current due date: "
   let taskDate = date task
-  putStrLn $ show taskDate ++ " (" ++ (show $ diffDays today taskDate) ++ " days left)"
+  putStrLn $ show taskDate ++ " (" ++ (show $ diffDays taskDate today) ++ " days left)"
   putStrLn "Enter due date (YYYY-MM-DD) or number of days from today" 
   putStrLn "(press Enter to leave unchanghed):"
   dateIO <- dateEntryAndCheck today
   let newDate = fromMaybe taskDate dateIO
   --
   -- Enter or Edit priority
+  putStrLn ":::"
   putStrLn $ "Current task priority: " ++ (show $ priority task) 
+  putStrLn "Enter new priority or leave empty to keep the same:"
   priorityIO <- entryAndCheck parserPriority "error: You entered an invalid priority text."
   let newPriority = fromMaybe (priority task) priorityIO
   --
   -- Enter or edit description.
+  putStrLn ":::"
   putStrLn "Current task description:"
   putStrLn $ "\"" ++ description task ++ "\""
   putStrLn "Enter new description or leave empty to keep the same:"
@@ -122,6 +127,7 @@ enterTaskAttributes task = do
   let newDescription = fromMaybe (description task) descriptionIO
   --
   -- build Task and return
+  putStrLn ":::"
   let newTask = Task (completed task) newName newPriority newDate newDescription
   putStrLn "Task edited/created:"
   putStrLn $ show newTask
