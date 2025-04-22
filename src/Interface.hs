@@ -130,8 +130,8 @@ enterTaskAttributes task = do
   putStrLn $ show newTask
   return newTask
 
--- | uses the Parser for checking that CLI inputs have a compatible format. 
---   It does loop if no copatible input is given.
+-- | uses the Parser to check that CLI inputs have a compatible format with the 
+--   text file parsers. It does loop if no copatible input is given.
 entryAndCheck :: Parser a -> IO a
 entryAndCheck p = do
   name <- getLine
