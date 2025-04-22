@@ -4,7 +4,8 @@ module Interface where
 
 import System.IO (hFlush, stdout)
 import Text.Parsec (parse)
-import Data.Time (getCurrentTime, utctDay, Day)
+import Data.Time (getCurrentTime, utctDay, Day, diffDays)
+import Data.Maybe (fromMaybe)
 
 import Task
 import File
@@ -29,10 +30,8 @@ handleInput ts "exit" = do
   putStrLn "Goodbye!"
   pure (False, [])
 
-handleInput ts "add" = do
-  putStrLn "Enter task:"
-  name <- nameCheck
-  task <- mkTask name
+handleInput ts "add" = do 
+  task <- mkTask "*unnamed*"
   task'<- enterTaskAttributes task
   pure (True, task:ts)
 
@@ -88,18 +87,31 @@ handleInput ts input = do
 -- | enterTaskAttributes is the part of the CLI interface used to deal with 
 --   @Task@ attributes insertion or ed1its.
 enterTaskAttributes :: Task -> IO Task
-enterTaskAttributes task = do  
-  putStrLn "Enter new name or leave empty to keep the same:"
-  nameIO <- nameCheck
+enterTaskAttributes task = do 
+  --
+  -- Enter or edit name.
+  putStrLn $ "Current task name: " ++ (name task) ++ " <---" 
+  putStrLn "Enter new name or leave empty to keep it the same:"
+  nameIO <- nameEntryAndCheck
   let newName = 
         if nameIO == "" 
-        then name task 
+        then name task
         else nameIO
-  putStrLn $ "Current due date: " 
-  putStrLn $ show $ date task
+  --
+  -- Enter or edit date.
+  today <- processCurrentDay
+  putStrLn $ "Current due date: "
+  let taskDate = date task
+  putStrLn $ show taskDate ++ " (" ++ (show $ diffDays today taskDate) ++ " days left)"
   putStrLn "Enter due date (YYYY-MM-DD) or number of days from today" 
   putStrLn "(press Enter to leave unchanghed):"
-  newDate <- dateCheck
+  dateIO <- dateEntryAndCheck today
+  let newDate = fromMaybe taskDate dateIO
+  --
+  -- Enter or Edit priority
+  -- undefined ..
+  --
+  -- Enter or edit description.
   putStrLn "Current task description:"
   putStrLn $ "\"" ++ description task ++ "\""
   putStrLn "Enter new description or leave empty to keep the same:"
@@ -108,35 +120,40 @@ enterTaskAttributes task = do
         if descriptionIO == "" 
         then description task 
         else descriptionIO
-  let newTask = Task (completed task) newName (priority task) (date newDate) newDescription
+  --
+  -- build Task to return
+  let newTask = Task (completed task) newName (priority task) newDate newDescription
   putStrLn "Task edited/created:"
   putStrLn $ show newTask
   return newTask
 
--- | nameCheck uses the Parser to read from file "todo.txt" for checking CLI inputs have 
---   a compatible format. It does loop if no copatible input is given.
-nameCheck :: IO String
-nameCheck = do
+-- | uses the Parser to read from file "todo.txt" or for checking that CLI inputs 
+--   have a compatible format. It does loop if no copatible input is given.
+nameEntryAndCheck :: IO String
+nameEntryAndCheck = do
   name <- getLine
   let check = parse parserTaskName "" name
   case check of 
     Left e -> do
       putStrLn "Only letters, `-`, `.` and spaces are accepted for names."
       putStrLn "Enter name again:"
-      nameCheck
+      nameEntryAndCheck
     Right n -> pure n
 
-dateCheck :: IO Day
-dateCheck = do 
+dateEntryAndCheck :: Day -> IO (Maybe Day)
+dateEntryAndCheck today = do 
   dateIO <- getLine
-  today <- processCurrentDay
-  case parse (parserDueDate today) "" dateIO of  
-    Left e -> undefined
-    Right newDate -> newDate
+  if dateIO == "" 
+  then pure Nothing
+  else case parse (parserDueDate today) "" dateIO of  
+    Left e -> do
+      putStrLn $ show e
+      dateEntryAndCheck today 
+    Right newDate -> pure $ Just newDate
 
--- | processCurrentDay is used as argument for the @Parser.parserDueDate@ to get
---   today's date in Day type format, so that we can enter a nuber of days to set
---   the due date from today's date.
+-- | used as argument for the @Parser.parserDueDate@ to get today's date in 
+--   Day type format, so that we can enter a nuber of days to set the due date 
+--   from today's date.
 processCurrentDay :: IO Day
 processCurrentDay = do
   currentTime <- getCurrentTime
