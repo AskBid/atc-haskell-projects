@@ -40,9 +40,7 @@ parserTaskName = do
 
 parserDescription :: Parser String
 parserDescription = do
-  char '"'
-  description <- many (noneOf "\"")
-  char '"'
+  description <- many (noneOf "\n")
   return description
 
 parserCompleted :: Parser Bool
