@@ -103,9 +103,9 @@ enterTaskAttributes task = do
   -- Enter or edit date.
   today <- processCurrentDay
   putStrLn ":::"
-  putStrLn $ "Current due date: "
   let taskDate = date task
-  putStrLn $ show taskDate ++ " (" ++ (show $ diffDays taskDate today) ++ " days left)"
+  let dateStr = show taskDate ++ " (" ++ (show $ diffDays taskDate today) ++ " days left)"
+  putStrLn $ "Current due date: " ++ dateStr
   putStrLn "Enter due date (YYYY-MM-DD) or number of days from today" 
   putStrLn "(press Enter to leave unchanghed):"
   dateIO <- dateEntryAndCheck today
