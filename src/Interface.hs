@@ -93,7 +93,7 @@ enterTaskAttributes task = do
   -- Enter or edit name.
   putStrLn $ "Current task name: " ++ (name task) ++ " <---" 
   putStrLn "Enter new name or leave empty to keep it the same:"
-  nameIO <- entryAndCheck parserTaskName
+  nameIO <- entryAndCheck parserTaskName "error: Only letters, `-`, `.` and spaces are accepted for names."
   let newName = fromMaybe (name task) nameIO
   --
   -- Enter or edit date.
@@ -108,14 +108,14 @@ enterTaskAttributes task = do
   --
   -- Enter or Edit priority
   putStrLn $ "Current task priority: " ++ (show $ priority task) 
-  priorityIO <- entryAndCheck parserPriority
+  priorityIO <- entryAndCheck parserPriority "error: You entered an invalid priority text."
   let newPriority = fromMaybe (priority task) priorityIO
   --
   -- Enter or edit description.
   putStrLn "Current task description:"
   putStrLn $ "\"" ++ description task ++ "\""
   putStrLn "Enter new description or leave empty to keep the same:"
-  descriptionIO <- entryAndCheck parserDescription
+  descriptionIO <- entryAndCheck parserDescription "error: You entered an invalid text as description."
   let newDescription = fromMaybe (description task) descriptionIO
   --
   -- build Task to return
@@ -126,16 +126,16 @@ enterTaskAttributes task = do
 
 -- | uses the Parser to check that CLI inputs have a compatible format with the 
 --   text file parsers. It does loop if no copatible input is given.
-entryAndCheck :: Parser a -> IO (Maybe a)
-entryAndCheck p = do
+entryAndCheck :: Parser a -> String -> IO (Maybe a)
+entryAndCheck p myErr = do
   entry <- getLine
   if entry == ""
   then pure Nothing 
-  else case parse p "" entry of 
+  else case parse p myErr entry of 
     Left e -> do
-      putStrLn $ show e -- "Only letters, `-`, `.` and spaces are accepted for names."
+      putStrLn $ show e 
       putStrLn "Enter again:"
-      entryAndCheck p
+      entryAndCheck p myErr
     Right a -> pure (Just a)
 
 dateEntryAndCheck :: Day -> IO (Maybe Day)
@@ -143,7 +143,7 @@ dateEntryAndCheck today = do
   dateIO <- getLine
   if dateIO == "" 
   then pure Nothing
-  else case parse (parserDueDate today) "" dateIO of  
+  else case parse (parserDueDate today) "error: You entered an invalid date format." dateIO of  
     Left e -> do
       putStrLn $ show e
       putStrLn "Enter date again:"
