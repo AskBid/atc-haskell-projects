@@ -118,7 +118,7 @@ enterTaskAttributes task = do
   descriptionIO <- entryAndCheck parserDescription "error: You entered an invalid text as description."
   let newDescription = fromMaybe (description task) descriptionIO
   --
-  -- build Task to return
+  -- build Task and return
   let newTask = Task (completed task) newName newPriority newDate newDescription
   putStrLn "Task edited/created:"
   putStrLn $ show newTask
