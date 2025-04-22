@@ -4,6 +4,7 @@ module Interface where
 
 import System.IO (hFlush, stdout)
 import Text.Parsec (parse)
+import Text.Parsec.String (Parser)
 import Data.Time (getCurrentTime, utctDay, Day, diffDays)
 import Data.Maybe (fromMaybe)
 
@@ -92,11 +93,10 @@ enterTaskAttributes task = do
   -- Enter or edit name.
   putStrLn $ "Current task name: " ++ (name task) ++ " <---" 
   putStrLn "Enter new name or leave empty to keep it the same:"
-  nameIO <- nameEntryAndCheck
-  let newName = 
-        if nameIO == "" 
-        then name task
-        else nameIO
+  nameIO <- entryAndCheck parserTaskName
+  let newName = if nameIO == "" 
+      then name task 
+      else nameIO
   --
   -- Enter or edit date.
   today <- processCurrentDay
@@ -109,17 +109,20 @@ enterTaskAttributes task = do
   let newDate = fromMaybe taskDate dateIO
   --
   -- Enter or Edit priority
-  -- undefined ..
+  putStrLn $ "Current task priority: " ++ (show $ priority task) 
+  newPriority <- entryAndCheck parserPriority
+  let newName = if nameIO == "" 
+      then name task
+      else nameIO
   --
   -- Enter or edit description.
   putStrLn "Current task description:"
   putStrLn $ "\"" ++ description task ++ "\""
   putStrLn "Enter new description or leave empty to keep the same:"
-  descriptionIO <- getLine
-  let newDescription = 
-        if descriptionIO == "" 
-        then description task 
-        else descriptionIO
+  descriptionIO <- entryAndCheck parserDescription
+  let newDescription = if descriptionIO == "" 
+      then description task 
+      else descriptionIO
   --
   -- build Task to return
   let newTask = Task (completed task) newName (priority task) newDate newDescription
@@ -127,17 +130,17 @@ enterTaskAttributes task = do
   putStrLn $ show newTask
   return newTask
 
--- | uses the Parser to read from file "todo.txt" or for checking that CLI inputs 
---   have a compatible format. It does loop if no copatible input is given.
-nameEntryAndCheck :: IO String
-nameEntryAndCheck = do
+-- | uses the Parser for checking that CLI inputs have a compatible format. 
+--   It does loop if no copatible input is given.
+entryAndCheck :: Parser a -> IO a
+entryAndCheck p = do
   name <- getLine
-  let check = parse parserTaskName "" name
+  let check = parse p "" name
   case check of 
     Left e -> do
-      putStrLn "Only letters, `-`, `.` and spaces are accepted for names."
-      putStrLn "Enter name again:"
-      nameEntryAndCheck
+      putStrLn $ show e -- "Only letters, `-`, `.` and spaces are accepted for names."
+      putStrLn "Enter again:"
+      entryAndCheck p
     Right n -> pure n
 
 dateEntryAndCheck :: Day -> IO (Maybe Day)
@@ -148,6 +151,7 @@ dateEntryAndCheck today = do
   else case parse (parserDueDate today) "" dateIO of  
     Left e -> do
       putStrLn $ show e
+      putStrLn "Enter date again:"
       dateEntryAndCheck today 
     Right newDate -> pure $ Just newDate
 
