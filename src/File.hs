@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module File (saveTasks, readTasks) where
 
 import System.IO

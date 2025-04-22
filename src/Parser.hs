@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 -- | Module with all the parsers used to read Tasks from file and validate CLI inputs.
 module Parser where
 

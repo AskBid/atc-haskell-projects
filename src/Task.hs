@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 -- | This module provides all types and function to handle Tasks
 module Task where
 

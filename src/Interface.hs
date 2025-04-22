@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Interface where
 
 import System.IO (hFlush, stdout)
