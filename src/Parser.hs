@@ -34,8 +34,8 @@ parserTask = do
 --   should be changed in the future.
 parserTaskName :: Parser String
 parserTaskName = do
-  name <- many $ letter <|> digit <|> oneOf "-. "
-  notFollowedBy (noneOf ",") <|> eof
+  name <- many (letter <|> digit <|> oneOf "-. ") -- <?> "letter, `-`, `.` or space"
+  notFollowedBy (noneOf ",") <|> eof -- <?> "end of input or a comma"
   return name
 
 parserDescription :: Parser String

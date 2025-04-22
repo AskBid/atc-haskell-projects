@@ -92,8 +92,6 @@ handleInput ts input = do
 --   It always takes a Task even when newly created.
 enterTaskAttributes :: Task -> IO Task
 enterTaskAttributes task = do 
-  --
-  -- Enter or edit name.
   putStrLn ":::"
   putStrLn $ "Current task name: " ++ (name task) ++ " <---" 
   putStrLn "Enter new name or leave empty to keep it the same:"
@@ -140,9 +138,9 @@ entryAndCheck p myErr = do
   entry <- getLine
   if entry == ""
   then pure Nothing 
-  else case parse p myErr entry of 
+  else case parse p "" entry of 
     Left e -> do
-      putStrLn $ show e 
+      putStrLn myErr 
       putStrLn "Enter again:"
       entryAndCheck p myErr
     Right a -> pure (Just a)
@@ -152,9 +150,9 @@ dateEntryAndCheck today = do
   dateIO <- getLine
   if dateIO == "" 
   then pure Nothing
-  else case parse (parserDueDate today) "error: You entered an invalid date format." dateIO of  
+  else case parse (parserDueDate today) "" dateIO of  
     Left e -> do
-      putStrLn $ show e
+      putStrLn "\"error: You entered an invalid date format. Enter (YYYY-MM-DD) or an integer.\""
       putStrLn "Enter date again:"
       dateEntryAndCheck today 
     Right newDate -> pure $ Just newDate
