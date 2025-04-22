@@ -86,7 +86,10 @@ handleInput ts input = do
   pure (True, ts)
 
 -- | enterTaskAttributes is the part of the CLI interface used to deal with 
---   @Task@ attributes insertion or ed1its.
+--   @Task@ attributes insertion or edits. It goes through every attribute one
+--   by one with the interface. Only completed is left out as that is dealt with
+--   the `mark` interface action.
+--   It always takes a Task even when newly created.
 enterTaskAttributes :: Task -> IO Task
 enterTaskAttributes task = do 
   --
