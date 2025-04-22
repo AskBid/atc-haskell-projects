@@ -94,9 +94,7 @@ enterTaskAttributes task = do
   putStrLn $ "Current task name: " ++ (name task) ++ " <---" 
   putStrLn "Enter new name or leave empty to keep it the same:"
   nameIO <- entryAndCheck parserTaskName
-  let newName = if nameIO == "" 
-      then name task 
-      else nameIO
+  let newName = fromMaybe (name task) nameIO
   --
   -- Enter or edit date.
   today <- processCurrentDay
@@ -110,38 +108,35 @@ enterTaskAttributes task = do
   --
   -- Enter or Edit priority
   putStrLn $ "Current task priority: " ++ (show $ priority task) 
-  newPriority <- entryAndCheck parserPriority
-  let newName = if nameIO == "" 
-      then name task
-      else nameIO
+  priorityIO <- entryAndCheck parserPriority
+  let newPriority = fromMaybe (priority task) priorityIO
   --
   -- Enter or edit description.
   putStrLn "Current task description:"
   putStrLn $ "\"" ++ description task ++ "\""
   putStrLn "Enter new description or leave empty to keep the same:"
   descriptionIO <- entryAndCheck parserDescription
-  let newDescription = if descriptionIO == "" 
-      then description task 
-      else descriptionIO
+  let newDescription = fromMaybe (description task) descriptionIO
   --
   -- build Task to return
-  let newTask = Task (completed task) newName (priority task) newDate newDescription
+  let newTask = Task (completed task) newName newPriority newDate newDescription
   putStrLn "Task edited/created:"
   putStrLn $ show newTask
   return newTask
 
 -- | uses the Parser to check that CLI inputs have a compatible format with the 
 --   text file parsers. It does loop if no copatible input is given.
-entryAndCheck :: Parser a -> IO a
+entryAndCheck :: Parser a -> IO (Maybe a)
 entryAndCheck p = do
-  name <- getLine
-  let check = parse p "" name
-  case check of 
+  entry <- getLine
+  if entry == ""
+  then pure Nothing 
+  else case parse p "" entry of 
     Left e -> do
       putStrLn $ show e -- "Only letters, `-`, `.` and spaces are accepted for names."
       putStrLn "Enter again:"
       entryAndCheck p
-    Right n -> pure n
+    Right a -> pure (Just a)
 
 dateEntryAndCheck :: Day -> IO (Maybe Day)
 dateEntryAndCheck today = do 
