@@ -6,6 +6,7 @@ import System.Environment
 
 import File (readTasks)
 import Interface (loop)
+import Task (sortTasks)
 
 main :: IO ()
 main = do
@@ -13,4 +14,4 @@ main = do
   putStrLn $ show args
   putStrLn "Welcome to my TODO List Manager!"
   ts <- readTasks
-  loop ts
+  loop $ sortTasks ts

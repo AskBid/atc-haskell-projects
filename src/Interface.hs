@@ -34,7 +34,7 @@ handleInput ts "exit" = do
 handleInput ts "add" = do 
   task <- mkTask "*unnamed*"
   task'<- enterTaskAttributes task
-  pure (True, task:ts)
+  pure (True, sortTasks $ task':ts)
 
 handleInput ts "view" = do
   sequenceA $ (putStrLn.show) <$> ts 
@@ -78,7 +78,7 @@ handleInput ts "edit" = do
     Right task -> do 
       newTask <- enterTaskAttributes task
       let newTS = replaceTask task newTask ts
-      pure (True, newTS)
+      pure (True, sortTasks newTS)
 
 handleInput ts input = do
   putStrLn $ "You entered: " ++ input
