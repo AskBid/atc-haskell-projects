@@ -11,7 +11,7 @@ data Task = Task
   , priority    :: Priority
   , date        :: Day
   , description :: String
-  } 
+  }
 
 mkTask :: String -> IO Task
 mkTask name = do
@@ -69,11 +69,11 @@ deleteTask task (t:ts)
 --   While GT is the biggest value of the Ordering type contructors. (LT | EQ | GT)
 sortTasks :: [Task] -> [Task]
 sortTasks [] = []
-sortTasks (t:ts) = sortTasks smallerTasks ++ sortTasks biggerTasks
+sortTasks (t:ts) = sortTasks smallerTasks ++ [t] ++ sortTasks biggerTasks
   where
     smallerTasks = [x | x <- ts, EQ >= (compare' x t)]
     biggerTasks  = [x | x <- ts, GT == (compare' x t)]
     compare' a b = 
-      case compare (date a) (date b)  of
+      case compare (date a) (date b) of
         EQ -> compare (priority a) (priority b)
         ord -> ord

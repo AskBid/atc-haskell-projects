@@ -31,3 +31,11 @@ readTasks = do
     Right ts -> do
       putStrLn "Todo list read from file."
       return ts
+
+readt :: IO [Task]
+readt = do 
+  string <- readFile "todo.txt"
+  case parse (many parserTask) "" string of
+    Left _-> return []
+    Right ts -> return ts
+
