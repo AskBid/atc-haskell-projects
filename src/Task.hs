@@ -33,6 +33,8 @@ instance Show Task where
     "\nDESCRIPTION:\n" ++ (description t) ++ "\n----------------"
 
 -- | Custom instantiation to keep the equality to the identity attributes only.
+--   NOTE: I am happy with this instance for the delete function, but I would do with different 
+--   type of equality istances for sorting Tasks, would be good to learn for strategies for that.
 instance Eq Task where
   (Task completed name _ _ _) == (Task completed' name' _ _ _) = 
     completed == completed' && name' == name
@@ -60,3 +62,11 @@ deleteTask _ [] = []
 deleteTask task (t:ts)
   | task == t = ts
   | otherwise = t:(deleteTask task ts)
+
+sortTasks :: [Task] -> (Task -> Task -> Bool) -> [Task]
+sortTasks (t:ts) compare = sortTasks smallerTasks compare ++ sortTasks biggerTasks compare
+  where
+    smallerTasks = [x | x <- ts, compare x t]
+    biggerTasks  = [x | x <- ts, compare x t]
+
+
