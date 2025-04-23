@@ -24,7 +24,7 @@ mkTask name = do
     , description = "" }
 
 data Priority = High | Medium | Low
-  deriving (Show, Enum, Read)
+  deriving (Show, Eq, Ord, Read)
 
 instance Show Task where
   show t = "\nTASK NAME: " ++ (name t) ++
@@ -46,7 +46,7 @@ getTask predicate ts = case filter predicate ts of
   []    -> Left $ "No matching task was found."
   (t:_) -> Right t
 
--- | replaceTask replaces a task modified after finding it with getTask. 
+-- | replaces a task modified after finding it with getTask. 
 --   It keeps the list order while modifying the Task.
 --   It takes the old Task, the new Task to replace it with and the original todo list.
 -- >>> replaceTask oldtask (Task True (name oldtask) (description oldtask) ... ) todoList
@@ -56,17 +56,23 @@ replaceTask old new (t:ts)
   | old == t  = new:ts
   | otherwise = t:(replaceTask old new ts)
 
--- | deleteTask takes a Task to be deleted from a list @[Task]@
+-- | takes a Task to be deleted from a list @[Task]@
 deleteTask :: Task -> [Task] -> [Task]
 deleteTask _ [] = []
 deleteTask task (t:ts)
   | task == t = ts
   | otherwise = t:(deleteTask task ts)
 
-sortTasks :: [Task] -> (Task -> Task -> Bool) -> [Task]
-sortTasks (t:ts) compare = sortTasks smallerTasks compare ++ sortTasks biggerTasks compare
+-- | sorts a Task list by first comparing the dates of each Task, and only if that is equal it 
+--   does compare them by their priority.
+--   note: EQ is considered a bigger value than LT in the Ordering types.
+--   While GT is the biggest value of the Ordering type contructors. (LT | EQ | GT)
+sortTasks :: [Task] -> [Task]
+sortTasks (t:ts) = sortTasks smallerTasks ++ sortTasks biggerTasks
   where
-    smallerTasks = [x | x <- ts, compare x t]
-    biggerTasks  = [x | x <- ts, compare x t]
-
-
+    smallerTasks = [x | x <- ts, EQ >= (compare' x t)]
+    biggerTasks  = [x | x <- ts, GT == (compare' x t)]
+    compare' a b = 
+      case compare (date a) (date b)  of
+        EQ -> compare (priority a) (priority b)
+        ord -> ord
