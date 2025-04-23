@@ -68,6 +68,7 @@ deleteTask task (t:ts)
 --   note: EQ is considered a bigger value than LT in the Ordering types.
 --   While GT is the biggest value of the Ordering type contructors. (LT | EQ | GT)
 sortTasks :: [Task] -> [Task]
+sortTasks [] = []
 sortTasks (t:ts) = sortTasks smallerTasks ++ sortTasks biggerTasks
   where
     smallerTasks = [x | x <- ts, EQ >= (compare' x t)]

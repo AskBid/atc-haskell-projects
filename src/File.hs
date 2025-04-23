@@ -18,16 +18,16 @@ writeTask t = (show $ completed t) ++
   "," ++ (name t) ++ 
   "," ++ (show $ priority t) ++ 
   "," ++ (show $ date t) ++ 
-  ",\"" ++ (description t) ++ "\"\n"
+  "," ++ (description t) ++ "\n"
 
-readTasks :: IO ([Task])
+readTasks :: IO [Task]
 readTasks = do 
   string <- readFile "todo.txt"
   let tasks = parse (many parserTask) "" string
   case tasks of
     Left err -> do
       putStrLn "Something went wrong while reading todo list from file."
-      pure []
+      return []
     Right ts -> do
       putStrLn "Todo list read from file."
-      pure ts
+      return ts
