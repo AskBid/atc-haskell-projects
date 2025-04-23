@@ -95,7 +95,7 @@ enterTaskAttributes task = do
   putStrLn ":::"
   putStrLn $ "Current task name: " ++ (name task) ++ " <---" 
   putStrLn "Enter new name or leave empty to keep it the same:"
-  nameIO <- entryAndCheck parserTaskName "error: Only letters, `-`, `.` and spaces are accepted for names."
+  nameIO <- entryAndCheck parserTaskName $ "error: " ++ nameParserError
   let newName = fromMaybe (name task) nameIO
   --
   -- Enter or edit date.

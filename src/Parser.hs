@@ -29,6 +29,9 @@ parserTask = do
   notFollowedBy eof
   return (Task mark name priority date description)
 
+nameParserError :: String
+nameParserError = "Only letters, `-`, `.` and spaces are accepted for names."
+
 -- | parserTaskName checks validity of Task name. 
 --   Allows for empty name for now as it comes handy with CLI when nochange is wanted,  
 --   should be changed in the future.
