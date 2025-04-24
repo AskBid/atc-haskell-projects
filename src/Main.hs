@@ -6,7 +6,7 @@ import System.Environment
 import Text.Parsec (parse)
 
 import File (readTasks)
-import Interface (loop)
+import Interface (loop, interfaceHelp)
 import Task (sortTasks, mkTask)
 import Parser (parserTaskName, nameParserError)
 
@@ -45,14 +45,6 @@ help = do
                           , ""
                           , "Available options:"
                           , "  --help, -h                 Shows this help text"
-                          , ""
-                          , "Commands for interactive CLI interface:"
-                          , "  exit                       Exits the interactive interface"
-                          , "  add                        Dialogue to add a new todo-list-task" 
-                          , "  view                       Shows a list of all uncompleted tasks"
-                          , "  completed                  Shows a list of all completed tasks"
-                          , "  mark                       Dialogue to mark a file as completed"
-                          , "  delete                     Dialogue to delete a task"
-                          , "  edit                       Dialogue to edit an existing task"
-                          , "  help                       Shows the interactive CLI interface available actions" ]
+                          , ""]
   putStrLn textBlock
+  interfaceHelp

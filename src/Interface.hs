@@ -31,6 +31,10 @@ handleInput ts "exit" = do
   putStrLn "Goodbye!"
   pure (False, [])
 
+handleInput ts "help" = do
+  interfaceHelp
+  pure (True, ts)
+
 handleInput ts "add" = do 
   task <- mkTask "*unnamed*"
   task'<- enterTaskAttributes task
@@ -165,4 +169,15 @@ processCurrentDay = do
   currentTime <- getCurrentTime
   return $ utctDay currentTime
 
-
+interfaceHelp :: IO ()
+interfaceHelp = do
+  let textBlock = unlines [ "Commands for interactive CLI interface:"
+                          , "  exit                       Exits the interactive interface"
+                          , "  add                        Dialogue to add a new todo-list-task" 
+                          , "  view                       Shows a list of all uncompleted tasks"
+                          , "  completed                  Shows a list of all completed tasks"
+                          , "  mark                       Dialogue to mark a file as completed"
+                          , "  delete                     Dialogue to delete a task"
+                          , "  edit                       Dialogue to edit an existing task"
+                          , "  help                       Shows the interactive CLI interface available actions" ]
+  putStrLn textBlock
