@@ -6,7 +6,7 @@ import System.Environment
 import Text.Parsec (parse)
 
 import File (readTasks)
-import Interface (loop, interfaceHelp)
+import Interface (loop, interfaceHelp, showCompletedTasks)
 import Task (sortTasks, mkTask)
 import Parser (parserTaskName, nameParserError)
 
@@ -16,6 +16,7 @@ main = do
   case args of
     [] -> interface
     ("add":name:_) -> add name
+    ("view":_) -> viewAllTasks
     ("--help":_) -> help
     ("-h":_) -> help
     otherwise -> putStrLn "Unknown command." 
@@ -35,6 +36,14 @@ add name = do
       ts <- readTasks
       pure $ sortTasks $ task:ts
       putStrLn $ "\" " ++ name ++ "\" task was written in the database."
+
+viewAllTasks :: IO ()
+viewAllTasks = do
+  ts <- readTasks
+  showCompletedTasks False ts
+  showCompletedTasks True ts
+  return ()
+
 
 help :: IO ()
 help = do

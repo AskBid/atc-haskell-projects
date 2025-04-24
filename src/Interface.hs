@@ -41,7 +41,11 @@ handleInput ts "add" = do
   pure (True, sortTasks $ task':ts)
 
 handleInput ts "view" = do
-  sequenceA $ (putStrLn.show) <$> ts 
+  showCompletedTasks True ts
+  pure (True, ts)
+
+handleInput ts "completed" = do
+  showCompletedTasks False ts
   pure (True, ts)
 
 handleInput ts "mark" = do
@@ -168,6 +172,9 @@ processCurrentDay :: IO Day
 processCurrentDay = do
   currentTime <- getCurrentTime
   return $ utctDay currentTime
+
+showCompletedTasks :: Bool -> [Task] -> IO [()]
+showCompletedTasks b ts = sequenceA $ (putStrLn.show) <$> (filterCompletes b ts)
 
 interfaceHelp :: IO ()
 interfaceHelp = do

@@ -77,3 +77,7 @@ sortTasks (t:ts) = sortTasks smallerTasks ++ [t] ++ sortTasks biggerTasks
       case compare (date a) (date b) of
         EQ -> compare (priority a) (priority b)
         ord -> ord
+
+-- | if first argument is True returns only completed Tasks, otherwise only the uncompleted Tasks.
+filterCompletes :: Bool -> [Task] -> [Task]
+filterCompletes b ts = filter (\t -> completed t == b) ts
