@@ -19,10 +19,9 @@ winLines :: Board -> [[Maybe Player]]
 winLines rows = rows ++ columns ++ diagonals
   where
     columns = transpose rows
-    diagonals :: _
-    diagonals = undefined
-    diagonalsTuples :: _
-    diagonalsTuples = [(rows !! row !! 0, rows !! row !! col) | row <- [0..length rows], col <- reverse [0..length rows]]
+    diagonals = [[rows !! row !! 0, rows !! row !! col] | row <- [0..length rows], col <- reverse [0..length rows]]
+    rowIxs = [0..length rows]
+    colIxs = reverse rowIxs
 
 -- 1[1,2,3]
 -- 2[1,2,3]
