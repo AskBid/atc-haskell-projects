@@ -16,13 +16,13 @@ winLine (p:ps) = foldl compare p ps
       | otherwise    = Nothing
 
 winLines :: Board -> [[Maybe Player]]
-winLines rows = rows ++ columns ++ diagonals rows
+winLines rows = rows ++ columns ++ diagonals
   where
     columns = transpose rows
+    diagonals :: _
     diagonals = undefined
-    -- diagonals = [rows !! 0 !! 0 | row <- [0..(length rows)], col <- 
-    -- diagonals = [rows !! 1 !! 1 | row <- [0..(length rows)], col <- 
-    -- diagonals = [rows !! 2 !! 2 | row <- [0..(length rows)], col <- 
+    diagonalsTuples :: _
+    diagonalsTuples = [(rows !! row !! 0, rows !! row !! col) | row <- [0..length rows], col <- reverse [0..length rows]]
 
 -- 1[1,2,3]
 -- 2[1,2,3]
