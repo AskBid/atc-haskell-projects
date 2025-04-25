@@ -7,6 +7,9 @@ data Player = O | X
 
 type Board = [[Maybe Player]]
 
+mkBoard :: Int -> Board
+mkBoard n = take n $ repeat (take n $ repeat Nothing)
+
 winLine :: [Maybe Player] -> Maybe Player
 winLine (Nothing:_) = Nothing
 winLine (p:ps) = foldl compare p ps
@@ -24,28 +27,6 @@ boardlines rows = rows ++ columns ++ diagonals
     rowIxs = [0..len]
     colIxs = reverse rowIxs
 
---  [[Just O, Just X, Nothing],
---  [Nothing, Just X, Nothing],
---  [Nothing, Just O, Just X]]
---
--- [[Just O,Just X,Nothing],
---  [Nothing,Just X,Nothing],
---  [Nothing,Just O,Just X],
---
---  [Just O,Nothing,Nothing],
---  [Just X,Just X,Just O],
---  [Nothing,Nothing,Just X],
---
---  [Just O,Nothing],
---  [Just O,Just X],
---  [Just O,Just O],
---  [Just X,Nothing],
---  [Just X,Just X],
---  [Just X,Nothing],
---  [Just X,Just X],
---  [Just X,Just O],
---  [Just X,Nothing]]
---
 --
 -- 1[1,2,3]
 -- 2[1,2,3]
