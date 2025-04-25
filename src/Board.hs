@@ -1,6 +1,6 @@
 module Board where
 
-import Data.List
+import Data.List (transpose)
 
 data Player = O | X 
   deriving (Show, Eq)
@@ -15,14 +15,38 @@ winLine (p:ps) = foldl compare p ps
       | p' == pSoFar = p' 
       | otherwise    = Nothing
 
-winLines :: Board -> [[Maybe Player]]
-winLines rows = rows ++ columns ++ diagonals
+boardlines :: Board -> [[Maybe Player]]
+boardlines rows = rows ++ columns ++ diagonals
   where
     columns = transpose rows
-    diagonals = [[rows !! row !! 0, rows !! row !! col] | row <- [0..length rows], col <- reverse [0..length rows]]
-    rowIxs = [0..length rows]
+    len = length rows - 1
+    diagonals = transpose [[rows !! r !! r, rows !! r !! (len - r)] | r <- rowIxs]
+    rowIxs = [0..len]
     colIxs = reverse rowIxs
 
+--  [[Just O, Just X, Nothing],
+--  [Nothing, Just X, Nothing],
+--  [Nothing, Just O, Just X]]
+--
+-- [[Just O,Just X,Nothing],
+--  [Nothing,Just X,Nothing],
+--  [Nothing,Just O,Just X],
+--
+--  [Just O,Nothing,Nothing],
+--  [Just X,Just X,Just O],
+--  [Nothing,Nothing,Just X],
+--
+--  [Just O,Nothing],
+--  [Just O,Just X],
+--  [Just O,Just O],
+--  [Just X,Nothing],
+--  [Just X,Just X],
+--  [Just X,Nothing],
+--  [Just X,Just X],
+--  [Just X,Just O],
+--  [Just X,Nothing]]
+--
+--
 -- 1[1,2,3]
 -- 2[1,2,3]
 -- 3[1,2,3]
