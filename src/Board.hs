@@ -27,11 +27,32 @@ boardlines rows = rows ++ columns ++ diagonals
     rowIxs = [0..len]
     colIxs = reverse rowIxs
 
+
+bb2 = [[Just X, Just O, Nothing]
+      ,[Just X, Nothing, Just O]
+      ,[Just O, Just X, Nothing]]
+
+-- calculating smaller diagonals as well.
+-- [0 0, 1 1, 2 2]
+-- [0 2, 1 1, 2 0]
+-- [0 1, 1 0] 
+-- [1 2, 2 1]
+-- [0 0]
+-- [2 2]
+
+bb3 = [[Just X, Just O, Nothing, Just X]
+      ,[Just X, Nothing, Just O, Nothing]
+      ,[Just O, Just X,  Just X, Just O]
+      ,[Just O, Just X, Nothing, Just O]]
+
+-- [0 0, 1 1, 2 2, 3 3]
+-- [0 3, 1 2, 2 1, 3 0]
+-- [0 2, 1 1, 2 0]
+-- [1 3, 2 2, 3 1]
+-- [0 1, 1 0]
+-- [2 3, 3 2]
+-- [0 0]
+-- [3 3]
 --
--- 1[1,2,3]
--- 2[1,2,3]
--- 3[1,2,3]
---
--- 1[3,2,1]
--- 2[3,2,1]
--- 3[3,2,1]
+
+
