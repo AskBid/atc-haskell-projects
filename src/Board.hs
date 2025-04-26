@@ -17,22 +17,14 @@ data Game = Game
 mkGame :: Int -> Int -> Maybe Game
 mkGame board ltw 
   | ltw <= board && ltw > 1 = Just $ Game (mkBoard board) O ltw
-  | otherwise    = Nothing
+  | otherwise               = Nothing
 
 mkBoard :: Int -> Board
 mkBoard n = take n $ repeat (take n $ repeat Nothing)
 
-winLine :: [Maybe Player] -> Maybe Player
-winLine (Nothing:_) = Nothing
-winLine (p:ps) = foldl compare p ps
-  where
-    compare p' pSoFar 
-      | p' == pSoFar = p' 
-      | otherwise    = Nothing
-
-winLineLtw :: Int -> [Maybe Player] -> Maybe Player
-winLineLtw _ []       = Nothing
-winLineLtw ltw (p:ps) = if fst mayWin >= ltw then snd mayWin else Nothing
+winLineLtw :: Game -> [Maybe Player] -> Maybe Player
+winLineLtw _ [] = Nothing
+winLineLtw (Game _ _ ltw) (p:ps) = if fst mayWin >= ltw then snd mayWin else Nothing
   where
     compare (count, pSoFar) p'
       | count >= ltw = (ltw, pSoFar)
