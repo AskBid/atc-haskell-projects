@@ -7,6 +7,17 @@ data Player = O | X
 
 type Board = [[Maybe Player]]
 
+data Game = Game
+  { board       :: Board 
+  , turn        :: Player
+  , lengthToWin :: Int
+  }
+
+mkGame :: Int -> Int -> Maybe Game
+mkGame board ltw 
+  | ltw <= board = Game (mkBoard board) O ltw
+  | otherwise    = Nothing
+
 mkBoard :: Int -> Board
 mkBoard n = take n $ repeat (take n $ repeat Nothing)
 
