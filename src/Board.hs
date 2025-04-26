@@ -16,7 +16,7 @@ data Game = Game
 
 mkGame :: Int -> Int -> Maybe Game
 mkGame board ltw 
-  | ltw <= board = Just $ Game (mkBoard board) O ltw
+  | ltw <= board && ltw > 1 = Just $ Game (mkBoard board) O ltw
   | otherwise    = Nothing
 
 mkBoard :: Int -> Board
@@ -30,15 +30,16 @@ winLine (p:ps) = foldl compare p ps
       | p' == pSoFar = p' 
       | otherwise    = Nothing
 
-winLineLtw :: Int -> [Maybe Player] -> (Int, Maybe Player)
-winLineLtw _ []       = (1, Nothing)
-winLineLtw ltw (p:ps) = foldl compare (1,p) ps
+winLineLtw :: Int -> [Maybe Player] -> Maybe Player
+winLineLtw _ []       = Nothing
+winLineLtw ltw (p:ps) = if fst mayWin >= ltw then snd mayWin else Nothing
   where
     compare (count, pSoFar) p'
       | count >= ltw = (ltw, pSoFar)
       | null p'      = (1, p')
       | p' == pSoFar = (count + 1, p')
       | otherwise    = (1, p')
+    mayWin = foldl compare (1,p) ps
 
 boardlines :: Board -> [[Maybe Player]]
 boardlines rows = rows ++ columns ++ diagonals
