@@ -1,7 +1,7 @@
 module Board where
 
 import Data.List (transpose)
-import Debug.Trace (trace)
+import Data.Maybe (isNothing)
 
 data Player = O | X 
   deriving (Show, Eq)
@@ -11,27 +11,32 @@ type Board = [[Maybe Player]]
 data Game = Game
   { board       :: Board 
   , turn        :: Player
-  , lengthToWin :: Int
+  , countToWin  :: Int
   }
 
 mkGame :: Int -> Int -> Maybe Game
-mkGame board ltw 
-  | ltw <= board && ltw > 1 = Just $ Game (mkBoard board) O ltw
-  | otherwise               = Nothing
+mkGame boardL ctw 
+  | ctw <= boardL && ctw > 1 = Just $ Game (mkBoard boardL) O ctw
+  | otherwise                = Nothing
 
 mkBoard :: Int -> Board
 mkBoard n = take n $ repeat (take n $ repeat Nothing)
 
-winLineLtw :: Game -> [Maybe Player] -> Maybe Player
-winLineLtw _ [] = Nothing
-winLineLtw (Game _ _ ltw) (p:ps) = if fst mayWin >= ltw then snd mayWin else Nothing
+-- |
+-- Qs: is using Game bad for performance? trade off with clarity/solidity.
+winStreak :: Game -> [Maybe Player] -> Maybe Player
+winStreak _ [] = Nothing
+winStreak game (p:ps) = if fst maxStreak >= ctw 
+                        then snd maxStreak 
+                        else Nothing
   where
-    compare (count, pSoFar) p'
-      | count >= ltw = (ltw, pSoFar)
-      | null p'      = (1, p')
-      | p' == pSoFar = (count + 1, p')
+    ctw = countToWin game
+    maxStreak = foldl compare (1, p) ps
+    compare (count, p) p'
+      | count >= ctw = (count, p)
+      | isNothing p' = (1, p')
+      | p' == p      = (count+1, p')
       | otherwise    = (1, p')
-    mayWin = foldl compare (1,p) ps
 
 boardlines :: Board -> [[Maybe Player]]
 boardlines rows = rows ++ columns ++ diagonals
