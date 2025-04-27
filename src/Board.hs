@@ -15,28 +15,27 @@ mkBoard :: Int -> Board
 mkBoard n = take n $ repeat (take n $ repeat Nothing)
 
 boardlines :: Board -> [[Maybe Player]]
-boardlines rows = rows ++ columns -- ++ diagonals
+boardlines board = rows ++ columns ++ diagonals
   where
+    rows = board
     columns = transpose rows
     len = length rows - 1
     rowIxs = [0..len]
-    colIxs = reverse rowIxs
+    colIxs = reverse rowIxs 
+    maxDistFromCenter = (length board) - minimumWin
+    diagonals = diagsCycle board maxDistFromCenter
 
 -- x210  012x
 -- 2101  1012
 -- 1012  2101
 -- 012x  x210
-diagonals :: Board -> [[Maybe Player]]
-diagonals b = diagsCycle b maxDistFromCenter ++ diagsCycle b (maxDistFromCenter - 1) 
-  where 
-    maxDistFromCenter = (length b) - minimumWin
-
 diagsCycle :: [[a]] -> Int -> [[a]]
+diagsCycle b (-1) = []
 diagsCycle b n = transpose [
   [ b !!  i    !! (n+i),
     b !! (i+n) !!  i,
     b !!  i    !! (l-i), 
     b !! (i+n) !! (l-i-n)
-  ] | i <- [0..l]]
+  ] | i <- [0..l]] ++ diagsCycle b (n-1)
   where
     l = (length b) -1 - n
