@@ -1,7 +1,8 @@
 # Notes to self.
 
-## Study on how to get diagonals smaller than Board lenght
+## Study on smaller diagonals.
 
+How to get the diagonals that are smaller than the Board lenght?
 
 ```
 [0 0, O 1, 0 2, 0 3]  
@@ -50,3 +51,56 @@
 -- [3 3]                             3       -- 3                                       <-- b side
 --                                   i+n        len - (i - n)                           <-- b side
 ```
+
+## GHCi
+
+`:load` interprets the files loading them into ghci.. but it doesn't place them in the namespace.. although if you launch `:load` during ghci, that files names will be available as the scope of the module is set now on that file.. but they are not in the main upper level namespace.. I know confusing.. but it works like that.. need more understanding on different ghci namespaces.
+
+### GHCi Scopes
+
+In GHCi, “scope” refers to the set of names (functions, types, variables, etc.) that are directly accessible in the interactive prompt without qualification (e.g., mkBoard vs. Board.mkBoard). 
+
+GHCi manages scopes through its module system, and there are several layers of scoping to consider: 
+
+1. Namespace. (top-level scope) 
+2. Module context. (current module)
+3. Loaded modules.
+
+#### NAMESPACE
+
+The set of names (functions, types, etc.) directly accessible in the GHCi prompt without module qualification (i.e. `Board.mkBoard` can be called just with `mkBoard`)
+
+Only names in the namespace can be used directly (e.g., mkBoard). If a module is loaded but not imported, you must qualify its names (e.g., Board.mkBoard).
+
+- `:import <Module>` or `:module +<Module>` to add a module’s exported symbols.
+- `:module -<Module>` removes a module’s symbols.
+- `:module` (without arguments) clears the namespace.
+
+#### MODULE CONTEXT (Current Module)
+
+The module that GHCi treats as the “current” module, whose exported symbols are implicitly (tacitly) in the namespace, as if you were typing inside that module’s scope.
+
+When a module is the current context, its exported symbols are in the namespace without needing `:import` or `:m +`.
+Typically `cabal repl` typically sets the context to Main (or no specific module).
+
+- `:load <FilePath>` makes the loaded module (or the last one if multiple) the current context.
+- `:module *<Module>` explicitly sets the current module.
+
+#### LOADED MODULES
+
+The set of modules that GHCi has compiled and loaded into memory, making them available for imports or use.
+
+Loaded modules are not automatically in the namespace. Their symbols are only accessible with qualification (e.g., `Board.mkBoard`) or after importing via `:import` or `:module +`.
+
+- `cabal repl` via `.cabal` loads modules automatically.
+- `:load <FilePath>` to load modules manually.
+- `:show modules` to show current loaded modules.
+
+### How Scopes Interact
+
+A module must be loaded (via `:load` or `cabal repl`) before it can be imported (`:import`) or added to the namespace (`:m +`).
+
+The **module context** is a single module whose symbols are in the namespace. The **namespace** can include symbols from multiple modules via `:import` or `:m +`, plus the context’s symbols.
+
+If Board is the context (after `:load src/Board.hs`), `mkBoard` is in the namespace. Adding `:m +Game` keeps Board’s symbols and adds `Game`’s.
+

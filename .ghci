@@ -1,0 +1,2 @@
+:set -ighci
+:def impAll \_ -> return ":m +Main Board Game\n:l TestGHCI\nimport TestGHCI"

@@ -1,4 +1,7 @@
-module Game where
+module Game 
+  ( Game 
+  , mkGame
+  ) where
 
 import Data.Maybe
 
@@ -16,7 +19,8 @@ mkGame boardL ctw
   | otherwise                = Nothing
 
 -- |
--- Qs: is using Game bad for performance? trade off with clarity/solidity.
+-- Qs: is using Game bad for performance Vs only Int? 
+--     trade off with clarity/solidity?
 winStreak :: Game -> [Maybe Player] -> Maybe Player
 winStreak _ [] = Nothing
 winStreak game (p:ps) = if fst maxStreak >= ctw 
@@ -31,14 +35,3 @@ winStreak game (p:ps) = if fst maxStreak >= ctw
       | p' == p      = (count+1, p')
       | otherwise    = (1, p')
 
-
-
--- only for testing:
-bb2 = [[Just X, Just O, Nothing]
-      ,[Just X, Nothing, Just O]
-      ,[Just O, Just X, Nothing]]
-
-bb3 = [[Just X, Just O, Nothing, Just X]
-      ,[Just X, Nothing, Just O, Nothing]
-      ,[Just O, Just X,  Just X, Just O]
-      ,[Just O, Just X, Nothing, Just O]]
