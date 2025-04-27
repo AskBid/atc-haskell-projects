@@ -104,3 +104,8 @@ The **module context** is a single module whose symbols are in the namespace. Th
 
 If Board is the context (after `:load src/Board.hs`), `mkBoard` is in the namespace. Adding `:m +Game` keeps Board’s symbols and adds `Game`’s.
 
+#### `:r`
+
+After running `:m +Main Board Game TestGHCI` in GHCi, the modules Main, Board, Game, and TestGHCI will still be in the namespace after you run `:r`, provided that the modules are successfully reloaded without errors and no other commands (e.g., :module without arguments or :m -<Module>) explicitly remove them from the namespace.
+The `:r` command reloads all currently loaded modules but does not reset the namespace. The namespace persists across `:r` invocations.
+
