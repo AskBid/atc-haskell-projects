@@ -5,7 +5,7 @@ module Game
 
 import Data.Maybe
 
-import Board
+import Board (Board(..), Player(..), mkBoard)
 
 data Game = Game
   { board       :: Board 
