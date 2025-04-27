@@ -10,56 +10,62 @@ How to get the diagonals that are smaller than the Board lenght?
 [2 0, 2 1, 2 2, 2 3]
 [3 0, 3 1, 3 2, 3 3]
 
-[[rows !! i !! if n>0 then (len-i) else i, rows !! i + n !! (len-(i-n))] | i <- [0..len]]
-
---                         [[rows !! i      !!  if n>0 then (len-i) else i,             <-- a dir
---                           rows !! i+n !!     (len-(i-n))]                            <-- b dir
---                                                              | i <- [0..len]]
+[[rows !! i !! n+i, rows !! i+n !! i, rows !! i !! len-i, rows !! i+n !! len-i-n] | i <- [0..len]]
 --
 -- n = 0
 -- len = 3      <-- (length - 1)
 --
--- [0 0, 1 1, 2 2, 3 3]              0 1 2 3 -- 0 1 2 3                                 <-- a0 dir
+-- [0 0, 1 1, 2 2, 3 3]              0 1 2 3    0 1 2 3                                 <-- a0 dir
 --                                   i          i+n                                     <-- a0 dir
--- [0 0, 1 1, 2 2, 3 3]              0 1 2 3 -- 0 1 2 3                                 <-- a0 dir
+-- [0 0, 1 1, 2 2, 3 3]              0 1 2 3    0 1 2 3                                 <-- a0 dir
 --                                   i+n        i                                       <-- a0 dir
 --
--- [0 3, 1 2, 2 1, 3 0]              0 1 2 3 -- 3 2 1 0                                 <-- b0 dir
+-- [0 3, 1 2, 2 1, 3 0]              0 1 2 3    3 2 1 0                                 <-- b0 dir
 --                                   i          len-i                                   <-- b0 dir
--- [0 3, 1 2, 2 1, 3 0]              0 1 2 3 -- 3 2 1 0                                 <-- b0 dir
+-- [0 3, 1 2, 2 1, 3 0]              0 1 2 3    3 2 1 0                                 <-- b0 dir
 --                                   i+n        len-i+n                                 <-- b0 dir
 --
 --
 -- n = 1
 -- len = 2
 --
--- [0 1, 1 2, 2 3]                   0 1 2   -- 1 2 3                                   <-- aUp side
+-- [0 1, 1 2, 2 3]                   0 1 2      1 2 3                                   <-- aUp side
 --                                   i          i+n                                     <-- aUp side
--- [1 0, 2 1, 3 2]                   1 2 3   -- 0 1 2                                   <-- aDw side
+-- [1 0, 2 1, 3 2]                   1 2 3      0 1 2                                   <-- aDw side
 --                                   i+n        i                                       <-- aDw side
 --
--- [0 2, 1 1, 2 0]                   0 1 2   -- 2 1 0                                   <-- bUp side
+-- [0 2, 1 1, 2 0]                   0 1 2      2 1 0                                   <-- bUp side
 --                                   i          len-i                                   <-- bUp side
--- [1 3, 2 2, 3 1]                   1 2 3   -- 3 2 1                                   <-- bDw side
+-- [1 3, 2 2, 3 1]                   1 2 3      3 2 1                                   <-- bDw side
 --                                   i+n        len-i+n                                 <-- bDw side
 --                                   
 --
 -- n = 2
 -- len = 1
 --
--- [0 1, 1 0]                        0 1     -- 1 0                                     <-- a side
---                                   i          i+n                                     <-- a side 
--- [2 3, 3 2]                        2 3     -- 3 2                                     <-- b side
---                                   i+n        i                                       <-- b side
+-- [0 2, 1 3]                        0 1        2 3                                     <-- aUp side
+--                                   i          i+n                                     <-- aUp side 
+-- [2 0, 3 1]                        2 3        0 1                                     <-- aDw side
+--                                   i+n        i                                       <-- aDw side
+--
+-- [0 1, 1 0]                        0 1        1 0                                     <-- bUp side
+--                                   i          len-i                                   <-- bUp side 
+-- [2 3, 3 2]                        2 3        3 2                                     <-- bDw side
+--                                   i+n        len-i+n                                 <-- bDw side
 --
 --
 -- n = 3
 -- len = 0
 --
--- [0 0]                             0       -- 0                                       <-- a side
---                                   i                    <-- a side
--- [3 3]                             3       -- 3                                       <-- b side
---                                   i+n        len - (i - n)                           <-- b side
+-- [0 3]                             0          3                                       <-- aUp side
+--                                   i          i+n                                     <-- aUp side 
+-- [3 0]                             3          0                                       <-- aDw side
+--                                   i+n        i                                       <-- aDw side
+--
+-- [0 0]                             0          0                                       <-- bUp side
+--                                   i          len-i                                   <-- bUp side
+-- [3 3]                             3          3                                       <-- bDw side
+--                                   i+n        len-i+n                                 <-- bDw side
 ```
 
 ## GHCi
