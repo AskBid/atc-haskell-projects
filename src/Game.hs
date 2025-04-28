@@ -27,9 +27,11 @@ mkGame boardL ctw
   | otherwise                = Nothing
 
 win :: Game -> Maybe Player -- Bool
-win (Game b _ ctw) = fst <$> (uncons $ dropWhile win' $ winStreak ctw <$> (boardlines b))
+win (Game b _ ctw) = head' (dropWhile win' $ winStreak ctw <$> (boardlines b))
   where
     win' p = isNothing p 
+    head' []     = Nothing
+    head' (p:ps) = p
 
 -- | Find the winner in a line from @Board.boardlines@.
 --   @Game@ argument is only used to get the @countToWin@ value that gives the
