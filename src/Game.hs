@@ -21,13 +21,13 @@ data Game = Game
   }
 type CountToWin = Int
 
-mkGame :: Int -> Int -> Maybe Game
+mkGame :: Int -> CountToWin -> Maybe Game
 mkGame boardL ctw 
   | ctw <= boardL && ctw > 1 = Just $ Game (mkBoard boardL) O ctw
   | otherwise                = Nothing
 
--- | given a @Game@ as argument returns a Player if a winner is found,
---   or Nothing if the game isn't finished.
+-- | given a @Game@ as argument returns a @Just Player@ if a winner is found,
+--   or @Nothing@ if the game isn't finished.
 win :: Game -> Maybe Player
 win (Game b _ ctw) = head' (dropWhile notWin $ winStreak ctw <$> (boardlines b))
   where
