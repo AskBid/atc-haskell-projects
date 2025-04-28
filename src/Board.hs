@@ -22,9 +22,6 @@ boardlines board = rows ++ columns ++ diagonals
   where
     rows = board
     columns = transpose rows
-    len = length rows - 1
-    rowIxs = [0..len]
-    colIxs = reverse rowIxs 
     maxDistFromCenter = (length board) - minimumWin
     diagonals = diagsCycle board maxDistFromCenter
 
