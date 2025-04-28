@@ -5,7 +5,12 @@ module Game
 
 import Data.Maybe
 
-import Board (Board(..), Player(..), mkBoard)
+import Board 
+  ( Board(..)
+  , Player(..) 
+  , mkBoard
+  , boardlines 
+  )
 
 data Game = Game
   { board       :: Board 
@@ -17,6 +22,9 @@ mkGame :: Int -> Int -> Maybe Game
 mkGame boardL ctw 
   | ctw <= boardL && ctw > 1 = Just $ Game (mkBoard boardL) O ctw
   | otherwise                = Nothing
+
+win :: Game -> Board -> _ -- Bool
+win g b = winStreak g <$> (boardlines b)
 
 -- | Find the winner in a line from the Board (from @Board.boardlines@)
 --   @Game@ argument is only used to get the @countToWin@ value that gives the
@@ -33,7 +41,7 @@ winStreak game (p:ps)
     ctw = countToWin game
     maxStreak = foldl compare (StreakCount 1 p) ps
     compare (StreakCount c p) p'
-      | c >= ctw = StreakCount c p
+      | c >= ctw     = StreakCount c p
       | isNothing p' = StreakCount 1 p'
       | p' == p      = StreakCount (c+1) p'
       | otherwise    = StreakCount 1 p'
