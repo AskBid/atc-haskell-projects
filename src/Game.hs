@@ -26,10 +26,9 @@ mkGame boardL ctw
 --     trade off with clarity/solidity?
 winStreak :: Game -> [Maybe Player] -> Maybe Player
 winStreak _ [] = Nothing
-winStreak game (p:ps) = 
-  if pawns maxStreak >= ctw 
-  then player maxStreak 
-  else Nothing
+winStreak game (p:ps)
+  | pawns maxStreak >= ctw = player maxStreak 
+  | otherwise              = Nothing
   where
     ctw = countToWin game
     maxStreak = foldl compare (StreakCount 1 p) ps
