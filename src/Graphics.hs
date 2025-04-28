@@ -32,9 +32,12 @@ edgeH []     = "-"
 edgeH (p:ps) = "----" ++ edgeH ps
 
 -- | gives and array of all the rows we need to print to visualise the board.
-boardRows :: Board -> Int -> [String]
-boardRows (row:[]) i   = edgeH row : pawnSpaces row i : [edgeH row]
-boardRows (row:rows) i = edgeH row : pawnSpaces row i : boardRows rows (i+1)
+boardRows :: Board -> [String]
+boardRows (row:rows) = edgeH row : pawnSpaces row 1 : boardRows' rows 1
+  where
+    edge = edgeH row
+    boardRows' (row:[]) i   = edge : pawnSpaces row i : [edge]
+    boardRows' (row:rows) i = edge : pawnSpaces row i : boardRows' rows (i+1)
 
-hIndexs :: String
-hIndexs = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+hIndexs :: [Maybe Player] -> String
+hIndexs (p:ps) = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
