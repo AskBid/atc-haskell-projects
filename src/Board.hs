@@ -18,7 +18,7 @@ mkBoard n = take n $ repeat (take n $ repeat Nothing)
 --   uses diagsCycle to recursively find the diagonals at each distance from 
 --   middle diagonals.
 boardlines :: Board -> [[Maybe Player]]
-boardlines board = diagonals
+boardlines board = rows ++ columns ++ diagonals
   where
     rows = board
     columns = transpose rows

@@ -12,6 +12,7 @@ library ghci
     Game
     Main
     TestGHCI
+    Graphics
   hs-source-dirs:
     src
     ghci
@@ -26,4 +27,4 @@ executable tic-tac-toe
   default-language:    Haskell2010
   build-depends:       base >=4.7 && <5
                      , containers
-  other-modules:       Board, Game
+  other-modules:       Board, Game, Graphics
