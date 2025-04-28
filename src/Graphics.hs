@@ -14,11 +14,8 @@ import Board
 --    -------------
 
 lineH :: [Maybe Player] -> String
-lineH b = line (length b)
-  where
-    line 0 = ""
-    line count = segment ++ line (count-1)
-    segment = "----"
+lineH []     = ""
+lineH (p:ps) = "----" ++ lineH ps
 
 pawnSpaces :: [Maybe Player] -> String
 pawnSpaces [] = "|"
