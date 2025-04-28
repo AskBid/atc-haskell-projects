@@ -16,7 +16,7 @@ mkBoard n = take n $ repeat (take n $ repeat Nothing)
 
 -- | returns all the possible lines that can have a winning streak for any board size.
 --   uses diagsCycle to recursively find the diagonals at each distance from 
---   middle diagonals (which are doubled).
+--   middle diagonals.
 boardlines :: Board -> [[Maybe Player]]
 boardlines board = rows ++ columns ++ diagonals
   where
@@ -35,14 +35,17 @@ boardlines board = rows ++ columns ++ diagonals
 --
 -- | given a Board-like structure - [[]] - finds 4 diagonals lists.
 --   it takes a board structure as argument and a distance from the central diagonals.
---   if distance is 0, returns the middle diagonals twice.
+--   if distance is 0. Returns the middle diagonals twice therefore the @n == 0@ case.
 diagsCycle :: [[a]] -> Int -> [[a]]
-diagsCycle b (-1) = []
-diagsCycle b n = transpose [
-  [ b !!  i    !! (n+i),  -- A direction Upside
-    b !! (i+n) !!  i,     -- A direction Downside
-    b !!  i    !! (l-i),  -- B direction Upside
-    b !! (i+n) !! (l-i-n) -- B direction Downside
-  ] | i <- [0..l]] ++ diagsCycle b (n-1)
+diagsCycle b n
+  | n < 0     = []
+  | n == 0    = take 2 $ fourDiags 0
+  | otherwise = fourDiags n
   where
+    fourDiags n = transpose [
+      [ b !!  i    !! (n+i),  -- A direction Upside
+        b !!  i    !! (l-i),  -- B direction Upside
+        b !! (i+n) !!  i,     -- A direction Downside
+        b !! (i+n) !! (l-i-n) -- B direction Downside
+      ] | i <- [0..l]] ++ diagsCycle b (n-1)
     l = (length b) -1 - n
