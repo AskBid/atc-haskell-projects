@@ -22,5 +22,10 @@ pawnSpaces [] = "|"
 pawnSpaces (p:ps) = pawnSpace p ++ pawnSpaces ps
   where
     pawnSpace Nothing   = "|   "
-    pawnSpace $ Just O  = "| O "
-    pawnSpace $ Just X  = "| X "
+    pawnSpace (Just O)  = "| O "
+    pawnSpace (Just X)  = "| X "
+
+boardRows :: Board -> [String]
+boardRows b = upperSegment ++ ([lineH, pawnSpaces] <*> b)
+  where 
+    upperSegment = 
