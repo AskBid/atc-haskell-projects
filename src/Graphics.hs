@@ -18,22 +18,27 @@ import Helpers as H
 
 
 -- | prints the vertical edges of the pawns' cells, the pawn and/or empty sapces.
+--   First argument is a row from Board, while the Int is the index number to be
+--   printed outside the board.
 pawnSpaces :: [Maybe Player] -> Int -> String
-pawnSpaces [] i = "| " ++ show i
-pawnSpaces (p:ps) i = pawnSpace p ++ pawnSpaces ps i
+pawnSpaces (p:ps) i = show i ++ " " ++ pawnSpace p ++ pawnSpaces' ps
   where
+    pawnSpaces' [] = "| " ++ show i
+    pawnSpaces' (p:ps)  = pawnSpace p ++ pawnSpaces' ps
     pawnSpace Nothing   = "|   "
     pawnSpace (Just O)  = "| O "
     pawnSpace (Just X)  = "| X "
 
 -- | prints the upper and lower edge of the pawn's cells
 edgeH :: [Maybe Player] -> String
-edgeH []     = "-"
-edgeH (p:ps) = "----" ++ edgeH ps
+edgeH ps = "  " ++ edgeH' ps
+  where
+    edgeH' []     = "-"
+    edgeH' (p:ps) = "----" ++ edgeH' ps
 
 -- | gives and array of all the rows we need to print to visualise the board.
 boardRows :: Board -> [String]
-boardRows (row:rows) = edgeH row : pawnSpaces row 1 : boardRows' rows 1
+boardRows (row:rows) = edgeH row : pawnSpaces row 1 : boardRows' rows 2
   where
     edge = edgeH row
     boardRows' (row:[]) i   = edge : pawnSpaces row i : [edge]
