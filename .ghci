@@ -1,2 +1,2 @@
 -- :set -ighci --was not giving me the behavior I wanted
-:def impAll \_ -> return ":m +Main Board Game Graphics TestGHCI"
+:def impAll \_ -> return ":m +Main Board Game Graphics Helpers TestGHCI"

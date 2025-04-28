@@ -13,6 +13,7 @@ import Board
   , mkBoard
   , boardlines 
   )
+import Helpers as H
 
 data Game = Game
   { board       :: Board 
@@ -29,11 +30,9 @@ mkGame boardL ctw
 -- | given a @Game@ as argument returns a @Just Player@ if a winner is found,
 --   or @Nothing@ if the game isn't finished.
 win :: Game -> Maybe Player
-win (Game b _ ctw) = head' (dropWhile notWin $ winStreak ctw <$> (boardlines b))
+win (Game b _ ctw) = H.head (dropWhile notWin $ winStreak ctw <$> (boardlines b))
   where
     notWin p = isNothing p
-    head' []     = Nothing
-    head' (p:ps) = p
 
 -- | Find the winner in a line from @Board.boardlines@.
 --   @Game@ argument is only used to get the @countToWin@ value that gives the
