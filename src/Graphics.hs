@@ -16,10 +16,12 @@ import Helpers as H
 --    |   |   |   |
 --    -------------
 
-lineH :: [Maybe Player] -> String
-lineH []     = ""
-lineH (p:ps) = "----" ++ lineH ps
+-- | prints the upper and lower edge of the pawn's cells
+edgeH :: [Maybe Player] -> String
+edgeH []     = ""
+edgeH (p:ps) = "----" ++ edgeH ps
 
+-- | prints the vertical edges of the pawns' cells, the pawn and/or empty sapces.
 pawnSpaces :: [Maybe Player] -> String
 pawnSpaces [] = "|"
 pawnSpaces (p:ps) = pawnSpace p ++ pawnSpaces ps
@@ -28,7 +30,8 @@ pawnSpaces (p:ps) = pawnSpace p ++ pawnSpaces ps
     pawnSpace (Just O)  = "| O "
     pawnSpace (Just X)  = "| X "
 
+-- | gives and array of all the rows to print to visualise the board.
 boardRows :: Board -> [String]
-boardRows b = upperSegment : ([lineH, pawnSpaces] <*> b)
+boardRows b = upperSegment : ([edgeH, pawnSpaces] <*> b)
   where 
-    upperSegment = fromMaybe "**empty**:" $ lineH <$> H.head b
+    upperSegment = fromMaybe "**empty**:" $ edgeH <$> H.head b
