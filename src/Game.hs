@@ -26,10 +26,12 @@ mkGame boardL ctw
   | ctw <= boardL && ctw > 1 = Just $ Game (mkBoard boardL) O ctw
   | otherwise                = Nothing
 
-win :: Game -> Maybe Player -- Bool
-win (Game b _ ctw) = head' (dropWhile win' $ winStreak ctw <$> (boardlines b))
+-- | given a @Game@ as argument returns a Player if a winner is found,
+--   or Nothing if the game isn't finished.
+win :: Game -> Maybe Player
+win (Game b _ ctw) = head' (dropWhile notWin $ winStreak ctw <$> (boardlines b))
   where
-    win' p = isNothing p 
+    notWin p = isNothing p
     head' []     = Nothing
     head' (p:ps) = p
 
