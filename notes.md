@@ -125,3 +125,23 @@ If Board is the context (after `:load src/Board.hs`), `mkBoard` is in the namesp
 After running `:m +Main Board Game TestGHCI` in GHCi, the modules Main, Board, Game, and TestGHCI will still be in the namespace after you run `:r`, provided that the modules are successfully reloaded without errors and no other commands (e.g., :module without arguments or :m -<Module>) explicitly remove them from the namespace.
 The `:r` command reloads all currently loaded modules but does not reset the namespace. The namespace persists across `:r` invocations.
 
+#### Other GHCi Finds:
+
+`:browse <ModuleName>`
+
+```
+ghci> :browse Game
+type Game :: *
+data Game
+  = Game {board :: Board,
+          turn :: Player,
+          countToWin :: Game.CountToWin}
+mkGame :: Int -> Game.CountToWin -> Maybe Game
+win :: Game -> Maybe Player
+ghci> :browse Graphics
+lineH :: [Maybe Player] -> String
+pawnSpaces :: [Maybe Player] -> String
+boardRows :: Board -> [String]
+```
+
+`:show modules`

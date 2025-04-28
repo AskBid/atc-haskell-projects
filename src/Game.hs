@@ -2,9 +2,10 @@ module Game
   ( Game(..) 
   , mkGame
   , win
+  , winStreak
   ) where
 
-import Data.Maybe (isNothing)
+import Data.Maybe (isNothing, fromMaybe)
 import Data.List (uncons)
 
 import Board 
@@ -30,9 +31,10 @@ mkGame boardL ctw
 -- | given a @Game@ as argument returns a @Just Player@ if a winner is found,
 --   or @Nothing@ if the game isn't finished.
 win :: Game -> Maybe Player
-win (Game b _ ctw) = H.head (dropWhile notWin $ winStreak ctw <$> (boardlines b))
+win (Game b _ ctw) = fromMaybe Nothing winner 
   where
     notWin p = isNothing p
+    winner = H.head (dropWhile notWin $ winStreak ctw <$> (boardlines b))
 
 -- | Find the winner in a line from @Board.boardlines@.
 --   @Game@ argument is only used to get the @countToWin@ value that gives the

@@ -3,7 +3,10 @@
 -- | This module is used to visualise boards and games statics
 module Graphics where
 
+import Data.Maybe (fromMaybe)
+
 import Board
+import Helpers as H
 
 --    -------------
 --    |   |   |   |
@@ -26,6 +29,6 @@ pawnSpaces (p:ps) = pawnSpace p ++ pawnSpaces ps
     pawnSpace (Just X)  = "| X "
 
 boardRows :: Board -> [String]
-boardRows b = upperSegment ++ ([lineH, pawnSpaces] <*> b)
+boardRows b = upperSegment : ([lineH, pawnSpaces] <*> b)
   where 
-    upperSegment = 
+    upperSegment = fromMaybe "**empty**:" $ lineH <$> H.head b
