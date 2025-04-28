@@ -1,8 +1,8 @@
-module Game where
-  -- ( Game(..) 
-  -- , mkGame
-  -- , win
-  -- ) where
+module Game 
+  ( Game(..) 
+  , mkGame
+  , win
+  ) where
 
 import Data.Maybe (isNothing)
 import Data.List (uncons)
