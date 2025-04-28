@@ -1,9 +1,11 @@
-module Game 
-  ( Game 
-  , mkGame
-  ) where
+module Game where
+  -- ( Game(..) 
+  -- , mkGame
+  -- , win
+  -- ) where
 
-import Data.Maybe
+import Data.Maybe (isNothing)
+import Data.List (uncons)
 
 import Board 
   ( Board(..)
@@ -17,7 +19,6 @@ data Game = Game
   , turn        :: Player
   , countToWin  :: CountToWin
   }
-
 type CountToWin = Int
 
 mkGame :: Int -> Int -> Maybe Game
@@ -25,10 +26,12 @@ mkGame boardL ctw
   | ctw <= boardL && ctw > 1 = Just $ Game (mkBoard boardL) O ctw
   | otherwise                = Nothing
 
-win :: Game -> _ -- Bool
-win (Game b _ ctw) = winStreak ctw <$> (boardlines b)
+win :: Game -> Maybe Player -- Bool
+win (Game b _ ctw) = fst <$> (uncons $ dropWhile win' $ winStreak ctw <$> (boardlines b))
+  where
+    win' p = isNothing p 
 
--- | Find the winner in a line from the Board (from @Board.boardlines@)
+-- | Find the winner in a line from @Board.boardlines@.
 --   @Game@ argument is only used to get the @countToWin@ value that gives the
 --   lenght of tokeens required for a win. 
 --   @[Maybe Player]@ is the line being analysed to find a winner.
