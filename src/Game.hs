@@ -15,30 +15,31 @@ import Board
 data Game = Game
   { board       :: Board 
   , turn        :: Player
-  , countToWin  :: Int
+  , countToWin  :: CountToWin
   }
+
+type CountToWin = Int
 
 mkGame :: Int -> Int -> Maybe Game
 mkGame boardL ctw 
   | ctw <= boardL && ctw > 1 = Just $ Game (mkBoard boardL) O ctw
   | otherwise                = Nothing
 
-win :: Game -> Board -> _ -- Bool
-win g b = winStreak g <$> (boardlines b)
+win :: Game -> _ -- Bool
+win (Game b _ ctw) = winStreak ctw <$> (boardlines b)
 
 -- | Find the winner in a line from the Board (from @Board.boardlines@)
 --   @Game@ argument is only used to get the @countToWin@ value that gives the
 --   lenght of tokeens required for a win. 
 --   @[Maybe Player]@ is the line being analysed to find a winner.
 -- Qs: is using Game bad for performance Vs only Int? 
---     trade off with clarity/solidity?
-winStreak :: Game -> [Maybe Player] -> Maybe Player
+--     trade off with clarity/solidity? // eventually used a type * = Int
+winStreak :: CountToWin -> [Maybe Player] -> Maybe Player
 winStreak _ [] = Nothing
-winStreak game (p:ps)
+winStreak ctw (p:ps)
   | pawns maxStreak >= ctw = player maxStreak 
   | otherwise              = Nothing
   where
-    ctw = countToWin game
     maxStreak = foldl compare (StreakCount 1 p) ps
     compare (StreakCount c p) p'
       | c >= ctw     = StreakCount c p
