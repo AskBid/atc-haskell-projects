@@ -6,13 +6,15 @@ module Graphics where
 import Board
 import Helpers as H
 
---    -------------
---    |   |   |   |
---    -------------
---    | O |   | X |
---    -------------
---    |   |   |   |
---    -------------
+--       A   B   C
+--     -------------
+--   1 |   |   |   | 1
+--     -------------
+--   2 | O |   | X | 2
+--     -------------
+--   3 |   |   |   | 3
+--     -------------
+--       A   B   C 
 
 -- | prints the vertical edges of the pawns' cells, the pawn and/or empty sapces.
 --   First argument is a row from Board, while the Int is the index number to be
@@ -35,7 +37,7 @@ edgeH ps = "  " ++ edgeH' ps
 
 -- | gives and array of all the rows we need to print to visualise the board.
 boardRows :: Board -> [String]
-boardRows [] = ["err:**empty board**"]
+boardRows [] = ["err: **empty board**"]
 boardRows (row:rows) = colHs : edge : pawns row 1 : boardRows' rows 2 ++ [colHs]
   where
     edge = edgeH row
@@ -51,11 +53,11 @@ colHeaders (p:ps) = "  " ++ strColH charsIxs'
   where
     l = length (p:ps)
     charsIxs' = take l $ charIndexes8 charsIxs
-    maxSpaces = 5
-    spacesL h = take ((maxSpaces - (length h)) `div` 2) $ repeat ' '
-    spacesR h 
-      | odd $ length h = spacesL h 
-      | otherwise = spacesL h ++ " "
+    maxSpaces = 4
+    spacesR h = take (((maxSpaces - (length h)) `div` 2)) $ repeat ' '
+    spacesL h 
+      | odd $ length h = spacesR h ++ " " 
+      | otherwise = spacesR h
     strColH [] = " "
     strColH (h:hs) = (spacesL h) ++ h ++ (spacesR h) ++ strColH hs
 
