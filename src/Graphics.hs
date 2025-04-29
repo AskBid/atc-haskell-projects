@@ -41,14 +41,6 @@ boardRows (row:rows) = edgeH row : pawns row 1 : boardRows' rows 2
     boardRows' (row:[]) i   = edge : pawns row i : [edge]
     boardRows' (row:rows) i = edge : pawns row i : boardRows' rows (i+1)
 
--- hIndexs :: [Maybe Player] -> String
--- hIndexs (p:ps) = "  " ++ spcs ++ chars !! i ++ spcs ++ hIndexs ps
---   where
---     chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
---     csLen = length chars  
---     len = length (p:ps)
---     spcs = spcs' i
-
 charsIxs :: [Char]
 charsIxs = ['A','B','C','D','E','F','G','H','I','J','K','L','M'
            ,'N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
@@ -63,5 +55,5 @@ charIndex cs i = (prefix (i `div` l)) ++ [suffixChar]
     l = length cs
     prefix i'
       | i < l = ""
-      | i' < l = [cs !! (i' `mod` l)]
+      | i' <= l = [cs !! ((i'-1) `mod` l)]
       | otherwise = charIndex cs i'
