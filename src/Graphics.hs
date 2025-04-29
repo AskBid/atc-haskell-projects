@@ -56,9 +56,21 @@ charsIxs = ['A','B','C','D','E','F','G','H','I','J','K','L','M'
 charIndexes8 :: [Char] -> [String]
 charIndexes8 cs = charIndex cs <$> [0..] 
 
+-- charIndex :: [Char] -> Int -> String
+-- charIndex cs i
+--   | i < l = [cs !! i]
+--   | otherwise = (if (((i-1) `div` l) < l) then [cs !! (i-1 `div` l)] else (charIndex cs ((i-1) `div` l))) ++ (charIndex cs (i `mod` l)) 
+--   where
+--     l = length cs
+--     prefixLen = i `div` l
+--     prefix 
+--       | prefixLen < l
+
 charIndex :: [Char] -> Int -> String
-charIndex cs i
-  | i < l = [cs !! i]
-  | otherwise = [cs !! ((i `div` l)-1)] ++ (charIndex cs (i `mod` l)) 
+charIndex cs i = (prefix (i `div` l)) ++ [suffixChar]
   where
+    suffixChar = cs !! (i `mod` l)
     l = length cs
+    prefix i'
+      | i' < l = [cs !! (i' `mod` l)]
+      | otherwise = charIndex cs i'

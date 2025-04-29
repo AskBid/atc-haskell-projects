@@ -145,3 +145,14 @@ boardRows :: Board -> [String]
 ```
 
 `:show modules`
+
+## Errors Language
+
+in the error:
+
+```
+Couldn't match expected type ‘[Char]’ with actual type ‘Char’ • In the first argument of ‘(++)’, namely ‘(prefix (i `div` l))’ In the expression: (prefix (i `div` l)) ++ [suffixChar] In an equation for ‘charIndex’: charIndex cs i = (prefix (i `div` l)) ++ [suffixChar] where suffixChar = cs !! (i `mod` l) l = length cs prefix i' | i' < l = cs !! (i' `mod` l) | otherwise = charIndex cs i'
+```
+
+`expected type [Char]` it means that the type system expects a **`[Char]`** but your code is actually writing a **`Char`**
+
