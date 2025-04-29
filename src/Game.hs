@@ -6,7 +6,6 @@ module Game
   ) where
 
 import Data.Maybe (isNothing, fromMaybe)
-import Data.List (uncons)
 
 import Board 
   ( Board(..)
@@ -22,6 +21,9 @@ data Game = Game
   , countToWin  :: CountToWin
   }
 type CountToWin = Int
+
+move :: Int -> Int -> Game -> Game
+move x y (Game b p _) = undefined 
 
 mkGame :: Int -> CountToWin -> Maybe Game
 mkGame boardL ctw 

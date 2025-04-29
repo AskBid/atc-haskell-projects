@@ -1,15 +1,28 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module Board where
 
 import Data.List (transpose)
 import Data.Maybe (isNothing)
+import Data.List.Index (setAt)
 
 data Player = O | X 
   deriving (Show, Eq)
 
 type Board = [[Maybe Player]]
 
+data Coordinate = Coordinate
+  { x :: Int
+  , y :: Int }
+
 minimumWin :: Int
 minimumWin = 3
+
+placePawn :: Player -> Coordinate -> Board -> Maybe Board
+placePawn p Coordinate{..} b = pure $ setAt y (setAt x (pure p) $ b !! x) b
+
+freeSpace :: Coordinate -> Board -> Bool
+freeSpace Coordinate{..} b = undefined  
 
 mkBoard :: Int -> Board
 mkBoard n = take n $ repeat (take n $ repeat Nothing)
@@ -18,12 +31,11 @@ mkBoard n = take n $ repeat (take n $ repeat Nothing)
 --   uses diagsCycle to recursively find the diagonals at each distance from 
 --   middle diagonals.
 boardlines :: Board -> [[Maybe Player]]
-boardlines board = rows ++ columns ++ diagonals
+boardlines board = rows ++ columns ++ diagonals board maxDistFromCenter
   where
     rows = board
     columns = transpose rows
     maxDistFromCenter = (length board) - minimumWin
-    diagonals = diagsCycle board maxDistFromCenter
 
 -- | given a Board-like structure - square [[]] - finds 4 diagonals lists.
 --   it takes a board structure as argument and a distance from the central diagonals.
@@ -34,8 +46,8 @@ boardlines board = rows ++ columns ++ diagonals
 --          2 1 0 1 2-->Downside    2 1 0 1 2
 --          1 0 1 2 x    Downside<--x 2 1 0 1
 --          0 1 2 x x               x x 2 1 0
-diagsCycle :: [[a]] -> Int -> [[a]]
-diagsCycle b n
+diagonals :: [[a]] -> Int -> [[a]]
+diagonals b n
   | n < 0     = []
   | n == 0    = take 2 $ fourDiags 0
   | otherwise = fourDiags n
@@ -45,5 +57,5 @@ diagsCycle b n
         b !!  i    !! (l-i),  -- B direction Upside
         b !! (i+n) !!  i,     -- A direction Downside
         b !! (i+n) !! (l-i+n) -- B direction Downside
-      ] | i <- [0..l]] ++ diagsCycle b (n-1)
+      ] | i <- [0..l]] ++ diagonals b (n-1)
     l = (length b) -1 - n
