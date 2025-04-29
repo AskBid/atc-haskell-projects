@@ -36,9 +36,10 @@ edgeH ps = "  " ++ edgeH' ps
 -- | gives and array of all the rows we need to print to visualise the board.
 boardRows :: Board -> [String]
 boardRows [] = ["err:**empty board**"]
-boardRows (row:rows) = edge : pawns row 1 : boardRows' rows 2
+boardRows (row:rows) = colHs : edge : pawns row 1 : boardRows' rows 2 ++ [colHs]
   where
     edge = edgeH row
+    colHs = colHeaders row
     boardRows' (row:[]) i   = edge : pawns row i : [edge]
     boardRows' (row:rows) i = edge : pawns row i : boardRows' rows (i+1)
 
@@ -51,9 +52,12 @@ colHeaders (p:ps) = "  " ++ strColH charsIxs'
     l = length (p:ps)
     charsIxs' = take l $ charIndexes8 charsIxs
     maxSpaces = 5
-    spaces h = take ((maxSpaces - (length h)) `div` 2) $ repeat ' '
+    spacesL h = take ((maxSpaces - (length h)) `div` 2) $ repeat ' '
+    spacesR h 
+      | odd $ length h = spacesL h 
+      | otherwise = spacesL h ++ " "
     strColH [] = " "
-    strColH (h:hs) = (spaces h) ++ h ++ " " ++ strColH hs
+    strColH (h:hs) = (spacesL h) ++ h ++ (spacesR h) ++ strColH hs
 
 charsIxs :: [Char]
 charsIxs = ['A','B','C','D','E','F','G','H','I','J','K','L','M'
