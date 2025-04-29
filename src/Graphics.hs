@@ -41,5 +41,27 @@ boardRows (row:rows) = edgeH row : pawns row 1 : boardRows' rows 2
     boardRows' (row:[]) i   = edge : pawns row i : [edge]
     boardRows' (row:rows) i = edge : pawns row i : boardRows' rows (i+1)
 
+{-
 hIndexs :: [Maybe Player] -> String
-hIndexs (p:ps) = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+hIndexs (p:ps) = "  " ++ spcs ++ chars !! i ++ spcs ++ hIndexs ps
+  where
+    chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    csLen = length chars  
+    len = length (p:ps)
+    spcs = spcs' i
+
+charIndexes8 :: [String]
+charIndexes8 = charIndexes8' 0
+  where
+-}
+chars' :: [Char]
+chars' = ['A','B','C','D','E','F','G','H','I','J','K','L','M'
+         ,'N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
+charLength = length chars'
+-- charIndexes8' i = index i ++ charIndexes8' i 
+
+
+index :: Int -> String
+index i 
+  | i < charLength = [chars' !! i]
+  | otherwise = [chars' !! ((i `div` charLength)-1)] ++ (index $ i `mod` charLength)
