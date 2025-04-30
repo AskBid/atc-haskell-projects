@@ -15,15 +15,25 @@ data Coordinate = Coordinate
   { x :: Int
   , y :: Int }
 
-minimumWin :: Int
-minimumWin = 3
+-- | The minimum number of pawns needed to achieve a winning streak (adjustable).
+--   The lower bound for the winning streak pawn count should set at 3.
+--   Used to limit the diagonals calculated.
+minStreak :: Int
+minStreak = 3
 
+-- | like a move function but not including turn check, only valid move check.
 placePawn :: Player -> Coordinate -> Board -> Maybe Board
-placePawn p Coordinate{..} b = pure $ setAt y (setAt x (pure p) $ b !! x) b
+placePawn p Coordinate{..} b 
+  | freeSpace (Coordinate x y) b = pure $ setAt y (setAt x (pure p) row) b
+  | otherwise = Nothing
+  where
+    row = b !! x
 
+-- | checks if pawn move is valid.
 freeSpace :: Coordinate -> Board -> Bool
-freeSpace Coordinate{..} b = undefined  
+freeSpace Coordinate{..} b = isNothing ((b !! y) !! x)
 
+-- | sqaured boards only.
 mkBoard :: Int -> Board
 mkBoard n = take n $ repeat (take n $ repeat Nothing)
 
@@ -35,9 +45,9 @@ boardlines board = rows ++ columns ++ diagonals board maxDistFromCenter
   where
     rows = board
     columns = transpose rows
-    maxDistFromCenter = (length board) - minimumWin
+    maxDistFromCenter = (length board) - minStreak
 
--- | given a Board-like structure - square [[]] - finds 4 diagonals lists.
+-- | given a Board-like structure - square [[]] - finds 4 diagonals lists per cycle.
 --   it takes a board structure as argument and a distance from the central diagonals.
 --   if distance is 0. Returns the middle diagonals twice therefore the @n == 0@ case.
 --         A direction             B direction
