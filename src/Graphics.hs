@@ -3,6 +3,8 @@
 -- | This module is used to visualise boards and games statics
 module Graphics where
 
+import Data.String (fromString)
+
 import Board
 import Helpers as H
 
@@ -53,7 +55,7 @@ printBoard b = sequenceA $ putStrLn <$> (boardRows b)
 --   column header/index (in letters).
 --   I added logic to handle spacing for multi-letter columns if the board size 
 --   exceeds available letters,
---   though this case shouldn't occur. It was a fun exercise!
+--   though this case shouldn't occur. It was a good exercise!
 --   It takes a Board row as input (any row works just as fine).
 colHeaders :: [Maybe Player] -> String
 colHeaders (p:ps) = "  " ++ strColH charsIxs'
@@ -69,8 +71,7 @@ colHeaders (p:ps) = "  " ++ strColH charsIxs'
     strColH (h:hs) = (spacesL h) ++ h ++ (spacesR h) ++ strColH hs
 
 charsIxs :: [Char]
-charsIxs = ['A','B','C','D','E','F','G','H','I','J','K','L','M'
-           ,'N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
+charsIxs = fromString "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 -- | creates an infinite list of letter indexes, multiple letters combo if exceedes 
 --   number of chars available.

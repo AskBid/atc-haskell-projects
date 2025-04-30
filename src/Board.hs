@@ -21,13 +21,14 @@ data Coordinate = Coordinate
 minStreak :: Int
 minStreak = 3
 
--- | like a move function but not including turn check, only valid move check.
+-- | like a move function but not including turn-check, only valid-move check.
 placePawn :: Player -> Coordinate -> Board -> Maybe Board
 placePawn p Coordinate{..} b 
-  | freeSpace (Coordinate x y) b = pure $ setAt y (setAt x (pure p) row) b
+  | freeSpace (Coordinate x y) b = pure $ setAt y newRow b
   | otherwise = Nothing
   where
     row = b !! x
+    newRow = setAt x (pure p) row
 
 -- | checks if pawn move is valid.
 freeSpace :: Coordinate -> Board -> Bool

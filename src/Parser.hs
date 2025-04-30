@@ -9,4 +9,6 @@ coordinateParser :: Parser Coordinate
 coordinateParser = undefined
 -- AB 1
 -- 1 AB
+-- 3ab
+-- ba3
 -- 1 3
