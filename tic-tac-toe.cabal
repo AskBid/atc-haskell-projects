@@ -14,6 +14,7 @@ library ghci
     TestGHCI
     Graphics
     Helpers
+    Interface
   hs-source-dirs:
     src
     ghci
@@ -30,4 +31,4 @@ executable tic-tac-toe
   build-depends:       base >=4.7 && <5
                      , containers
                      , ilist
-  other-modules:       Board, Game, Graphics, Helpers
+  other-modules:       Board, Game, Graphics, Helpers, Interface
