@@ -16,7 +16,7 @@ import Helpers as H
 --     -------------
 --       A   B   C 
 
--- | prints the vertical edges of the pawns' cells, the pawn and/or empty sapces.
+-- | prints the vertical edges of the pawns' cells, the pawn and/or the empty spaces.
 --   First argument is a row from Board, while the Int is the index number to be
 --   printed outside the board.
 pawns :: [Maybe Player] -> Int -> String
@@ -45,9 +45,16 @@ boardRows (row:rows) = colHs : edge : pawns row 1 : boardRows' rows 2 ++ [colHs]
     boardRows' (row:[]) i   = edge : pawns row i : [edge]
     boardRows' (row:rows) i = edge : pawns row i : boardRows' rows (i+1)
 
+-- | print Board for CLI terminal.
 printBoard :: Board -> IO [()]
 printBoard b = sequenceA $ putStrLn <$> (boardRows b) 
 
+-- | Generates a string for the top/bottom of a printed Board, serving as a 
+--   column header/index (in letters).
+--   I added logic to handle spacing for multi-letter columns if the board size 
+--   exceeds available letters,
+--   though this case shouldn't occur. It was a fun exercise!
+--   It takes a Board row as input (any row works just as fine).
 colHeaders :: [Maybe Player] -> String
 colHeaders (p:ps) = "  " ++ strColH charsIxs'
   where
@@ -65,6 +72,8 @@ charsIxs :: [Char]
 charsIxs = ['A','B','C','D','E','F','G','H','I','J','K','L','M'
            ,'N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
 
+-- | creates an infinite list of letter indexes, multiple letters combo if exceedes 
+--   number of chars available.
 charIndexes8 :: [Char] -> [String]
 charIndexes8 cs = charIndex cs <$> [0..] 
 
