@@ -15,13 +15,15 @@ library ghci
     Graphics
     Helpers
     Interface
+    Parser
   hs-source-dirs:
     src
     ghci
   build-depends:
     base >= 4.7 && < 5,
     containers,
-    ilist
+    ilist,
+    parsec
   default-language: Haskell2010
 
 executable tic-tac-toe
@@ -31,4 +33,5 @@ executable tic-tac-toe
   build-depends:       base >=4.7 && <5
                      , containers
                      , ilist
-  other-modules:       Board, Game, Graphics, Helpers, Interface
+                     , parsec
+  other-modules:       Board, Game, Graphics, Helpers, Interface, Parser
