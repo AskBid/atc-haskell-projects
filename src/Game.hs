@@ -1,3 +1,5 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module Game 
   ( Game(..) 
   , mkGame
@@ -7,11 +9,13 @@ module Game
 
 import Data.Maybe (isNothing, fromMaybe)
 
-import Board 
+import Board
   ( Board(..)
   , Player(..) 
+  , Coordinate(..)
   , mkBoard
   , boardlines 
+  , placePawn
   )
 import Helpers as H
 
@@ -22,8 +26,17 @@ data Game = Game
   }
 type CountToWin = Int
 
-move :: Int -> Int -> Game -> Game
-move x y (Game b p _) = undefined 
+-- | uses placePawn to make a move in game, considering turn.
+move :: Coordinate -> Game -> Maybe Game
+move xy Game{..} = 
+  case tryMove of  
+    Nothing       -> Nothing
+    Just newBoard -> Just $ Game newBoard nextPlayer countToWin
+  where
+    otherPlayer O = X
+    otherPlayer X = O
+    nextPlayer = otherPlayer turn
+    tryMove = placePawn nextPlayer xy board
 
 mkGame :: Int -> CountToWin -> Maybe Game
 mkGame boardL ctw 
