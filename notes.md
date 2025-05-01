@@ -180,7 +180,7 @@ As **Monad**:
 ```
 oop :: [Task] -> IO ()
 loop ts = do
-  putStr "Enter command: "
+  putStr "Enter command: "
   hFlush stdout
   input <- getLine
   (isLooping, tsNew) <- handleInput ts input
@@ -188,7 +188,7 @@ loop ts = do
 ```
 
 Transalte to:
-
+#
 ```
 loop :: [Task] -> IO ()
 loop ts =
@@ -213,4 +213,23 @@ If the `do` block is not passed to a combinator expecting a function; it’s the
 
 #### How to Check `do`
 
-Examine the Type Signature, Look at return (plain vlaue? or monadic value?)
+Examine the Type Signature, Look at return (plain vlaue? or monadic value?), check bindings (`<-`) (are they resulting from a function or monadic action?).
+
+
+## State
+
+```
+newtype State' s a = State' (s -> (a, s))
+
+newtype StateT s m a = StateT (s -> m (a,s))
+
+state :: Monad m => (s -> (a, s)) -> StateT s m a
+state f = StateT (return . f)
+
+type State s a = StateT s Identity a
+
+-- by defining State' as a new type, you got an error, because actually 
+-- State is no other than a StateT with IDentity as a Monad structure.
+-- that is why despite `state` returning a `StateT s m a`, works fine with 
+-- the type of `rollDie` that is `State s a`.
+```
