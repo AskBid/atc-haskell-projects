@@ -156,3 +156,61 @@ Couldn't match expected type ‘[Char]’ with actual type ‘Char’ • In the
 
 `expected type [Char]` it means that the type system expects a **`[Char]`** but your code is actually writing a **`Char`**
 
+TYPE SYSTEM expects || YOUR CODE is actual
+
+## `do` as Lambda and `do` as Monad
+
+As **Lambda**:
+
+```
+rollDie :: State StdGen Die
+rollDie = state $ do
+  (n, s) <- randomR (1, 6)
+  return (intToDie n, s)
+```
+
+Translate to:
+
+```
+ rollDie = state $\gen -> let (n, s) = randomR (1, 6) gen in (intToDie n, s).
+```
+
+As **Monad**:
+
+```
+oop :: [Task] -> IO ()
+loop ts = do
+  putStr "Enter command: "
+  hFlush stdout
+  input <- getLine
+  (isLooping, tsNew) <- handleInput ts input
+  if isLooping then loop tsNew else return ()
+```
+
+Transalte to:
+
+```
+loop :: [Task] -> IO ()
+loop ts =
+  putStr "Enter command: " >>= \_ ->
+  hFlush stdout >>= \_ ->
+  getLine >>= \input ->
+  handleInput ts input >>= \(isLooping, tsNew) ->
+  if isLooping
+  then loop tsNew
+  else return ()
+```
+
+Check the Surrounding Combinator or Context to understand if a `do` block is workign as lambda or monad.
+
+The most reliable indicator is the function or combinator applied to the `do` block. 
+Combinators like `state` often expect a function, triggering a lambda-defining `do`, while monadic contexts imply a `bind`.
+
+> NOTE: In Haskell, a combinator is a higher-order function that manipulates or combines other functions or values in a specific way, often abstracting common patterns of computation.
+
+
+If the `do` block is not passed to a combinator expecting a function; it’s the body of a computation in a monadic context (e.g., `IO`, `State`, `Maybe`).
+
+#### How to Check `do`
+
+Examine the Type Signature, Look at return (plain vlaue? or monadic value?)
