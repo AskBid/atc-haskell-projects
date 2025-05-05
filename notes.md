@@ -180,7 +180,7 @@ As **Monad**:
 ```
 oop :: [Task] -> IO ()
 loop ts = do
-  putStr "Enter command: "
+  putStr "Enter command: "
   hFlush stdout
   input <- getLine
   (isLooping, tsNew) <- handleInput ts input
@@ -228,8 +228,14 @@ state f = StateT (return . f)
 
 type State s a = StateT s Identity a
 
--- by defining State' as a new type, you got an error, because actually 
+-- by defining State as a new type, you got an error, because actually 
 -- State is no other than a StateT with IDentity as a Monad structure.
 -- that is why despite `state` returning a `StateT s m a`, works fine with 
 -- the type of `rollDie` that is `State s a`.
 ```
+
+runStateT: Use when you need both the result and final state (e.g., ((), [String]) here).
+evalStateT: Use when you only need the result and can discard the state (e.g., () in a CLI loop).
+execStateT: Use when you only need the final state and can discard the result (e.g., just [String]).
+
+those work like `parse` work for Parsers, and indeed the Parsers are a little like StateTs. They are instructions on how to process States that are fed to it through the `runStateT` etc. as `parse` feds a String into a Parser.
