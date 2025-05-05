@@ -1,28 +1,40 @@
 module Interface where
 
 import System.IO (hFlush, stdout)
+import Control.Monad.State
+-- import Control.Monad.IO.Class
+-- import Data.Maybe
+
+import Game
+import Board
+
+data AppState = AppState
+  { game :: Game
+  , isLooping :: Bool
+  } -- deriving (Show)
 
 loop :: IO ()
 loop = do
   putStr "Enter command: "
   hFlush stdout
   input <- getLine
-  isLooping <- handleInput input
-  if isLooping
-    then loop
-    else return ()
+  runStateT (handleInput input) $ AppState (Game mkBoard 3 3) True 
+  putStrLn "ennnddddd"
+  -- if isLooping
+  --   then loop
+  --   else return ()
 
-handleInput :: String -> IO Bool
+handleInput :: String -> StateT AppState IO ()
 handleInput "exit" = do
-  putStrLn "Goodbye!"
-  pure False
+  liftIO $ putStrLn "Goodbye!"
 handleInput "standard" = do
-  putStrLn "Enter board size:"
-  putStrLn "Enter winning streak amount:"
-  putStrLn "Enter game type:"
-  putStrLn "1. Classic"
-  putStrLn "2. Disappearing"
-  pure True
+  liftIO $ putStrLn "Enter board size:"
+  liftIO $ putStrLn "Enter winning streak amount:"
+  liftIO $ putStrLn "Enter game type:"
+  liftIO $ putStrLn "1. Classic"
+  liftIO $ putStrLn "2. Disappearing"
+  case mkGame 3 3 of
+    Nothing -> liftIO $ putStrLn "err"
+    Just game -> modify (\s -> s {game=game, isLooping=False})
 handleInput input = do
-  putStrLn $ "You entered: " ++ input
-  pure True
+  liftIO $ putStrLn $ "You entered: " ++ input
