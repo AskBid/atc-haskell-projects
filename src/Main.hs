@@ -7,6 +7,7 @@ import Game
 
 main :: IO ()
 main = do
+  putStrLn ""
   putStrLn "         X X"
   putStrLn "----------O------------"
   putStrLn "Welcome to Tic Tac Toe!"
@@ -16,4 +17,4 @@ main = do
     Nothing -> putStrLn "error"
     Just g -> do 
       runStateT loop $ AppState g True False
-      putStrLn "loop end." 
+      putStrLn "------loop end.-------" 

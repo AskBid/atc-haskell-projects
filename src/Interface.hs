@@ -29,16 +29,26 @@ loop = do
 handleInput :: String -> StateT AppState IO ()
 handleInput "exit" = do
   printLn "Goodbye!"
-  modify $ (\s -> s {isLooping = False})
+  modify (\s -> s {isLooping = False})
+handleInput "0" = do
+  printLn ""
+  input <- getLn
+  handleGame input
+  modify (\s -> s {playing = True})
 handleInput "2" = do
   state <- get
   liftIO $ printBoard $ board $ game state
   printLn "Enter board size:"
   printLn "Enter winning streak amount:"
+  modify (\s -> s {playing = True})
 handleInput "help" = do
   printLn "exit"
 handleInput input = do
   printLn $ "You entered: " ++ input
+  printLn "Not valid entry."
+
+handleGame :: String -> StateT AppState IO ()
+handleGame = undefined
 
 menu :: StateT AppState IO ()
 menu = do 
