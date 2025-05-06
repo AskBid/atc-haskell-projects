@@ -16,20 +16,21 @@ data AppState = AppState
 
 loop :: StateT AppState IO ()
 loop = do
-  printLn "Enter command: " -- liftIO $ hFlush stdout <<-- not sure I need it
-  input <- liftIO $ getLine 
+  printLn "Enter command: " -- liftIO $ hFlush stdout -- not sure I need it
+  input <- getLn 
+  handleInput input
   state <- get
-  liftIO $ printBoard $ board $ game state
-  printLn input
-  -- if isLooping
-  --   then loop
-  --   else return ()
+  if isLooping state
+    then loop
+    else return ()
 
 handleInput :: String -> StateT AppState IO ()
 handleInput "exit" = do
   printLn "Goodbye!"
+  modify $ (\s -> s {isLooping = False})
 handleInput "standard" = do
-  input <- getLn
+  state <- get
+  liftIO $ printBoard $ board $ game state
   printLn "Enter board size:"
   printLn "Enter winning streak amount:"
   printLn "Enter game type:"
