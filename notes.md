@@ -239,3 +239,16 @@ evalStateT: Use when you only need the result and can discard the state (e.g., (
 execStateT: Use when you only need the final state and can discard the result (e.g., just [String]).
 
 those work like `parse` work for Parsers, and indeed the Parsers are a little like StateTs. They are instructions on how to process States that are fed to it through the `runStateT` etc. as `parse` feds a String into a Parser.
+
+
+StateT Monad: StateT s m a is a monad transformer that adds state manipulation (for state type s) to an underlying monad m (here, IO). It threads the state (AppState) through computations automatically, allowing functions like get, put, and modify to access or update the state without explicit passing.
+
+Because loop is a StateT AppState IO () action, it runs with an implicit AppState threaded through it. When loop calls handleInput, it’s composing two StateT actions within the same monad stack, so handleInput inherits the same state context.
+
+The StateT monad is designed to thread the state (AppState) through all computations automatically. When you use get, put, or modify in handleInput, these functions operate on the current state of the StateT monad, which is maintained by the transformer.
+
+Think of it like this: loop is a sequence of StateT actions, and handleInput is one of those actions. Each action in the do block operates on the state threaded through the entire StateT computation, starting from the initial state provided to runStateT.
+
+The "automagical" part comes from Haskell’s monadic abstraction. The StateT monad hides the plumbing of passing the state around. When you write get or modify, you’re interacting with the state implicitly managed by the StateT transformer.
+
+Under the hood, StateT s m a is a newtype around a function s -> m (a, s), which takes a state, produces a result and a new state, and runs in the base monad m. When you compose StateT actions (like loop calling handleInput), the transformer ensures the state is passed through correctly.
