@@ -30,14 +30,11 @@ handleInput :: String -> StateT AppState IO ()
 handleInput "exit" = do
   printLn "Goodbye!"
   modify $ (\s -> s {isLooping = False})
-handleInput "standard" = do
+handleInput "2" = do
   state <- get
   liftIO $ printBoard $ board $ game state
   printLn "Enter board size:"
   printLn "Enter winning streak amount:"
-  printLn "Enter game type:"
-  printLn "1. Classic"
-  printLn "2. Disappearing"
 handleInput "help" = do
   printLn "exit"
 handleInput input = do
