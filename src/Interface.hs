@@ -13,11 +13,14 @@ import Graphics
 data AppState = AppState
   { game :: Game
   , isLooping :: Bool
+  , playing :: Bool
   } -- deriving (Show)
 
 loop :: StateT AppState IO ()
 loop = do
-  printLn "Enter command: " -- liftIO $ hFlush stdout -- not sure I need it
+  state <- get
+  when (not $ playing state) menu  
+  printLn "Enter command/selection: " -- liftIO $ hFlush stdout -- not sure I need it
   input <- getLn 
   handleInput input
   state <- get
@@ -35,8 +38,20 @@ handleInput "standard" = do
   printLn "Enter game type:"
   printLn "1. Classic"
   printLn "2. Disappearing"
+handleInput "help" = do
+  printLn "exit"
 handleInput input = do
   printLn $ "You entered: " ++ input
+
+menu :: StateT AppState IO ()
+menu = do 
+  printLn ""
+  printLn "0. Quick Standard 3x3 Game"
+  printLn "1. Quick Evaporating 3x3 Game"
+  printLn "2. Stadard Style Game Setup"
+  printLn "3. Evaporating Style Game Setup"
+  printLn ""
+  printLn "Select a number."
 
 -- | helper function to avoid using liftIO everytime I print something inside a StateT function.
 printLn :: String -> StateT AppState IO ()

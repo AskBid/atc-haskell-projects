@@ -7,10 +7,13 @@ import Game
 
 main :: IO ()
 main = do
+  putStrLn "         X X"
+  putStrLn "----------O------------"
   putStrLn "Welcome to Tic Tac Toe!"
+  putStrLn "-----------------------"
   let gm = mkGame 3 3
   case gm of
     Nothing -> putStrLn "error"
     Just g -> do 
-      runStateT loop $ AppState g True
+      runStateT loop $ AppState g True False
       putStrLn "loop end." 
