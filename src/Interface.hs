@@ -2,6 +2,7 @@ module Interface where
 
 import System.IO (hFlush, stdout)
 import Control.Monad.State
+import Control.Monad (when)
 -- import Control.Monad.IO.Class
 -- import Data.Maybe
 
@@ -20,9 +21,7 @@ loop = do
   input <- getLn 
   handleInput input
   state <- get
-  if isLooping state
-    then loop
-    else return ()
+  when (isLooping state) loop
 
 handleInput :: String -> StateT AppState IO ()
 handleInput "exit" = do
