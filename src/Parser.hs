@@ -2,6 +2,8 @@ module Parser where
 
 import Text.Parsec
 import Text.Parsec.String (Parser)
+import Data.List (elemIndex)
+import Text.Read (readMaybe)
 
 import Board
 
@@ -17,7 +19,11 @@ coordinateParser charIndexes = do
   xs <- many1 digit <|> many1 letter
   spaces
   ys <- many1 digit
-  return $ Coordinate {x=fromCharIndexToInt charIndexes xs, y=read ys}
+  case readMaybe xs of
+    Just num -> return $ Coordinate {y=read ys, x=num}
+    Nothing -> case fromCharIndexToInt charIndexes xs of
+      Just x -> return $ Coordinate {x=x, y=read ys}
+      Nothing -> fail "the letter coordinate was not valid."
 
-fromCharIndexToInt :: [String] -> String -> Int
-fromCharIndexToInt str = undefined
+fromCharIndexToInt :: [String] -> String -> Maybe Int
+fromCharIndexToInt cixs cix = elemIndex cix cixs 
