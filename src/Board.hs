@@ -14,6 +14,7 @@ type Board = [[Maybe Player]]
 data Coordinate = Coordinate
   { x :: Int
   , y :: Int }
+  deriving Show
 
 -- | The minimum number of pawns needed to achieve a winning streak (adjustable).
 --   The lower bound for the winning streak pawn count should set at 3.
