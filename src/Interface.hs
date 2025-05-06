@@ -16,7 +16,7 @@ data AppState = AppState
 
 loop :: StateT AppState IO ()
 loop = do
-  liftIO $ putStr "Enter command: " -- liftIO $ hFlush stdout <<-- not sure I need it
+  printLn "Enter command: " -- liftIO $ hFlush stdout <<-- not sure I need it
   input <- liftIO $ getLine 
   state <- get
   liftIO $ printBoard $ board $ game state
@@ -27,18 +27,16 @@ loop = do
 
 handleInput :: String -> StateT AppState IO ()
 handleInput "exit" = do
-  liftIO $ putStrLn "Goodbye!"
+  printLn "Goodbye!"
 handleInput "standard" = do
-  liftIO $ putStrLn "Enter board size:"
-  liftIO $ putStrLn "Enter winning streak amount:"
-  liftIO $ putStrLn "Enter game type:"
-  liftIO $ putStrLn "1. Classic"
-  liftIO $ putStrLn "2. Disappearing"
-  case mkGame 3 3 of
-    Nothing -> liftIO $ putStrLn "err"
-    Just game -> modify (\s -> s {game=game, isLooping=False})
+  input <- getLn
+  printLn "Enter board size:"
+  printLn "Enter winning streak amount:"
+  printLn "Enter game type:"
+  printLn "1. Classic"
+  printLn "2. Disappearing"
 handleInput input = do
-  liftIO $ putStrLn $ "You entered: " ++ input
+  printLn $ "You entered: " ++ input
 
 -- | helper function to avoid using liftIO everytime I print something inside a StateT function.
 printLn :: String -> StateT AppState IO ()
