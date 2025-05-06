@@ -13,13 +13,12 @@ data AppState = AppState
   , isLooping :: Bool
   } -- deriving (Show)
 
-loop :: IO ()
+loop :: StateT AppState IO ()
 loop = do
-  putStr "Enter command: "
-  hFlush stdout
-  input <- getLine
-  runStateT (handleInput input) $ AppState (Game mkBoard 3 3) True 
-  putStrLn "ennnddddd"
+  liftIO $ putStr "Enter command: "
+  liftIO $ hFlush stdout
+  input <- liftIO $ getLine 
+  liftIO $ putStrLn "ennnddddd"
   -- if isLooping
   --   then loop
   --   else return ()
