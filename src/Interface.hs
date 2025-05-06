@@ -7,6 +7,7 @@ import Control.Monad.State
 
 import Game
 import Board
+import Graphics
 
 data AppState = AppState
   { game :: Game
@@ -15,10 +16,11 @@ data AppState = AppState
 
 loop :: StateT AppState IO ()
 loop = do
-  liftIO $ putStr "Enter command: "
-  liftIO $ hFlush stdout
+  liftIO $ putStr "Enter command: " -- liftIO $ hFlush stdout <<-- not sure I need it
   input <- liftIO $ getLine 
-  liftIO $ putStrLn "ennnddddd"
+  state <- get
+  liftIO $ printBoard $ board $ game state
+  printLn input
   -- if isLooping
   --   then loop
   --   else return ()
@@ -37,3 +39,14 @@ handleInput "standard" = do
     Just game -> modify (\s -> s {game=game, isLooping=False})
 handleInput input = do
   liftIO $ putStrLn $ "You entered: " ++ input
+
+-- | helper function to avoid using liftIO everytime I print something inside a StateT function.
+printLn :: String -> StateT AppState IO ()
+printLn str = do 
+  liftIO $ putStrLn str
+
+getLn :: StateT AppState IO String
+getLn = do 
+  input <- liftIO $ getLine
+  return input
+
