@@ -58,25 +58,18 @@ setupGame = undefined
 gameLoop :: StateT AppState IO ()
 gameLoop = do
   state <- get
-  displayGame state
-  moveDialogue
-  where
-    moveDialogue = do
-      state <- get
-      let player = turn $ game state
-      printLn $ "Enter coordinates for player `" ++ show player ++ "` next move"
-      input <- getLn
-      handleGame input
-      when (isNothing $ win $ game state) moveDialogue
-
-handleGame :: String -> StateT AppState IO (Maybe Game)
-handleGame input = do
-  state <- get
+  let player = turn $ game state
+  printLn $ "Enter coordinates for player `" ++ show player ++ "` next move"
+  input <- getLn
   case parse (coordinateParser ["A","B","C"]) "" input of
-    Left e -> do
-      printLn "Bad coordinate input entered."
-      return Nothing
-    Right xy -> return $ move xy $ game state 
+    Left e   -> printLn "err: Bad coordinate input."
+    Right xy -> case move xy $ game state of
+      Left e   -> printLn e
+      Right gm -> modify (\s -> s {game=gm})
+  state' <- get
+  displayGame state' 
+  when (isNothing $ win $ game state') gameLoop
+  printLn "game ended"
 
 menu :: StateT AppState IO ()
 menu = do 

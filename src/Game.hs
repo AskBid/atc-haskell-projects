@@ -28,11 +28,11 @@ data Game = Game
 type CountToWin = Int
 
 -- | uses placePawn to make a move in game, considering turn.
-move :: Coordinate -> Game -> Maybe Game
+move :: Coordinate -> Game -> Either String Game
 move xy Game{..} = 
   case tryMove of  
-    Nothing       -> Nothing
-    Just newBoard -> Just $ Game newBoard nextPlayer countToWin
+    Nothing       -> Left "err: The move is not valid."
+    Just newBoard -> Right $ Game newBoard nextPlayer countToWin
   where
     otherPlayer O = X
     otherPlayer X = O
