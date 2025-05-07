@@ -58,7 +58,6 @@ setupGame = undefined
 gameLoop :: StateT AppState IO ()
 gameLoop = do
   state <- get
-  printLn ":::top of gameloop:::"
   displayGame state 
   let player = otherPlayer $ lastMove $ game state
   printLn $ "Enter coordinates for player `" ++ show player ++ "` next move"
@@ -68,40 +67,8 @@ gameLoop = do
     Right xy -> case move xy $ game state of
       Left e   -> printLn e
       Right gm -> modify (\s -> s {game=gm})
-  printLn ":::after move happened previous state:::"
-  printLn $ show $ game state
   state' <- get
-  printLn ":::after getting new state:::"
-  printLn $ show $ game state'
   when (isNothing $ win $ game state') gameLoop
-  printLn "game ended"
-
-gamemove :: Game -> IO (Maybe Game)
-gamemove gm = do
-  let player = otherPlayer $ lastMove gm
-  printBoard $ board gm
-  putStrLn $ "Enter coordinates for player `" ++ show player ++ "` next move"
-  input <- getLine
-  case parse (coordinateParser ["A","B","C"]) "" input of
-    Left e   -> return Nothing
-    Right xy -> case move xy $ gm of
-      Left e   -> return Nothing 
-      Right gm' -> do 
-        gamemove gm'
-
-placePawnMove :: Player -> Board -> IO ()
-placePawnMove p b = do
-  printBoard b
-  putStrLn "give me a move:"
-  input <- getLine
-  let coords = parse' input
-  case placePawn p coords b of 
-    Nothing -> placePawnMove p b
-    Just bnew -> placePawnMove (otherPlayer p) bnew
-  where
-    parse' i = case parse (coordinateParser ["A","B","C"]) "" i of
-      Left e -> Coordinate 0 0
-      Right xy -> xy
 
 menu :: StateT AppState IO ()
 menu = do 
