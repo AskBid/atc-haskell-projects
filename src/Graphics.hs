@@ -49,8 +49,8 @@ boardRows (row:rows) = colHs : edge : pawns row 1 : boardRows' rows 2 ++ [colHs]
     boardRows' (row:rows) i = edge : pawns row i : boardRows' rows (i+1)
 
 -- | print Board for CLI terminal.
-printBoard :: Board -> IO [()]
-printBoard b = sequenceA $ putStrLn <$> (boardRows b) 
+printBoard :: Board -> IO ()
+printBoard b = sequence_ $ putStrLn <$> (boardRows b) 
 
 -- | Generates a string for the top/bottom of a printed Board, serving as a 
 --   column header/index (in letters).

@@ -9,6 +9,7 @@ import Control.Monad (when)
 import Game
 import Board
 import Graphics
+import Parser
 
 data AppState = AppState
   { game :: Game
@@ -33,11 +34,11 @@ handleInput "exit" = do
 handleInput "0" = do
   printLn ""
   input <- getLn
-  handleGame input
   modify (\s -> s {playing = True})
+  handleGame input
 handleInput "2" = do
   state <- get
-  liftIO $ printBoard $ board $ game state
+  displayGame
   printLn "Enter board size:"
   printLn "Enter winning streak amount:"
   modify (\s -> s {playing = True})
@@ -59,6 +60,11 @@ menu = do
   printLn "3. Evaporating Style Game Setup"
   printLn ""
   printLn "Select a number."
+
+displayGame :: StateT AppState IO ()
+displayGame = do
+  state <- get
+  liftIO $ printBoard $ board $ game state
 
 -- | helper function to avoid using liftIO everytime I print something inside a StateT function.
 printLn :: String -> StateT AppState IO ()
