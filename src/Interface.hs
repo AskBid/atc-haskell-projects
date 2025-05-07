@@ -89,6 +89,19 @@ gamemove gm = do
       Right gm' -> do 
         gamemove gm'
 
+placePawnMove :: Player -> Board -> IO ()
+placePawnMove p b = do
+  printBoard b
+  putStrLn "give me a move:"
+  input <- getLine
+  let coords = parse' input
+  case placePawn p coords b of 
+    Nothing -> placePawnMove p b
+    Just bnew -> placePawnMove (otherPlayer p) bnew
+  where
+    parse' i = case parse (coordinateParser ["A","B","C"]) "" i of
+      Left e -> Coordinate 0 0
+      Right xy -> xy
 
 menu :: StateT AppState IO ()
 menu = do 
