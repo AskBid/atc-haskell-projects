@@ -6,6 +6,7 @@ module Game
   , win
   , winStreak
   , move
+  , otherPlayer
   ) where
 
 import Data.Maybe (isNothing, fromMaybe)
@@ -22,7 +23,7 @@ import Helpers as H
 
 data Game = Game
   { board       :: Board 
-  , turn        :: Player
+  , lastMove    :: Player
   , countToWin  :: CountToWin
   } deriving Show
 type CountToWin = Int
@@ -32,12 +33,15 @@ move :: Coordinate -> Game -> Either String Game
 move xy Game{..} = 
   case tryMove of  
     Nothing       -> Left "err: The move is not valid."
-    Just newBoard -> Right $ Game newBoard nextPlayer countToWin
+    Just newBoard -> Right $ Game newBoard movePlayer countToWin
   where
-    otherPlayer O = X
-    otherPlayer X = O
-    nextPlayer = otherPlayer turn
-    tryMove = placePawn nextPlayer xy board
+    movePlayer = otherPlayer lastMove
+    tryMove = placePawn movePlayer xy board
+
+otherPlayer :: Player -> Player
+otherPlayer O = X
+otherPlayer X = O
+ 
 
 mkGame :: Int -> CountToWin -> Maybe Game
 mkGame boardL ctw 

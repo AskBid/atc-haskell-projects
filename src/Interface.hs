@@ -58,7 +58,9 @@ setupGame = undefined
 gameLoop :: StateT AppState IO ()
 gameLoop = do
   state <- get
-  let player = turn $ game state
+  printLn ":::top of gameloop:::"
+  displayGame state 
+  let player = otherPlayer $ lastMove $ game state
   printLn $ "Enter coordinates for player `" ++ show player ++ "` next move"
   input <- getLn
   case parse (coordinateParser ["A","B","C"]) "" input of
@@ -66,10 +68,27 @@ gameLoop = do
     Right xy -> case move xy $ game state of
       Left e   -> printLn e
       Right gm -> modify (\s -> s {game=gm})
+  printLn ":::after move happened previous state:::"
+  printLn $ show $ game state
   state' <- get
-  displayGame state' 
+  printLn ":::after getting new state:::"
+  printLn $ show $ game state'
   when (isNothing $ win $ game state') gameLoop
   printLn "game ended"
+
+gamemove :: Game -> IO (Maybe Game)
+gamemove gm = do
+  let player = otherPlayer $ lastMove gm
+  printBoard $ board gm
+  putStrLn $ "Enter coordinates for player `" ++ show player ++ "` next move"
+  input <- getLine
+  case parse (coordinateParser ["A","B","C"]) "" input of
+    Left e   -> return Nothing
+    Right xy -> case move xy $ gm of
+      Left e   -> return Nothing 
+      Right gm' -> do 
+        gamemove gm'
+
 
 menu :: StateT AppState IO ()
 menu = do 

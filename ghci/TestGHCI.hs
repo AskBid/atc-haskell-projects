@@ -22,6 +22,11 @@ bb9 = [ [Just X, Just O, Nothing, Just X,Nothing,Nothing,Nothing,Nothing,Just O]
        ,[Just X, Just O, Nothing, Just X,Nothing,Nothing,Nothing,Nothing,Just O]
        ,[Just X, Just O, Nothing, Just X,Nothing,Nothing,Nothing,Nothing,Just O]
        ,[Just X, Just O, Nothing, Just X,Nothing,Nothing,Nothing,Nothing,Just O]]
- 
+
+bb0 = [[Nothing, Nothing, Nothing]
+      ,[Nothing, Nothing, Nothing]
+      ,[Nothing, Nothing, Nothing]]
+
 
 gm1 = (Game bb3 O 3)
+gm0 = (Game bb0 O 3)

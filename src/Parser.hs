@@ -28,7 +28,7 @@ digiCombo = do
   x <- many1 digit
   spaces
   y <- many1 digit
-  return $ Coordinate {x=read x, y=read y}
+  return $ Coordinate {x=read x, y=(read y)-1}
 
 -- | parses only a letter index plus a digit input.
 --   first argument is the list of all possible board letter indexes 
@@ -40,7 +40,7 @@ charDigiCombo cxs = do
   y <- many1 digit
   case fromCharIndexToInt cxs (toUpper <$> cx) of
     Nothing -> fail "the letter coordinate was not valid."
-    Just x' -> return $ Coordinate {x= x', y=read y}
+    Just x' -> return $ Coordinate {x= x', y=(read y)-1}
 
 
 -- | from a list of letter indexes for the current board, gives the corresponding
@@ -48,4 +48,4 @@ charDigiCombo cxs = do
 --   first argument is the list of all possible board letter indexes 
 --   (limited by board size).
 fromCharIndexToInt :: [String] -> String -> Maybe Int
-fromCharIndexToInt cixs cix = (+1) <$> (elemIndex cix cixs)
+fromCharIndexToInt cixs cix = elemIndex cix cixs
