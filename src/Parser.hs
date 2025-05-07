@@ -25,5 +25,21 @@ coordinateParser charIndexes = do
       Just x -> return $ Coordinate {x=x, y=read ys}
       Nothing -> fail "the letter coordinate was not valid."
 
+digiCombo :: Parser Coordinate
+digiCombo = do
+  x <- many1 digit
+  spaces
+  y <- many1 digit
+  return $ Coordinate {x=read x, y=read y}
+
+digiCharCombo :: [String] -> Parser Coordinate
+digiCharCombo cxs = do
+  cx <- many1 letter
+  spaces
+  y <- many1 digit
+  case fromCharIndexToInt cxs cx of
+    Nothing -> fail "the letter coordinate was not valid."
+    Just x' -> return $ Coordinate {x= x', y=read y}
+
 fromCharIndexToInt :: [String] -> String -> Maybe Int
-fromCharIndexToInt cixs cix = elemIndex cix cixs 
+fromCharIndexToInt cixs cix = (+1) <$> (elemIndex cix cixs) 
