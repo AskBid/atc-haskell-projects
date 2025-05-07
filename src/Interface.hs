@@ -4,7 +4,7 @@ import System.IO (hFlush, stdout)
 import Control.Monad.State
 import Control.Monad (when)
 -- import Control.Monad.IO.Class
-import Data.Maybe (isNothing)
+import Data.Maybe (isNothing, fromMaybe)
 import Text.Parsec (parse)
 
 import Game
@@ -15,13 +15,13 @@ import Parser
 data AppState = AppState
   { game :: Game
   , isLooping :: Bool
-  , playing :: Bool
   } -- deriving (Show)
 
 loop :: StateT AppState IO ()
 loop = do
   state <- get
-  when (not $ playing state) menu  
+  printLn "------------------------" 
+  menu
   printLn "Enter command/selection: " -- liftIO $ hFlush stdout -- not sure I need it
   input <- getLn 
   handleInput input
@@ -34,9 +34,12 @@ handleInput "exit" = do
   modify (\s -> s {isLooping = False})
 --
 handleInput "0" = do
-  modify (\s -> s {playing = True})
   printLn "Quick Standard Game Started!"
   gameLoop
+  state <- get
+  displayGame state
+  printLn $ "Winner is: " ++ (show $ fromMaybe O $ win $ game state)
+  clearBoard
 -- 
 handleInput "2" = do
   state <- get
@@ -83,6 +86,14 @@ menu = do
 displayGame :: AppState -> StateT AppState IO ()
 displayGame state = do
   liftIO $ printBoard $ board $ game state
+  printLn ""
+
+clearBoard :: StateT AppState IO ()
+clearBoard = do
+  state <- get
+  let gm = game state
+  let boardSize = length $ board gm
+  modify (\s -> s {game= gm {board= mkBoard boardSize}})
 
 -- | helper function to avoid using liftIO everytime I print something inside a StateT function.
 printLn :: String -> StateT AppState IO ()

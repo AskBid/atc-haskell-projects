@@ -16,5 +16,5 @@ main = do
   case gm of
     Nothing -> putStrLn "error"
     Just g -> do 
-      runStateT loop $ AppState g True False
+      runStateT loop $ AppState g True
       putStrLn "------loop end.-------" 
