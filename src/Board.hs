@@ -24,11 +24,12 @@ minStreak = 3
 
 -- | like a move function but not including turn-check, only valid-move check.
 placePawn :: Player -> Coordinate -> Board -> Maybe Board
-placePawn p Coordinate{..} b 
-  | freeSpace (Coordinate x y) b = pure $ setAt y newRow b
-  | otherwise = Nothing
+placePawn p Coordinate{..} b = 
+  if freeSpace (Coordinate x y) b
+  then pure $ setAt y newRow b
+  else Nothing
   where
-    row = b !! x
+    row = b !! y
     newRow = setAt x (pure p) row
 
 -- | checks if pawn move is valid.
