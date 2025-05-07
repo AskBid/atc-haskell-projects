@@ -5,6 +5,7 @@ module Game
   , mkGame
   , win
   , winStreak
+  , move
   ) where
 
 import Data.Maybe (isNothing, fromMaybe)
@@ -23,7 +24,7 @@ data Game = Game
   { board       :: Board 
   , turn        :: Player
   , countToWin  :: CountToWin
-  }
+  } deriving Show
 type CountToWin = Int
 
 -- | uses placePawn to make a move in game, considering turn.
@@ -55,8 +56,6 @@ win (Game b _ ctw) = fromMaybe Nothing winner
 --   @Game@ argument is only used to get the @countToWin@ value that gives the
 --   lenght of tokeens required for a win. 
 --   @[Maybe Player]@ is the line being analysed to find a winner.
--- Qs: is using Game bad for performance Vs only Int? 
---     trade off with clarity/solidity? // eventually used a type * = Int
 winStreak :: CountToWin -> [Maybe Player] -> Maybe Player
 winStreak _ [] = Nothing
 winStreak ctw (p:ps)

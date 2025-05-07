@@ -4,7 +4,8 @@ import System.IO (hFlush, stdout)
 import Control.Monad.State
 import Control.Monad (when)
 -- import Control.Monad.IO.Class
--- import Data.Maybe
+import Data.Maybe (isNothing)
+import Text.Parsec (parse)
 
 import Game
 import Board
@@ -35,19 +36,13 @@ handleInput "exit" = do
 handleInput "0" = do
   modify (\s -> s {playing = True})
   printLn "Quick Standard Game Started!"
-  state <- get
-  displayGame state
-  let player = turn $ game state
-  printLn $ "Enter coordinates for player `" ++ show player ++ "` next move"
-  input <- getLn
-  handleGame input
+  gameLoop
 -- 
 handleInput "2" = do
   state <- get
   displayGame state
   printLn "Enter board size:"
   printLn "Enter winning streak amount:"
-  modify (\s -> s {playing = True})
 -- 
 handleInput "help" = do
   printLn "exit"
@@ -56,8 +51,32 @@ handleInput input = do
   printLn $ "You entered: " ++ input
   printLn "Not valid entry."
 
-handleGame :: String -> StateT AppState IO ()
-handleGame = undefined
+
+setupGame :: StateT AppState IO ()
+setupGame = undefined
+
+gameLoop :: StateT AppState IO ()
+gameLoop = do
+  state <- get
+  displayGame state
+  moveDialogue
+  where
+    moveDialogue = do
+      state <- get
+      let player = turn $ game state
+      printLn $ "Enter coordinates for player `" ++ show player ++ "` next move"
+      input <- getLn
+      handleGame input
+      when (isNothing $ win $ game state) moveDialogue
+
+handleGame :: String -> StateT AppState IO (Maybe Game)
+handleGame input = do
+  state <- get
+  case parse (coordinateParser ["A","B","C"]) "" input of
+    Left e -> do
+      printLn "Bad coordinate input entered."
+      return Nothing
+    Right xy -> return $ move xy $ game state 
 
 menu :: StateT AppState IO ()
 menu = do 
