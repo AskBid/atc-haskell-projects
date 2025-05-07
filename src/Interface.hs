@@ -31,19 +31,27 @@ handleInput :: String -> StateT AppState IO ()
 handleInput "exit" = do
   printLn "Goodbye!"
   modify (\s -> s {isLooping = False})
+--
 handleInput "0" = do
-  printLn ""
-  input <- getLn
   modify (\s -> s {playing = True})
+  printLn "Quick Standard Game Started!"
+  state <- get
+  displayGame state
+  let player = turn $ game state
+  printLn $ "Enter coordinates for player `" ++ show player ++ "` next move"
+  input <- getLn
   handleGame input
+-- 
 handleInput "2" = do
   state <- get
-  displayGame
+  displayGame state
   printLn "Enter board size:"
   printLn "Enter winning streak amount:"
   modify (\s -> s {playing = True})
+-- 
 handleInput "help" = do
   printLn "exit"
+-- 
 handleInput input = do
   printLn $ "You entered: " ++ input
   printLn "Not valid entry."
@@ -61,9 +69,8 @@ menu = do
   printLn ""
   printLn "Select a number."
 
-displayGame :: StateT AppState IO ()
-displayGame = do
-  state <- get
+displayGame :: AppState -> StateT AppState IO ()
+displayGame state = do
   liftIO $ printBoard $ board $ game state
 
 -- | helper function to avoid using liftIO everytime I print something inside a StateT function.
