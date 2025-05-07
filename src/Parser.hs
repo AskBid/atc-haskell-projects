@@ -28,7 +28,7 @@ digiCombo = do
   x <- many1 digit
   spaces
   y <- many1 digit
-  return $ Coordinate {x=read x, y=(read y)-1}
+  return $ Coordinate {x=(read x)-1, y=(read y)-1}
 
 -- | parses only a letter index plus a digit input.
 --   first argument is the list of all possible board letter indexes 
