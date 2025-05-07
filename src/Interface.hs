@@ -38,7 +38,10 @@ handleInput "0" = do
   gameLoop
   state <- get
   displayGame state
-  printLn $ "Winner is: " ++ (show $ fromMaybe O $ win $ game state)
+  let winner = win $ game state
+  if isNothing winner 
+  then printLn "The game was a Draw!"
+  else printLn $ "Winner is: " ++ (show $ fromMaybe O winner)
   clearBoard
 -- 
 handleInput "2" = do
@@ -71,7 +74,7 @@ gameLoop = do
       Left e   -> printLn e
       Right gm -> modify (\s -> s {game=gm})
   state' <- get
-  when (isNothing $ win $ game state') gameLoop
+  when ((isNothing $ win $ game state') && (not $ end $ game state')) gameLoop
 
 menu :: StateT AppState IO ()
 menu = do 

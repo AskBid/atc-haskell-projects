@@ -4,6 +4,7 @@ module Game
   ( Game(..) 
   , mkGame
   , win
+  , end
   , winStreak
   , move
   , otherPlayer
@@ -41,12 +42,16 @@ move xy Game{..} =
 otherPlayer :: Player -> Player
 otherPlayer O = X
 otherPlayer X = O
- 
 
 mkGame :: Int -> CountToWin -> Maybe Game
 mkGame boardL ctw 
   | ctw <= boardL && ctw > 1 = Just $ Game (mkBoard boardL) O ctw
   | otherwise                = Nothing
+
+end :: Game -> Bool
+end Game{..} =  0 == (length $ filter isNothing flatBoard)
+  where
+    flatBoard = concat board
 
 -- | given a @Game@ as argument returns a @Just Player@ if a winner is found,
 --   or @Nothing@ if the game isn't finished.
@@ -57,7 +62,7 @@ win (Game b _ ctw) = fromMaybe Nothing winner
     winner = H.head (dropWhile notWin $ winStreak ctw <$> (boardlines b))
 
 -- | Find the winner in a line from @Board.boardlines@.
---   @Game@ argument is only used to get the @countToWin@ value that gives the
+--   from @Game@ we get the @countToWin@ value that gives the
 --   lenght of tokeens required for a win. 
 --   @[Maybe Player]@ is the line being analysed to find a winner.
 winStreak :: CountToWin -> [Maybe Player] -> Maybe Player
