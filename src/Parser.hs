@@ -4,11 +4,14 @@ import Text.Parsec
 import Text.Parsec.String (Parser)
 import Data.List (elemIndex)
 import Text.Read (readMaybe)
+import Data.Char
 
 import Board
 
 -- | parse coordinates from user input, forces to have the horizontal coordinate first,
 --   but accepts both coordinates as numbers.
+--   first argument is the list of all possible board letter indexes 
+--   (limited by board size).
 -- AB 1 --V
 -- 1 AB --X
 -- 3ab  --X
@@ -16,15 +19,10 @@ import Board
 -- 1 3  --V
 coordinateParser :: [String] -> Parser Coordinate
 coordinateParser charIndexes = do
-  xs <- many1 digit <|> many1 letter
-  spaces
-  ys <- many1 digit
-  case readMaybe xs of
-    Just num -> return $ Coordinate {y=read ys, x=num}
-    Nothing -> case fromCharIndexToInt charIndexes xs of
-      Just x -> return $ Coordinate {x=x, y=read ys}
-      Nothing -> fail "the letter coordinate was not valid."
+  coords <- digiCombo <|> charDigiCombo charIndexes
+  return coords
 
+-- | parses only two digits input with a space in between
 digiCombo :: Parser Coordinate
 digiCombo = do
   x <- many1 digit
@@ -32,14 +30,22 @@ digiCombo = do
   y <- many1 digit
   return $ Coordinate {x=read x, y=read y}
 
-digiCharCombo :: [String] -> Parser Coordinate
-digiCharCombo cxs = do
+-- | parses only a letter index plus a digit input.
+--   first argument is the list of all possible board letter indexes 
+--   (limited by board size). 
+charDigiCombo :: [String] -> Parser Coordinate
+charDigiCombo cxs = do
   cx <- many1 letter
   spaces
   y <- many1 digit
-  case fromCharIndexToInt cxs cx of
+  case fromCharIndexToInt cxs (toUpper <$> cx) of
     Nothing -> fail "the letter coordinate was not valid."
     Just x' -> return $ Coordinate {x= x', y=read y}
 
+
+-- | from a list of letter indexes for the current board, gives the corresponding
+--   integer index.
+--   first argument is the list of all possible board letter indexes 
+--   (limited by board size).
 fromCharIndexToInt :: [String] -> String -> Maybe Int
-fromCharIndexToInt cixs cix = (+1) <$> (elemIndex cix cixs) 
+fromCharIndexToInt cixs cix = (+1) <$> (elemIndex cix cixs)

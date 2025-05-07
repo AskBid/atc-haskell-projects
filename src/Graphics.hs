@@ -4,6 +4,7 @@
 module Graphics where
 
 import Data.String (fromString)
+import Data.Char (toUpper)
 
 import Board
 import Helpers as H
@@ -76,7 +77,7 @@ charsIxs = fromString "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 -- | creates an infinite list of letter indexes, multiple letters combo if exceedes 
 --   number of chars available.
 charIndexes8 :: [Char] -> [String]
-charIndexes8 cs = charIndex cs <$> [0..] 
+charIndexes8 cs = charIndex (toUpper <$> cs) <$> [0..] 
 
 charIndex :: [Char] -> Int -> String
 charIndex cs i = (prefix (i `div` l)) ++ [suffixChar]
