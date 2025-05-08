@@ -19,6 +19,7 @@ import Board
   , mkBoard
   , boardlines 
   , placePawn
+  , removePawn
   )
 import Helpers as H
 
@@ -50,15 +51,16 @@ move xy Game{..} =
 
 disappearingMove :: Coordinate -> Game -> Game
 disappearingMove xy gm
-  | length movesP < (countToWin gm) = gm {movesHistory= injectMove}
-  | otherwise = do           -- remove oldest move, delete pawn from board, add new move,
-      let boardNew = fromMaybe [[]] $ placePawn Nothing (last movesP) (board gm)  
-      gm
+  | length movesP < (countToWin gm) = gm {movesHistory= injectMove movesP}
+  | otherwise = do 
+      let boardNew = removePawn (last movesP) (board gm)  
+      let movesP' = take ((length movesP)-1) movesP
+      gm {movesHistory= injectMove movesP'
   where 
     movesP = getMoves thisPlayer moves
     thisPlayer = lastPlayer gm
     moves = movesHistory gm
-    injectMove = insertMovesH thisPlayer (xy:movesP) moves
+    injectMove ms = insertMovesH thisPlayer (xy:ms) moves
 
     insertMovesH :: Player -> [Coordinate] -> Moves -> Moves
     insertMovesH O cs mvs = mvs {playerO= cs}   
