@@ -51,21 +51,20 @@ move xy Game{..} =
 
 disappearingMove :: Coordinate -> Game -> Game
 disappearingMove xy gm
-  | length movesP < (countToWin gm) = gm {movesHistory= injectMove movesP}
-  | otherwise = do 
-      let boardNew = removePawn (last movesP) (board gm)  
-      let movesP' = take ((length movesP)-1) movesP
-      gm {movesHistory= injectMove movesP'
+  | length movesP < (countToWin gm) = 
+      gm {movesHistory= injectMove movesP}
+  | otherwise = 
+      gm {board= boardNew, movesHistory= injectMove movesP'}
   where 
     movesP = getMoves thisPlayer moves
     thisPlayer = lastPlayer gm
     moves = movesHistory gm
     injectMove ms = insertMovesH thisPlayer (xy:ms) moves
-
+    boardNew = removePawn (last movesP) (board gm)
+    movesP' = take ((length movesP)-1) movesP
     insertMovesH :: Player -> [Coordinate] -> Moves -> Moves
     insertMovesH O cs mvs = mvs {playerO= cs}   
     insertMovesH X cs mvs = mvs {playerX= cs}   
-
     getMoves :: Player -> Moves -> [Coordinate]
     getMoves O Moves{..} = playerO
     getMoves X Moves{..} = playerX
