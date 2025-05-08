@@ -31,7 +31,7 @@ data Game = Game
   } deriving Show
 type CountToWin = Int
 
-data Moves = Moves {playerO :: [(Int, Int)], playerX :: [(Int,Int)]} 
+data Moves = Moves {playerO :: [(Int,Int)], playerX :: [(Int,Int)]} 
   deriving Show
 
 -- | uses placePawn to make a move in game, considering turn.
@@ -39,11 +39,26 @@ move :: Coordinate -> Game -> Either String Game
 move xy Game{..} = 
   case tryMove of  
     Nothing       -> Left "err: The move is not valid."
-    Just newBoard -> Right $ Game newBoard movePlayer countToWin disappearingCount moves
+    Just newBoard -> do 
+      let gm = Game newBoard movePlayer countToWin disappearingCount moves
+      if isNothing disappearingCount
+      then Right $ gm 
+      else Right $ disappearingMove xy gm
   where
     movePlayer = otherPlayer lastMove
     tryMove = placePawn movePlayer xy board
 
+disappearingMove :: Coordinate -> Game -> Game
+disappearingMove Coordinate{..} Game{..}
+  | length mvs < countToWin = undefined -- add move 
+  | otherwise = undefined   
+  where 
+    mvs = getMoves lastMove moves
+
+getMoves :: Player -> Moves -> [(Int,Int)]
+getMoves O Moves{..} = playerO
+getMoves X Moves{..} = playerX
+    
 otherPlayer :: Player -> Player
 otherPlayer O = X
 otherPlayer X = O
@@ -51,6 +66,7 @@ otherPlayer X = O
 mkGame :: Int -> CountToWin -> Game
 mkGame boardL ctw = Game (mkBoard boardL) X ctw Nothing $ Moves [] []
 
+-- | asses if a board doesn't have any empty spaces.
 end :: Game -> Bool
 end Game{..} =  0 == (length $ filter isNothing flatBoard)
   where
