@@ -79,6 +79,9 @@ charsIxs = fromString "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 charIndexes8 :: [Char] -> [String]
 charIndexes8 cs = charIndex (toUpper <$> cs) <$> [0..] 
 
+-- | given a list of symbols (String) returns the element at the Int index of that list.
+--   if the index exceedes the list length, a combo of multiple letters is used to accepts
+--   an infinite amount of indexes.
 charIndex :: [Char] -> Int -> String
 charIndex cs i = (prefix (i `div` l)) ++ [suffixChar]
   where
