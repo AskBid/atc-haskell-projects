@@ -12,9 +12,6 @@ main = do
   putStrLn "---------O---X---------"
   putStrLn "Welcome to Tic Tac Toe!"
   putStrLn "-----------------------"
-  let gm = mkGame 3 3
-  case gm of
-    Nothing -> putStrLn "error"
-    Just g -> do 
-      runStateT loop $ AppState g True
-      putStrLn "------loop end.-------" 
+  let gm = mkGame 3 3 
+  runStateT loop $ AppState gm True
+  putStrLn "------loop end.-------" 

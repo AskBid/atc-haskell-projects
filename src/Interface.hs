@@ -45,10 +45,7 @@ handleInput "0" = do
   clearBoard
 -- 
 handleInput "2" = do
-  state <- get
-  displayGame state
-  printLn "Enter board size:"
-  printLn "Enter winning streak amount:"
+  buildCustomGame
 -- 
 handleInput "help" = do
   printLn "exit"
@@ -88,6 +85,7 @@ menu = do
 
 displayGame :: AppState -> StateT AppState IO ()
 displayGame state = do
+  printLn "\\/"
   liftIO $ printBoard $ board $ game state
   printLn ""
 
@@ -97,6 +95,23 @@ clearBoard = do
   let gm = game state
   let boardSize = length $ board gm
   modify (\s -> s {game= gm {board= mkBoard boardSize}})
+
+buildCustomGame :: StateT AppState IO ()
+buildCustomGame = do 
+  boardSize <- liftIO $ getSettingSize "Enter board size:" 
+  countToWin <- liftIO $ getSettingSize "Enter winning strake count:"
+  modify (\s -> s {game= (mkGame boardSize countToWin)})
+
+getSettingSize :: String -> IO Int
+getSettingSize str = do
+  putStrLn str
+  input <- getLine 
+  case parse acceptedNumber "" input of
+    Left e  -> do 
+      putStrLn $ last $ lines $ show e
+      getSettingSize str
+    Right boardSize -> return boardSize 
+
 
 -- | helper function to avoid using liftIO everytime I print something inside a StateT function.
 printLn :: String -> StateT AppState IO ()

@@ -49,3 +49,11 @@ charDigiCombo cxs = do
 --   (limited by board size).
 fromCharIndexToInt :: [String] -> String -> Maybe Int
 fromCharIndexToInt cixs cix = elemIndex cix cixs
+
+acceptedNumber :: Parser Int
+acceptedNumber = do
+  digits <- many1 digit
+  let num = read digits :: Int
+  if num >= 3 && num < 100
+    then return num
+    else fail "Number must be 3 < num < 100."

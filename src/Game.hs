@@ -43,10 +43,8 @@ otherPlayer :: Player -> Player
 otherPlayer O = X
 otherPlayer X = O
 
-mkGame :: Int -> CountToWin -> Maybe Game
-mkGame boardL ctw 
-  | ctw <= boardL && ctw > 1 = Just $ Game (mkBoard boardL) O ctw
-  | otherwise                = Nothing
+mkGame :: Int -> CountToWin -> Game
+mkGame boardL ctw = Game (mkBoard boardL) X ctw
 
 end :: Game -> Bool
 end Game{..} =  0 == (length $ filter isNothing flatBoard)
