@@ -36,16 +36,12 @@ handleInput "exit" = do
 handleInput "0" = do
   printLn "Quick Standard Game Started!"
   gameLoop
-  state <- get
-  displayGame state
-  let winner = win $ game state
-  if isNothing winner 
-  then printLn "The game was a Draw!"
-  else printLn $ "Winner is: " ++ (show $ fromMaybe O winner)
-  clearBoard
+  endGame 
 -- 
 handleInput "2" = do
   buildCustomGame
+  gameLoop
+  endGame
 -- 
 handleInput "help" = do
   printLn "exit"
@@ -88,6 +84,16 @@ displayGame state = do
   printLn "\\/"
   liftIO $ printBoard $ board $ game state
   printLn ""
+
+endGame :: StateT AppState IO ()
+endGame = do
+  state <- get
+  displayGame state
+  let winner = win $ game state
+  if isNothing winner 
+  then printLn "The game was a Draw!"
+  else printLn $ "Winner is: " ++ (show $ fromMaybe O winner)
+  clearBoard
 
 clearBoard :: StateT AppState IO ()
 clearBoard = do
