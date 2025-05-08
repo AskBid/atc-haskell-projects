@@ -27,7 +27,7 @@ data Game = Game
   { board       :: Board 
   , lastPlayer  :: Player
   , countToWin  :: CountToWin
-  , disappearingCount :: Maybe Int
+  , evaporCount :: Maybe Int
   , movesHistory :: Moves
   } deriving Show
 type CountToWin = Int
@@ -41,8 +41,8 @@ move xy Game{..} =
   case tryMove of  
     Nothing       -> Left "err: The move is not valid."
     Just newBoard -> do 
-      let gm = Game newBoard movePlayer countToWin disappearingCount movesHistory
-      if isNothing disappearingCount
+      let gm = Game newBoard movePlayer countToWin evaporCount movesHistory
+      if isNothing evaporCount
       then Right $ gm 
       else Right $ disappearingMove xy gm
   where
@@ -51,7 +51,7 @@ move xy Game{..} =
 
 disappearingMove :: Coordinate -> Game -> Game
 disappearingMove xy gm
-  | length movesP < (countToWin gm) = 
+  | length movesP < (fromMaybe (countToWin gm) $ evaporCount gm) = 
       gm {movesHistory= injectMove movesP}
   | otherwise = 
       gm {board= boardNew, movesHistory= injectMove movesP'}

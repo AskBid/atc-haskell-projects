@@ -43,8 +43,8 @@ handleInput "0" = do
   endGame 
 -- 
 handleInput "1" = do
-  printLn "Quick Disappearing Game Started!"
-  -- modify game to be disappearing style
+  printLn "Quick Evaporating Game Started!"
+  modify (\s -> s{game=(game s){evaporCount= Just 3}})
   gameLoop
   endGame 
 -- 
