@@ -31,7 +31,7 @@ data Game = Game
   } deriving Show
 type CountToWin = Int
 
-data Moves = Moves {playerO :: [(Int,Int)], playerX :: [(Int,Int)]} 
+data Moves = Moves {playerO :: [Coordinate], playerX :: [Coordinate]} 
   deriving Show
 
 -- | uses placePawn to make a move in game, considering turn.
@@ -49,16 +49,23 @@ move xy Game{..} =
     tryMove = placePawn movePlayer xy board
 
 disappearingMove :: Coordinate -> Game -> Game
-disappearingMove Coordinate{..} Game{..}
-  | length mvs < countToWin = undefined -- add new move 
+disappearingMove xy gm
+  | length movesP < (countToWin gm) = gm {movesHistory= injectMove}
   | otherwise = undefined               -- remove oldest move, delete pawn from board, add new move,
   where 
-    mvs = getMoves lastPlayer movesHistory
+    movesP = getMoves thisPlayer moves
+    thisPlayer = lastPlayer gm
+    moves = movesHistory gm
+    injectMove = insertMovesH thisPlayer (xy:movesP) moves
 
-getMoves :: Player -> Moves -> [(Int,Int)]
-getMoves O Moves{..} = playerO
-getMoves X Moves{..} = playerX
-    
+    insertMovesH :: Player -> [Coordinate] -> Moves -> Moves
+    insertMovesH O cs mvs = mvs {playerO= cs}   
+    insertMovesH X cs mvs = mvs {playerX= cs}   
+
+    getMoves :: Player -> Moves -> [Coordinate]
+    getMoves O Moves{..} = playerO
+    getMoves X Moves{..} = playerX
+
 otherPlayer :: Player -> Player
 otherPlayer O = X
 otherPlayer X = O
