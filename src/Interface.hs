@@ -72,9 +72,9 @@ gameLoop = do
   let player = otherPlayer $ lastPlayer $ game state
   printLn $ "Enter coordinates for player `" ++ show player ++ "` next move"
   input <- getLn
-  let letterIndexes = take (countToWin $ game state) $ charIndexes8 charsIxs 
+  let letterIndexes = take (length $ board $ game state) $ charIndexes8 charsIxs 
   case parse (coordinateParser letterIndexes) "" input of
-    Left e   -> printLn "err: Bad coordinate input."
+    Left e   -> printLn $ show e
     Right xy -> case move xy $ game state of
       Left e   -> printLn e
       Right gm -> modify (\s -> s {game=gm})
@@ -86,6 +86,7 @@ displayGame state = do
   printLn "\\/"
   printLn ""
   liftIO $ printBoard $ board $ game state
+  printLn ""
   printLn ""
 
 endGame :: StateT AppState IO ()
