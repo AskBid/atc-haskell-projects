@@ -24,8 +24,7 @@ loop = do
   printLn ""
   printLn "0. Quick Standard 3x3 Game"
   printLn "1. Quick Evaporating 3x3 Game"
-  printLn "2. Stadard Style Game Setup"
-  printLn "3. Evaporating Style Game Setup"
+  printLn "2. Stadard/Evaporating Custom Game Setup"
   printLn ""
   printLn "Select/enter a number or \"help\" to list available commands."
   input <- getLn 
@@ -40,6 +39,12 @@ handleInput "exit" = do
 --
 handleInput "0" = do
   printLn "Quick Standard Game Started!"
+  gameLoop
+  endGame 
+-- 
+handleInput "1" = do
+  printLn "Quick Disappearing Game Started!"
+  -- modify game to be disappearing style
   gameLoop
   endGame 
 -- 
@@ -64,7 +69,7 @@ gameLoop :: StateT AppState IO ()
 gameLoop = do
   state <- get
   displayGame state 
-  let player = otherPlayer $ lastMove $ game state
+  let player = otherPlayer $ lastPlayer $ game state
   printLn $ "Enter coordinates for player `" ++ show player ++ "` next move"
   input <- getLn
   let letterIndexes = take (countToWin $ game state) $ charIndexes8 charsIxs 
