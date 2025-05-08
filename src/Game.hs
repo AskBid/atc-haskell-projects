@@ -51,7 +51,9 @@ move xy Game{..} =
 disappearingMove :: Coordinate -> Game -> Game
 disappearingMove xy gm
   | length movesP < (countToWin gm) = gm {movesHistory= injectMove}
-  | otherwise = undefined               -- remove oldest move, delete pawn from board, add new move,
+  | otherwise = do           -- remove oldest move, delete pawn from board, add new move,
+      let boardNew = fromMaybe [[]] $ placePawn Nothing (last movesP) (board gm)  
+      gm
   where 
     movesP = getMoves thisPlayer moves
     thisPlayer = lastPlayer gm
