@@ -62,19 +62,16 @@ handleInput input = do
   printLn "Not valid entry."
 
 
-setupGame :: StateT AppState IO ()
-setupGame = undefined
-
 gameLoop :: StateT AppState IO ()
 gameLoop = do
   state <- get
   displayGame state 
   let player = otherPlayer $ lastPlayer $ game state
-  printLn $ "Enter coordinates for player `" ++ show player ++ "` next move"
+  printLn $ "Enter coordinates for player `" ++ show player ++ "` next move (e.g. a1, A1, a 1, 1 1)"
   input <- getLn
   let letterIndexes = take (length $ board $ game state) $ charIndexes8 charsIxs 
   case parse (coordinateParser letterIndexes) "" input of
-    Left e   -> printLn $ show e
+    Left e   -> printLn $ last $ lines $ show e
     Right xy -> case move xy $ game state of
       Left e   -> printLn e
       Right gm -> modify (\s -> s {game=gm})
