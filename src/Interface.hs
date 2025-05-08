@@ -21,8 +21,13 @@ loop :: StateT AppState IO ()
 loop = do
   state <- get
   printLn "------------------------" 
-  menu
-  printLn "Enter command/selection: " -- liftIO $ hFlush stdout -- not sure I need it
+  printLn ""
+  printLn "0. Quick Standard 3x3 Game"
+  printLn "1. Quick Evaporating 3x3 Game"
+  printLn "2. Stadard Style Game Setup"
+  printLn "3. Evaporating Style Game Setup"
+  printLn ""
+  printLn "Select/enter a number or \"help\" to list available commands)"
   input <- getLn 
   handleInput input
   state <- get
@@ -39,6 +44,7 @@ handleInput "0" = do
   endGame 
 -- 
 handleInput "2" = do
+  printLn ""
   buildCustomGame
   gameLoop
   endGame
@@ -69,16 +75,6 @@ gameLoop = do
   state' <- get
   when ((isNothing $ win $ game state') && (not $ end $ game state')) gameLoop
 
-menu :: StateT AppState IO ()
-menu = do 
-  printLn ""
-  printLn "0. Quick Standard 3x3 Game"
-  printLn "1. Quick Evaporating 3x3 Game"
-  printLn "2. Stadard Style Game Setup"
-  printLn "3. Evaporating Style Game Setup"
-  printLn ""
-  printLn "Select a number."
-
 displayGame :: AppState -> StateT AppState IO ()
 displayGame state = do
   printLn "\\/"
@@ -107,6 +103,8 @@ buildCustomGame = do
   boardSize <- liftIO $ getSettingSize "Enter board size:" 
   countToWin <- liftIO $ getSettingSize "Enter winning strake count:"
   modify (\s -> s {game= (mkGame boardSize countToWin)})
+  printLn "Custom Game Started!"
+  printLn $ "Make a line of "++ show countToWin ++" pawns to win the game!" 
 
 getSettingSize :: String -> IO Int
 getSettingSize str = do
