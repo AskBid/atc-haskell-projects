@@ -26,11 +26,18 @@ minStreak = 3
 placePawn :: Player -> Coordinate -> Board -> Maybe Board
 placePawn p Coordinate{..} b = 
   if freeSpace (Coordinate x y) b
-  then pure $ setAt y newRow b
+  then pure $ replaceItem (pure p) b x y 
   else Nothing
+
+removePawn :: Coordinate -> Board -> Maybe Board
+removePawn = undefined
+
+replaceItem :: a -> [[a]] -> Int -> Int -> [[a]]
+replaceItem el rows x y = setAt y newRow rows
   where
-    row = b !! y
-    newRow = setAt x (pure p) row
+    row = rows !! y
+    newRow = setAt x el row
+
 
 -- | checks if pawn move is valid.
 freeSpace :: Coordinate -> Board -> Bool
