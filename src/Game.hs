@@ -24,10 +24,10 @@ import Helpers as H
 
 data Game = Game
   { board       :: Board 
-  , lastMove    :: Player
+  , lastPlayer  :: Player
   , countToWin  :: CountToWin
   , disappearingCount :: Maybe Int
-  , moves :: Moves
+  , movesHistory :: Moves
   } deriving Show
 type CountToWin = Int
 
@@ -40,20 +40,20 @@ move xy Game{..} =
   case tryMove of  
     Nothing       -> Left "err: The move is not valid."
     Just newBoard -> do 
-      let gm = Game newBoard movePlayer countToWin disappearingCount moves
+      let gm = Game newBoard movePlayer countToWin disappearingCount movesHistory
       if isNothing disappearingCount
       then Right $ gm 
       else Right $ disappearingMove xy gm
   where
-    movePlayer = otherPlayer lastMove
+    movePlayer = otherPlayer lastPlayer
     tryMove = placePawn movePlayer xy board
 
 disappearingMove :: Coordinate -> Game -> Game
 disappearingMove Coordinate{..} Game{..}
-  | length mvs < countToWin = undefined -- add move 
-  | otherwise = undefined   
+  | length mvs < countToWin = undefined -- add new move 
+  | otherwise = undefined               -- remove oldest move, delete pawn from board, add new move,
   where 
-    mvs = getMoves lastMove moves
+    mvs = getMoves lastPlayer movesHistory
 
 getMoves :: Player -> Moves -> [(Int,Int)]
 getMoves O Moves{..} = playerO
