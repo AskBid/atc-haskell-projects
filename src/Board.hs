@@ -29,15 +29,14 @@ placePawn p Coordinate{..} b =
   then pure $ replaceItem (pure p) b x y 
   else Nothing
 
-removePawn :: Coordinate -> Board -> Maybe Board
-removePawn = undefined
+removePawn :: Coordinate -> Board -> Board
+removePawn Coordinate{..} b = replaceItem Nothing b x y 
 
 replaceItem :: a -> [[a]] -> Int -> Int -> [[a]]
 replaceItem el rows x y = setAt y newRow rows
   where
     row = rows !! y
     newRow = setAt x el row
-
 
 -- | checks if pawn move is valid.
 freeSpace :: Coordinate -> Board -> Bool
