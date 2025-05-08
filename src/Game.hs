@@ -27,15 +27,19 @@ data Game = Game
   , lastMove    :: Player
   , countToWin  :: CountToWin
   , disappearingCount :: Maybe Int
+  , moves :: Moves
   } deriving Show
 type CountToWin = Int
+
+data Moves = Moves {playerO :: [(Int, Int)], playerX :: [(Int,Int)]} 
+  deriving Show
 
 -- | uses placePawn to make a move in game, considering turn.
 move :: Coordinate -> Game -> Either String Game
 move xy Game{..} = 
   case tryMove of  
     Nothing       -> Left "err: The move is not valid."
-    Just newBoard -> Right $ Game newBoard movePlayer countToWin disappearingCount
+    Just newBoard -> Right $ Game newBoard movePlayer countToWin disappearingCount moves
   where
     movePlayer = otherPlayer lastMove
     tryMove = placePawn movePlayer xy board
@@ -45,7 +49,7 @@ otherPlayer O = X
 otherPlayer X = O
 
 mkGame :: Int -> CountToWin -> Game
-mkGame boardL ctw = Game (mkBoard boardL) X ctw Nothing
+mkGame boardL ctw = Game (mkBoard boardL) X ctw Nothing $ Moves [] []
 
 end :: Game -> Bool
 end Game{..} =  0 == (length $ filter isNothing flatBoard)
@@ -55,7 +59,7 @@ end Game{..} =  0 == (length $ filter isNothing flatBoard)
 -- | given a @Game@ as argument returns a @Just Player@ if a winner is found,
 --   or @Nothing@ if the game isn't finished.
 win :: Game -> Maybe Player
-win (Game b _ ctw _) = fromMaybe Nothing winner 
+win (Game b _ ctw _ _) = fromMaybe Nothing winner 
   where
     notWin p = isNothing p
     winner = H.head (dropWhile notWin $ winStreak ctw <$> (boardlines b))
