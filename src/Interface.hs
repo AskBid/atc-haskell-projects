@@ -27,7 +27,7 @@ loop = do
   printLn "2. Stadard Style Game Setup"
   printLn "3. Evaporating Style Game Setup"
   printLn ""
-  printLn "Select/enter a number or \"help\" to list available commands)"
+  printLn "Select/enter a number or \"help\" to list available commands."
   input <- getLn 
   handleInput input
   state <- get
@@ -78,6 +78,7 @@ gameLoop = do
 displayGame :: AppState -> StateT AppState IO ()
 displayGame state = do
   printLn "\\/"
+  printLn ""
   liftIO $ printBoard $ board $ game state
   printLn ""
 
@@ -100,20 +101,20 @@ clearBoard = do
 
 buildCustomGame :: StateT AppState IO ()
 buildCustomGame = do 
-  boardSize <- liftIO $ getSettingSize "Enter board size:" 
-  countToWin <- liftIO $ getSettingSize "Enter winning strake count:"
+  boardSize <- liftIO $ getSettingSize "Enter board size:" 100 
+  countToWin <- liftIO $ getSettingSize "Enter winning strake count:" boardSize
   modify (\s -> s {game= (mkGame boardSize countToWin)})
   printLn "Custom Game Started!"
   printLn $ "Make a line of "++ show countToWin ++" pawns to win the game!" 
 
-getSettingSize :: String -> IO Int
-getSettingSize str = do
+getSettingSize :: String -> Int -> IO Int
+getSettingSize str limit = do
   putStrLn str
   input <- getLine 
-  case parse acceptedNumber "" input of
+  case parse (acceptedNumber limit) "" input of
     Left e  -> do 
       putStrLn $ last $ lines $ show e
-      getSettingSize str
+      getSettingSize str limit
     Right boardSize -> return boardSize 
 
 

@@ -50,10 +50,10 @@ charDigiCombo cxs = do
 fromCharIndexToInt :: [String] -> String -> Maybe Int
 fromCharIndexToInt cixs cix = elemIndex cix cixs
 
-acceptedNumber :: Parser Int
-acceptedNumber = do
+acceptedNumber :: Int -> Parser Int
+acceptedNumber lim = do
   digits <- many1 digit
   let num = read digits :: Int
-  if num >= 3 && num < 100
+  if num >= 3 && num < lim
     then return num
     else fail "Number must be 3 < num < 100."
