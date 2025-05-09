@@ -64,18 +64,21 @@ handleInput "exit" = do
 --
 handleInput "0" = do
   printLn "Quick Standard Game Started!"
+  setStartintPawn
   gameLoop
   endGame 
 -- 
 handleInput "1" = do
   printLn "Quick Evaporating Game Started!"
   modify (\s -> s{game=(game s){evaporCount= Just 3}})
+  setStartintPawn
   gameLoop
   endGame 
 -- 
 handleInput "2" = do
   printLn ""
   buildCustomGame
+  setStartintPawn
   gameLoop
   endGame
 --- 
@@ -85,6 +88,7 @@ handleInput "3" = do
   printLn "Replaying game with:"
   printLn $ "Evaporating value: " ++ (show $ evaporCount $ game state)
   printLn $ "Winning strake value: " ++ (show $ countToWin $ game state)
+  setStartintPawn
   gameLoop
   endGame
 handleInput "repeat" = handleInput "3"
