@@ -13,5 +13,5 @@ main = do
   putStrLn "Welcome to Tic Tac Toe!"
   putStrLn "-----------------------"
   let gm = mkGame 3 3 
-  runStateT loop $ AppState gm True
+  runStateT loop $ AppState gm True 0 0
   putStrLn "------loop end.-------" 

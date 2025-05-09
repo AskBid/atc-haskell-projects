@@ -15,6 +15,8 @@ import Parser
 data AppState = AppState
   { game :: Game
   , isLooping :: Bool
+  , scoresO :: Int
+  , scoresX :: Int
   } -- deriving (Show)
 
 loop :: StateT AppState IO ()
@@ -67,7 +69,7 @@ gameLoop = do
   state <- get
   displayGame state 
   let player = otherPlayer $ lastPlayer $ game state
-  printLn $ "Enter coordinates for player `" ++ show player ++ "` next move (e.g. a1, A1, a 1, 1 1)"
+  printLn $ "Enter coordinates for player `" ++ show player ++ "` next move. (e.g. a1, A1, a 1, 1 1)"
   input <- getLn
   let letterIndexes = take (length $ board $ game state) $ charIndexes8 charsIxs 
   case parse (coordinateParser letterIndexes) "" input of
@@ -91,6 +93,7 @@ endGame = do
   state <- get
   displayGame state
   let winner = win $ game state
+  modify (\s -> s {
   if isNothing winner 
   then printLn "The game was a Draw!"
   else printLn $ "Winner is: " ++ (show $ fromMaybe O winner)
@@ -135,6 +138,13 @@ getSettingSize defaulT str min max = do
         getSettingSize defaulT str min max
       Right boardSize -> return boardSize 
 
+dispatchScores :: Player -> AppState -> AppState
+dispatchScores O as = as{scores= {playerO= pOs}}
+dispatchScores X as = as{scores= {playerX= pXs}}
+  where
+    ctw = countToWin $ game as
+    pOs = playerO as + ctw
+    pXs = playerX as + ctw
 
 -- | helper function to avoid using liftIO everytime I print something inside a StateT function.
 printLn :: String -> StateT AppState IO ()
