@@ -85,11 +85,14 @@ handleInput "scores" = do
 -- 
 -- 
 handleInput "reset" = do
-  printLn "reset"
+  let app = AppState (mkGame 3 3) True 0 0 True
+  printLn "Games history reset."
+  app' <- liftIO $ multiplayer app
+  modify $ const app'
 -- 
 handleInput input = do
   printLn $ "You entered: " ++ input
-  printLn "Not valid entry."
+  printLn $ "err: `" ++ input ++ "` is not a valid command."
 
 
 gameLoop :: StateT AppState IO ()
