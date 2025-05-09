@@ -23,18 +23,22 @@ data AppState = AppState
   , startingPawn :: Player
   } -- deriving (Show)
 
-multiplayer :: AppState -> IO (AppState)
+multiplayer :: AppState -> IO AppState
 multiplayer as = do
-  putStrLn "Player X should be AI or Human?:"
-  putStrLn "(`ai`, `human`, press enter for default (AI)"
-  inputX <- getLine
-  putStrLn "Player O should be AI or Human?:"
-  putStrLn "(`ai`, `human`, press enter for default (AI)"
-  inputO <- getLine
-  let as' = as{aiX= parseAiInput inputX}
-  return as'{aiO= parseAiInput inputO}
+  as' <- interface X as
+  interface O as' 
   -- putStrLn "please enter only `human` or `ai`"
   where
+    interface :: Player -> AppState -> IO AppState
+    interface p as'' = do
+      putStrLn $ "Player `" ++ show p ++ "` should be AI or Human?:"
+      putStrLn "(`ai`, `human`, press enter for default (AI)"
+      input <- getLine
+      dispatchChange input p as''
+    dispatchChange :: String -> Player -> AppState -> IO AppState
+    dispatchChange i p as''' 
+      | p == X = return as'''{aiX= parseAiInput i}
+      | p == O = return as'''{aiO= parseAiInput i}
     parseAiInput ""      = True 
     parseAiInput "ai"    = True 
     parseAiInput "human" = False 
