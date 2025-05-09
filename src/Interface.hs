@@ -41,7 +41,9 @@ loop = do
           \0         |                                 Quick Standard 3x3 Game\n\
           \1         |                              Quick Evaporating 3x3 Game\n\
           \2         |                   Stadard/Evaporating Custom Game Setup\n\
+          \3         |                                        repeat last game\n\
           \          |                                                        \n\
+          \repeat    |                                        repeat last game\n\
           \scores    |                 Shows the scores of all games this far.\n\
           \starting  |                    Switch the player that starts first.\n\
           \reset     |                 Reinitiate App (select Multiplayer/AI).\n\
@@ -75,7 +77,17 @@ handleInput "2" = do
   buildCustomGame
   gameLoop
   endGame
--- 
+--- 
+handleInput "3" = do
+  state <- get
+  printLn ""
+  printLn "Replaying game with:"
+  printLn $ "Evaporating value: " ++ (show $ evaporCount $ game state)
+  printLn $ "Winning strake value: " ++ (show $ countToWin $ game state)
+  gameLoop
+  endGame
+handleInput "repeat" = handleInput "3"
+--  
 handleInput "starting" = do
   printLn "switch starting player"
 -- 
@@ -101,8 +113,8 @@ gameLoop = do
   displayGame state 
   let player = otherPlayer $ lastPlayer $ game state
   if humanVsAI state 
-    then getPlayerCoordinates player state 
-    else getAiMove $ game state
+    then getAiMove $ game state
+    else getPlayerCoordinates player state 
   state' <- get
   when ((isNothing $ win $ game state') && (not $ end $ game state')) gameLoop
 
