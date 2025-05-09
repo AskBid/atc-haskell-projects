@@ -73,8 +73,9 @@ otherPlayer :: Player -> Player
 otherPlayer O = X
 otherPlayer X = O
 
+-- | notice O as lastPlayer means X will start the game.
 mkGame :: Int -> CountToWin -> Game
-mkGame boardL ctw = Game (mkBoard boardL) X ctw Nothing $ Moves [] []
+mkGame boardL ctw = Game (mkBoard boardL) O ctw Nothing $ Moves [] []
 
 -- | asses if a board doesn't have any empty spaces.
 end :: Game -> Bool
