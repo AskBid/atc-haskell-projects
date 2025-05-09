@@ -164,6 +164,7 @@ gameLoop = do
       takePlayersStatus X state = aiX state 
       takePlayersStatus O state = aiO state
 
+-- | connects AI functions to state modification.
 getAiMove :: Game -> StateT AppState IO ()
 getAiMove gm = modify (\s -> s{game= newGame})
   where 
