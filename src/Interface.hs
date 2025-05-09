@@ -83,7 +83,7 @@ handleInput "2" = do
   setStartintPawn
   gameLoop
   endGame
---- 
+--
 handleInput "3" = do
   state <- get
   printLn ""
@@ -93,16 +93,23 @@ handleInput "3" = do
   setStartintPawn
   gameLoop
   endGame
+--
 handleInput "repeat" = handleInput "3"
 --  
 handleInput "starting" = do
   switchStartingPlayer
   printLn "Switched starting player"
 -- 
--- 
 handleInput "scores" = do
-  printLn "scores"
--- 
+  state <- get
+  printLn "Scores are calculated by assigning the winning streak number for each win."
+  printLn ""
+  printLn $ "Player X scores: " ++ (show $ scoresX state) 
+  printLn $ "Player O scores: " ++ (show $ scoresO state) 
+  printLn ""
+  printLn "press Enter to continue."
+  input <- getLn
+  printLn ""
 -- 
 handleInput "reset" = do
   let app = AppState (mkGame 3 3) True 0 0 True X
@@ -113,6 +120,8 @@ handleInput "reset" = do
 handleInput input = do
   printLn $ "You entered: " ++ input
   printLn $ "err: `" ++ input ++ "` is not a valid command."
+-- handleInput end
+
 
 setStartintPawn :: StateT AppState IO ()
 setStartintPawn = do
