@@ -99,14 +99,14 @@ gameLoop = do
   let player = otherPlayer $ lastPlayer $ game state
   if humanVsAI state 
     then getPlayerCoordinates player state 
-    else makeAImove $ game state
+    else getAiMove $ game state
   state' <- get
   when ((isNothing $ win $ game state') && (not $ end $ game state')) gameLoop
 
-getAiMove :: AppState -> StateT AppState IO ()
-getAiMove as = as{game= newGame}
+getAiMove :: Game -> StateT AppState IO ()
+getAiMove gm = modify (\s -> s{game= newGame})
   where 
-    newGame = makeAiMove $ game as
+    newGame = makeAiMove gm
 
 getPlayerCoordinates :: Player -> AppState -> StateT AppState IO ()
 getPlayerCoordinates p state = do 
