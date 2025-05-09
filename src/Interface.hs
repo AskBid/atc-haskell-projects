@@ -45,11 +45,13 @@ loop = do
           \3         |                                        repeat last game\n\
           \          |                                                        \n\
           \repeat    |                                        repeat last game\n\
-          \scores    |                 Shows the scores of all games this far.\n\
-          \starting  |                    Switch the player that starts first.\n\
-          \reset     |                 Reinitiate App (select Multiplayer/AI).\n\
-          \exit      |                                      Exit from the App.\n\
+          \scores    |                  Shows the scores of all games this far\n\
+          \starting  |                     Switch the player that starts first\n\
+          \reset     |                  Reinitiate App (select Multiplayer/AI)\n\
+          \exit      |                                       Exit from the App\n\
           \-------------------------------------------------------------------"
+  printLn ""
+  printLn $ "Player to start next: " ++ (show $ startingPawn state)
   printLn ""
   printLn "Please, enter a command from the list above:"
   input <- getLn 
@@ -94,10 +96,8 @@ handleInput "3" = do
 handleInput "repeat" = handleInput "3"
 --  
 handleInput "starting" = do
-  printLn "switch starting player"
-  state <- get
-  let current = startingPawn state
-  modify (\s -> state{startingPawn= otherPlayer current})
+  switchStartingPlayer
+  printLn "Switched starting player"
 -- 
 -- 
 handleInput "scores" = do
@@ -132,6 +132,7 @@ gameLoop = do
     else getPlayerCoordinates player state 
   state' <- get
   when ((isNothing $ win $ game state') && (not $ end $ game state')) gameLoop
+  handleInput "starting"
 
 getAiMove :: Game -> StateT AppState IO ()
 getAiMove gm = modify (\s -> s{game= newGame})
@@ -150,6 +151,12 @@ getPlayerCoordinates p state = do
     Right xy -> case move xy $ game state of
       Left e   -> printLn e
       Right gm -> modify (\s -> s {game=gm})
+
+switchStartingPlayer :: StateT AppState IO ()
+switchStartingPlayer = do
+  state <- get
+  let current = startingPawn state
+  modify (\s -> state{startingPawn= otherPlayer current})
 
 displayGame :: AppState -> StateT AppState IO ()
 displayGame state = do
