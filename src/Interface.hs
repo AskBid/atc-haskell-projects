@@ -23,6 +23,7 @@ data AppState = AppState
   , startingPawn :: Player
   } -- deriving (Show)
 
+-- | dialogue to set players as human or AI, used at the very beginning of the CLI.
 multiplayer :: AppState -> IO AppState
 multiplayer as = do
   as' <- interface X as
@@ -135,7 +136,9 @@ handleInput input = do
   printLn $ "err: `" ++ input ++ "` is not a valid command."
 -- handleInput end
 
-
+-- | gameLoop always set the player opposite from what was the last move
+--   this function makes sure at the beginning of each game the initial player
+--   recorded in AppState has effect by changing the lastPlayer value accordingly
 setStartintPawn :: StateT AppState IO ()
 setStartintPawn = do
   state <- get
@@ -144,6 +147,8 @@ setStartintPawn = do
   let gm' = gm{lastPlayer= lastP}
   modify (\s -> s{game= gm'})
 
+-- | the part of the interface where a recursive function get one move after the
+--   other switching players
 gameLoop :: StateT AppState IO ()
 gameLoop = do
   state <- get
@@ -177,6 +182,8 @@ getPlayerCoordinates p state = do
       Left e   -> printLn e
       Right gm -> modify (\s -> s {game=gm})
 
+-- | to chose a different pawn for 1st player or modify the sqitching of starting 
+--   player after every game.
 switchStartingPlayer :: StateT AppState IO ()
 switchStartingPlayer = do
   state <- get
@@ -228,6 +235,8 @@ buildCustomGame = do
               \Leave blank for standard game style (non evaporating pawns) \n\
               \Enter number:"
 
+-- | common bit of interface reused for every integer value to be gatehred from 
+--   user input. allows for a default -> message -> minimum value -> maximum value.
 getSettingSize :: Int -> String -> Int -> Int -> IO Int
 getSettingSize defaulT str min max = do
   putStrLn str
@@ -244,8 +253,8 @@ getSettingSize defaulT str min max = do
 
 dispatchScores :: Player -> AppState -> AppState
 dispatchScores p as 
-  | p == O    = as{scoresO= pOs}
-  | otherwise = as{scoresX= pXs}
+  | p == O = as{scoresO= pOs}
+  | p == X = as{scoresX= pXs}
   where
     ctw = countToWin $ game as
     pOs = scoresO as
