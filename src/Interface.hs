@@ -149,12 +149,15 @@ gameLoop = do
   state <- get
   displayGame state 
   let player = otherPlayer $ lastPlayer $ game state
-  if humanVsAI state 
+  if takePlayersStatus player state 
     then getAiMove $ game state
     else getPlayerCoordinates player state 
   state' <- get
   when ((isNothing $ win $ game state') && (not $ end $ game state')) gameLoop
   handleInput "starting"
+    where 
+      takePlayersStatus X state = aiX state 
+      takePlayersStatus O state = aiO state
 
 getAiMove :: Game -> StateT AppState IO ()
 getAiMove gm = modify (\s -> s{game= newGame})
