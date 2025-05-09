@@ -22,11 +22,17 @@ data AppState = AppState
 loop :: StateT AppState IO ()
 loop = do
   state <- get
-  printLn "------------------------" 
+  printLn "-------------------------------------------------------------------" 
   printLn ""
-  printLn "0. Quick Standard 3x3 Game"
-  printLn "1. Quick Evaporating 3x3 Game"
-  printLn "2. Stadard/Evaporating Custom Game Setup"
+  printLn "0                                           Quick Standard 3x3 Game"
+  printLn "1                                        Quick Evaporating 3x3 Game"
+  printLn "2                             Stadard/Evaporating Custom Game Setup"
+  printLn ""
+  printLn "scores                      Shows the scores of all games this far."
+  printLn "starting                       Switch the player that starts first."
+  printLn "reset                       Reinitiate App (select Multiplayer/AI)."
+  printLn "exit                                             Exit from the App."
+  printLn "-------------------------------------------------------------------"
   printLn ""
   printLn "Select/enter a number or \"help\" to list available commands."
   input <- getLn 
@@ -73,7 +79,9 @@ gameLoop = do
   input <- getLn
   let letterIndexes = take (length $ board $ game state) $ charIndexes8 charsIxs 
   case parse (coordinateParser letterIndexes) "" input of
-    Left e   -> printLn $ last $ lines $ show e
+    Left e   -> printLn "You entered an invlaid coordinate format,\n\
+                        \please stick to this patter examples:\n\
+                        \`a1`, `A1`, `a 1`, `A 1`, `1 1`."
     Right xy -> case move xy $ game state of
       Left e   -> printLn e
       Right gm -> modify (\s -> s {game=gm})
@@ -92,11 +100,12 @@ endGame :: StateT AppState IO ()
 endGame = do
   state <- get
   displayGame state
-  let winner = win $ game state
-  modify (\s -> s {
+  let winner = win $ game state 
   if isNothing winner 
-  then printLn "The game was a Draw!"
-  else printLn $ "Winner is: " ++ (show $ fromMaybe O winner)
+    then printLn "The game was a Draw!"
+    else do
+      modify $ dispatchScores (fromMaybe X winner)
+      printLn $ "Winner is: " ++ (show $ fromMaybe O winner)
   clearBoard
 
 clearBoard :: StateT AppState IO ()
@@ -139,12 +148,13 @@ getSettingSize defaulT str min max = do
       Right boardSize -> return boardSize 
 
 dispatchScores :: Player -> AppState -> AppState
-dispatchScores O as = as{scores= {playerO= pOs}}
-dispatchScores X as = as{scores= {playerX= pXs}}
+dispatchScores p as 
+  | p == O    = as{scoresO= pOs}
+  | otherwise = as{scoresX= pXs}
   where
     ctw = countToWin $ game as
-    pOs = playerO as + ctw
-    pXs = playerX as + ctw
+    pOs = scoresO as
+    pXs = scoresX as
 
 -- | helper function to avoid using liftIO everytime I print something inside a StateT function.
 printLn :: String -> StateT AppState IO ()
