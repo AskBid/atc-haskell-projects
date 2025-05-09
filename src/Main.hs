@@ -4,6 +4,7 @@ import Control.Monad.State
 
 import Interface
 import Game
+import Board (Player(..))
 
 main :: IO ()
 main = do
@@ -13,7 +14,7 @@ main = do
   putStrLn "Welcome to Tic Tac Toe!"
   putStrLn "-----------------------"
   let gm = mkGame 3 3 
-  let app = AppState gm True 0 0 True
+  let app = AppState gm True 0 0 True X
   app' <- multiplayer app
   runStateT loop app' 
   putStrLn "------loop end.-------" 
