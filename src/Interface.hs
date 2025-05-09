@@ -27,21 +27,23 @@ multiplayer :: AppState -> IO AppState
 multiplayer as = do
   as' <- interface X as
   interface O as' 
-  -- putStrLn "please enter only `human` or `ai`"
   where
-    interface :: Player -> AppState -> IO AppState
-    interface p as'' = do
+    interface p as = do
       putStrLn $ "Player `" ++ show p ++ "` should be AI or Human?:"
       putStrLn "(`ai`, `human`, press enter for default (AI)"
       input <- getLine
-      dispatchChange input p as''
-    dispatchChange :: String -> Player -> AppState -> IO AppState
-    dispatchChange i p as''' 
-      | p == X = return as'''{aiX= parseAiInput i}
-      | p == O = return as'''{aiO= parseAiInput i}
-    parseAiInput ""      = True 
-    parseAiInput "ai"    = True 
-    parseAiInput "human" = False 
+      case parseAiInput input of
+        Just bool -> dispatchChange bool p as
+        Nothing   -> do 
+          putStrLn "please enter only `human` or `ai`"
+          interface p as
+    dispatchChange b p as 
+      | p == X = return as{aiX= b}
+      | p == O = return as{aiO= b}
+    parseAiInput ""      = Just True 
+    parseAiInput "ai"    = Just True 
+    parseAiInput "human" = Just False 
+    parseAiInput otherwise = Nothing
 
 loop :: StateT AppState IO ()
 loop = do
