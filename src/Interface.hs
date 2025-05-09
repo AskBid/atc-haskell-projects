@@ -19,6 +19,7 @@ data AppState = AppState
   , scoresO   :: Int
   , scoresX   :: Int
   , humanVsAI :: Bool
+  , startingPawn :: Player
   } -- deriving (Show)
 
 multiplayer :: AppState -> IO (AppState)
@@ -90,6 +91,9 @@ handleInput "repeat" = handleInput "3"
 --  
 handleInput "starting" = do
   printLn "switch starting player"
+  state <- get
+  let current = startingPawn state
+  modify (\s -> state{startingPawn= otherPlayer current})
 -- 
 -- 
 handleInput "scores" = do
@@ -97,7 +101,7 @@ handleInput "scores" = do
 -- 
 -- 
 handleInput "reset" = do
-  let app = AppState (mkGame 3 3) True 0 0 True
+  let app = AppState (mkGame 3 3) True 0 0 True X
   printLn "Games history reset."
   app' <- liftIO $ multiplayer app
   modify $ const app'
@@ -106,6 +110,13 @@ handleInput input = do
   printLn $ "You entered: " ++ input
   printLn $ "err: `" ++ input ++ "` is not a valid command."
 
+setStartintPawn :: StateT AppState IO ()
+setStartintPawn = do
+  state <- get
+  let gm = game state
+  let lastP = otherPlayer $ startingPawn state
+  let gm' = gm{lastPlayer= lastP}
+  modify (\s -> s{game= gm'})
 
 gameLoop :: StateT AppState IO ()
 gameLoop = do
