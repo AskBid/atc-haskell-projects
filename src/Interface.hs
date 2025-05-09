@@ -25,21 +25,19 @@ data AppState = AppState
 
 multiplayer :: AppState -> IO (AppState)
 multiplayer as = do
-  putStrLn "Player X should be AI or Human:"
+  putStrLn "Player X should be AI or Human?:"
   putStrLn "(`ai`, `human`, press enter for default (AI)"
   inputX <- getLine
-  putStrLn "Player O should be AI or Human:"
+  putStrLn "Player O should be AI or Human?:"
   putStrLn "(`ai`, `human`, press enter for default (AI)"
   inputO <- getLine
-  case input of
-    "human" -> return as{humanVsAI=False} 
-    "ai"    -> return as{humanVsAI=True}
-    otherwise -> do
-      putStrLn "please enter only `human` or `ai`"
-      multiplayer as
+  let as' = as{aiX= parseAiInput inputX}
+  return as'{aiO= parseAiInput inputO}
+  -- putStrLn "please enter only `human` or `ai`"
   where
-    setAi X state = undefined 
-    setAi O state = undefined 
+    parseAiInput ""      = True 
+    parseAiInput "ai"    = True 
+    parseAiInput "human" = False 
 
 loop :: StateT AppState IO ()
 loop = do
