@@ -125,7 +125,7 @@ handleInput "scores" = do
   printLn ""
 -- 
 handleInput "reset" = do
-  let app = AppState (mkGame 3 3) True 0 0 True X
+  let app = AppState (mkGame 3 3) True 0 0 True True X
   printLn "Games history reset."
   app' <- liftIO $ multiplayer app
   modify $ const app'
