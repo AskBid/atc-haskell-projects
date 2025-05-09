@@ -11,6 +11,7 @@ import Game
 import Board
 import Graphics
 import Parser
+import Ai
 
 data AppState = AppState
   { game      :: Game
@@ -96,9 +97,16 @@ gameLoop = do
   state <- get
   displayGame state 
   let player = otherPlayer $ lastPlayer $ game state
-  getPlayerCoordinates player state 
+  if humanVsAI state 
+    then getPlayerCoordinates player state 
+    else makeAImove $ game state
   state' <- get
   when ((isNothing $ win $ game state') && (not $ end $ game state')) gameLoop
+
+getAiMove :: AppState -> StateT AppState IO ()
+getAiMove as = as{game= newGame}
+  where 
+    newGame = makeAiMove $ game as
 
 getPlayerCoordinates :: Player -> AppState -> StateT AppState IO ()
 getPlayerCoordinates p state = do 

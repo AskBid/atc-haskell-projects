@@ -16,6 +16,7 @@ library ghci
     Helpers
     Interface
     Parser
+    Ai
   hs-source-dirs:
     src
     ghci
@@ -36,4 +37,4 @@ executable tic-tac-toe
                      , ilist
                      , parsec
                      , mtl
-  other-modules:       Board, Game, Graphics, Helpers, Interface, Parser
+  other-modules:       Board, Game, Graphics, Helpers, Interface, Parser, Ai
