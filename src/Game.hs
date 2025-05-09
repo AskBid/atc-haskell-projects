@@ -84,7 +84,7 @@ end Game{..} =  0 == (length $ filter isNothing flatBoard)
     flatBoard = concat board
 
 -- | given a @Game@ as argument returns a @Just Player@ if a winner is found,
---   or @Nothing@ if the game isn't finished.
+--   or @Nothing@ if the game isn't finished. 
 win :: Game -> Maybe Player
 win (Game b _ ctw _ _) = fromMaybe Nothing winner 
   where
