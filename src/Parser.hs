@@ -39,7 +39,7 @@ charDigiCombo cxs = do
   spaces
   y <- many1 digit
   case fromCharIndexToInt cxs (toUpper <$> cx) of
-    Nothing -> fail "the letter coordinate was not valid."
+    Nothing -> fail "error: the letter coordinate was not valid."
     Just x' -> return $ Coordinate {x= x', y=(read y)-1}
 
 

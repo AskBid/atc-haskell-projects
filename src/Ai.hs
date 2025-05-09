@@ -14,4 +14,4 @@ makeAiMove gm = undefined
 -- boardlines
 -- winStreak with countToWin-1
 -- if any winstreak -1  found add +1 pawn if possible
--- could be recursive up to 2/1/3? pawns 
+-- could be recursive up to countWin-2,-1,-3?
