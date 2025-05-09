@@ -13,11 +13,23 @@ import Graphics
 import Parser
 
 data AppState = AppState
-  { game :: Game
+  { game      :: Game
   , isLooping :: Bool
-  , scoresO :: Int
-  , scoresX :: Int
+  , scoresO   :: Int
+  , scoresX   :: Int
+  , humanVsAI :: Bool
   } -- deriving (Show)
+
+multiplayer :: AppState -> IO (AppState)
+multiplayer as = do
+  putStrLn "Do you want to play against AI or another Human?"
+  input <- getLine
+  case input of
+    "human" -> return as{humanVsAI=False} 
+    "ai"    -> return as{humanVsAI=True}
+    otherwise -> do
+      putStrLn "please enter only `human` or `ai`"
+      multiplayer as
 
 loop :: StateT AppState IO ()
 loop = do
@@ -62,8 +74,16 @@ handleInput "2" = do
   gameLoop
   endGame
 -- 
-handleInput "help" = do
-  printLn "exit"
+handleInput "starting" = do
+  printLn "switch starting player"
+-- 
+-- 
+handleInput "scores" = do
+  printLn "scores"
+-- 
+-- 
+handleInput "reset" = do
+  printLn "reset"
 -- 
 handleInput input = do
   printLn $ "You entered: " ++ input
