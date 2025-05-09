@@ -34,19 +34,20 @@ multiplayer as = do
 loop :: StateT AppState IO ()
 loop = do
   state <- get
-  printLn "-------------------------------------------------------------------" 
+  printLn "-------------------------------------------------------------------\n\ 
+          \COMMAND   |                                             DESCRIPTION\n\
+          \----------|--------------------------------------------------------\n\
+          \0         |                                 Quick Standard 3x3 Game\n\
+          \1         |                              Quick Evaporating 3x3 Game\n\
+          \2         |                   Stadard/Evaporating Custom Game Setup\n\
+          \          |                                                        \n\
+          \scores    |                 Shows the scores of all games this far.\n\
+          \starting  |                    Switch the player that starts first.\n\
+          \reset     |                 Reinitiate App (select Multiplayer/AI).\n\
+          \exit      |                                      Exit from the App.\n\
+          \-------------------------------------------------------------------"
   printLn ""
-  printLn "0                                           Quick Standard 3x3 Game"
-  printLn "1                                        Quick Evaporating 3x3 Game"
-  printLn "2                             Stadard/Evaporating Custom Game Setup"
-  printLn ""
-  printLn "scores                      Shows the scores of all games this far."
-  printLn "starting                       Switch the player that starts first."
-  printLn "reset                       Reinitiate App (select Multiplayer/AI)."
-  printLn "exit                                             Exit from the App."
-  printLn "-------------------------------------------------------------------"
-  printLn ""
-  printLn "Select/enter a number or \"help\" to list available commands."
+  printLn "Please, enter a command from the list above:"
   input <- getLn 
   handleInput input
   state <- get
