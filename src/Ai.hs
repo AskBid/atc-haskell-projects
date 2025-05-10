@@ -5,6 +5,7 @@ module Ai where
 
 import Data.List (find)
 import Test.LeanCheck ((><))
+import Data.Maybe (fromMaybe)
 
 import Game
 import Board
@@ -45,12 +46,7 @@ findQuasiStreaks p ctw rws =
     ps = fst $ unzip rws
 
 choseNextStreakCell :: Player -> [(Maybe Player, Coordinate)] -> Maybe Coordinate
-choseNextStreakCell p line = undefined
-  where
-    emptyAfter ((p,_):(Nothing,_):ns) = undefined 
-
-choseNextStreakCell' :: Player -> [(Maybe Player, Coordinate)] -> _ -- Maybe Coordinate
-choseNextStreakCell' p line = fst $ find (\(coo,count) -> maxCount == count) streaks
+choseNextStreakCell p line = emptyCell $ findCoord $ maxCount counts
   where
     emptyAfter :: [(Maybe Player, Coordinate)] -> Int -> [(Coordinate, Int)]
     emptyAfter [] _ = []
@@ -62,11 +58,13 @@ choseNextStreakCell' p line = fst $ find (\(coo,count) -> maxCount == count) str
       | otherwise = emptyAfter ns 0
     emptyAfter _ _ = []
     streaks = emptyAfter line 0
-    maxCount = maximum $ snd $ unzip streaks
-
--- xxxoe eoxxx
--- exoxx xxoxe
--- oxxex xexxo
+    counts = snd $ unzip streaks
+    maxCount [] = Nothing
+    maxCount ns = Just $ maximum ns
+    findCoord Nothing    = Nothing
+    findCoord (Just max) = find (\(coo,count) -> max == count) streaks
+    emptyCell Nothing = Nothing
+    emptyCell (Just (coo,count)) = Just coo
 
 findRandomEmpty :: [[(Maybe Player, Coordinate)]] -> Coordinate
 findRandomEmpty b = undefined
