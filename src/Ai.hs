@@ -49,16 +49,18 @@ choseNextStreakCell p line = undefined
   where
     emptyAfter ((p,_):(Nothing,_):ns) = undefined 
 
-choseNextStreakCell' :: Player -> [(Maybe Player, Int)] -> String-- Maybe Coordinate
+choseNextStreakCell' :: Player -> [(Maybe Player, Coordinate)] -> _ -- Maybe Coordinate
 choseNextStreakCell' p line = emptyAfter line 0
   where
-    emptyAfter ((p',_):(Nothing,_):ns) c
-      | p' == Just p = 
-      | otherwise = 
-    emptyAfter ((p',_):(p',_):ns) c
-      | p' == Just p = emptyAfter ns (c+2)
-      | otherwise =
-    emptyAfter _ _ = "no"
+    emptyAfter :: [(Maybe Player, Coordinate)] -> Int -> [(Coordinate, Int)]
+    emptyAfter [] _ = []
+    emptyAfter ((p',_):(Nothing,coord):ns) c
+      | p' == Just p = (coord,c+1) : (emptyAfter ns 0) 
+      | otherwise = emptyAfter ns 0 
+    emptyAfter ((p',_):(b',_):ns) c
+      | p' == Just p && b'==p' = emptyAfter ns (c+2)
+      | otherwise = emptyAfter ns 0
+    emptyAfter _ _ = []
 -- xxxoe eoxxx
 -- exoxx xxoxe
 -- oxxex xexxo
