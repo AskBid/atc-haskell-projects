@@ -25,7 +25,8 @@ library ghci
     containers,
     ilist,
     parsec,
-    mtl
+    mtl,
+    leancheck
   default-language: Haskell2010
 
 executable tic-tac-toe
@@ -37,4 +38,5 @@ executable tic-tac-toe
                      , ilist
                      , parsec
                      , mtl
+                     , leancheck
   other-modules:       Board, Game, Graphics, Helpers, Interface, Parser, Ai

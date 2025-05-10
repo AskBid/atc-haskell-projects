@@ -4,6 +4,7 @@
 module Ai where
 
 import Data.List (find)
+import Test.LeanCheck ((><))
 
 import Game
 import Board
@@ -11,11 +12,11 @@ import Board
 findAiMove :: Game -> Coordinate
 findAiMove gm = findAiMove' $ countToWin gm
   where 
-  findAiMove' 0    = findRandomEmpty aiLines
+  findAiMove' 0    = findRandomEmpty bwc
   findAiMove' ctw = 
-    case find (findQuasiStreaks p ctw) aiLines of
+    case find (findQuasiStreaks p ctw) bwc of
       Just line -> case choseNextStreakCell p line of
-                     Nothing -> findRandomEmpty aiLines
+                     Nothing -> findRandomEmpty bwc
                      -- ^should really look for possible other 
                      --  incomplete streak, but I will keep it
                      --  simple for this round.
@@ -25,16 +26,16 @@ findAiMove gm = findAiMove' $ countToWin gm
   ls = boardlines b
   p = otherPlayer $ lastPlayer gm
   cb = mkCoordsBoard $ length b 
-  aiLines = boardAiLines b cb
+  bwc = boardWithCoords b cb
 
 mkCoordsBoard :: Int -> [[Coordinate]]
 mkCoordsBoard l = (makeLine l) <$> [0..l]
   where 
     makeLine l row = [Coordinate row n | n <- [0..l]]
 
-
-boardAiLines :: Board -> [[Coordinate]] -> [([Maybe Player], [Coordinate])]
-boardAiLines b bc = undefined
+-- | proudly found (><) just by looking up the type on hoogle *o*
+boardWithCoords :: Board -> [[Coordinate]] -> [[(Maybe Player, Coordinate)]]
+boardWithCoords b bc = (><) b bc
 
 findQuasiStreaks :: Player -> Int -> ([Maybe Player],[Coordinate]) -> Bool
 findQuasiStreaks p ctw (ps,cs) = 
