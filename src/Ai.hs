@@ -8,9 +8,29 @@ import Board
 
 makeAiMove :: Game -> Game
 makeAiMove gm = undefined
+  where 
+    b = board gm
+    ls = boardlines b
+    p = otherPlayer $ lastPlayer gm
+
+makeCoordsBoard :: Board -> [[Coordinate]]
+makeCoordsBoard b = undefined
+
+boardAiLines :: Board -> [[Coordinate]] -> [([Maybe Player], [Coordinate])]
+boardAiLines b bc = undefined
+
+findStreaks :: Player -> Int -> ([Maybe Player],[Coordinate]) -> Bool
+findStreaks p ctw (ps,cs) = 
+  case winStreak ctw ps of
+    p -> True
+
+findMove :: Player -> ([Maybe Player],[Coordinate]) -> Coordinate
+findMove p line = undefined 
+
+
 
 -- listEmptyCells
-
+--
 -- boardlines
 -- winStreak with countToWin-1
 -- if any winstreak -1  found add +1 pawn if possible
