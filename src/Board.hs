@@ -42,14 +42,14 @@ replaceItem el rows x y = setAt y newRow rows
 freeSpace :: Coordinate -> Board -> Bool
 freeSpace Coordinate{..} b = isNothing ((b !! y) !! x)
 
--- | sqaured boards only.
+-- | squared boards only.
 mkBoard :: Int -> Board
 mkBoard n = take n $ repeat (take n $ repeat Nothing)
 
 -- | returns all the possible lines that can have a winning streak for any board size.
 --   uses diagsCycle to recursively find the diagonals at each distance from 
 --   middle diagonals.
-boardlines :: Board -> [[Maybe Player]]
+boardlines :: [[Maybe a]] -> [[Maybe a]]
 boardlines board = rows ++ columns ++ diagonals board maxDistFromCenter
   where
     rows = board
