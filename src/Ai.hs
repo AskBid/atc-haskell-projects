@@ -5,7 +5,7 @@ module Ai where
 
 import Data.List (find)
 import Test.LeanCheck ((><))
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, isNothing)
 
 import Game
 import Board
@@ -62,13 +62,16 @@ choseNextStreakCell p line = emptyCell $ findCoord $ maxCount counts
     maxCount [] = Nothing
     maxCount ns = Just $ maximum ns
     findCoord Nothing    = Nothing
-    findCoord (Just max) = find (\(coo,count) -> max == count) streaks
+    findCoord (Just max) = find (\(_,count) -> max == count) streaks
     emptyCell Nothing = Nothing
-    emptyCell (Just (coo,count)) = Just coo
+    emptyCell (Just (coo,_)) = Just coo
 
-findRandomEmpty :: [[(Maybe Player, Coordinate)]] -> Coordinate
-findRandomEmpty b = undefined
-
+findRandomEmpty :: [[(Maybe Player, Coordinate)]] -> Maybe Coordinate
+findRandomEmpty b = sortResult findEmpty 
+  where 
+    findEmpty = find (\(cell,_) -> isNothing cell) $ concat b
+    sortResult Nothing      = Nothing
+    sortResult (Just (_,c)) = Just c
 
 
 -- listEmptyCells
