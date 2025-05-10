@@ -46,6 +46,22 @@ findQuasiStreaks p ctw rws =
 
 choseNextStreakCell :: Player -> [(Maybe Player, Coordinate)] -> Maybe Coordinate
 choseNextStreakCell p line = undefined
+  where
+    emptyAfter ((p,_):(Nothing,_):ns) = undefined 
+
+choseNextStreakCell' :: Player -> [(Maybe Player, Int)] -> String-- Maybe Coordinate
+choseNextStreakCell' p line = emptyAfter line 0
+  where
+    emptyAfter ((p',_):(Nothing,_):ns) c
+      | p' == Just p = 
+      | otherwise = 
+    emptyAfter ((p',_):(p',_):ns) c
+      | p' == Just p = emptyAfter ns (c+2)
+      | otherwise =
+    emptyAfter _ _ = "no"
+-- xxxoe eoxxx
+-- exoxx xxoxe
+-- oxxex xexxo
 
 findRandomEmpty :: [[(Maybe Player, Coordinate)]] -> Coordinate
 findRandomEmpty b = undefined
