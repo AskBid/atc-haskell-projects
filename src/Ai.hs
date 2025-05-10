@@ -50,7 +50,7 @@ choseNextStreakCell p line = undefined
     emptyAfter ((p,_):(Nothing,_):ns) = undefined 
 
 choseNextStreakCell' :: Player -> [(Maybe Player, Coordinate)] -> _ -- Maybe Coordinate
-choseNextStreakCell' p line = emptyAfter line 0
+choseNextStreakCell' p line = fst $ find (\(coo,count) -> maxCount == count) streaks
   where
     emptyAfter :: [(Maybe Player, Coordinate)] -> Int -> [(Coordinate, Int)]
     emptyAfter [] _ = []
@@ -61,6 +61,9 @@ choseNextStreakCell' p line = emptyAfter line 0
       | p' == Just p && b'==p' = emptyAfter ns (c+2)
       | otherwise = emptyAfter ns 0
     emptyAfter _ _ = []
+    streaks = emptyAfter line 0
+    maxCount = maximum $ snd $ unzip streaks
+
 -- xxxoe eoxxx
 -- exoxx xxoxe
 -- oxxex xexxo
