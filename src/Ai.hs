@@ -13,7 +13,7 @@ findAiMove gm = findAiMove' $ countToWin gm
   where 
   findAiMove' 0    = findRandomEmpty aiLines
   findAiMove' ctw = 
-    case find (findStreaks p ctw) aiLines of
+    case find (findQuasiStreaks p ctw) aiLines of
       Just line -> case choseNextStreakCell p line of
                      Nothing -> findRandomEmpty aiLines
                      -- ^should really look for possible other 
@@ -24,17 +24,20 @@ findAiMove gm = findAiMove' $ countToWin gm
   b = board gm
   ls = boardlines b
   p = otherPlayer $ lastPlayer gm
-  cb = makeCoordsBoard b 
+  cb = mkCoordsBoard $ length b 
   aiLines = boardAiLines b cb
 
-makeCoordsBoard :: Board -> [[Coordinate]]
-makeCoordsBoard b = undefined
+mkCoordsBoard :: Int -> [[Coordinate]]
+mkCoordsBoard l = (makeLine l) <$> [0..l]
+  where 
+    makeLine l row = [Coordinate row n | n <- [0..l]]
+
 
 boardAiLines :: Board -> [[Coordinate]] -> [([Maybe Player], [Coordinate])]
 boardAiLines b bc = undefined
 
-findStreaks :: Player -> Int -> ([Maybe Player],[Coordinate]) -> Bool
-findStreaks p ctw (ps,cs) = 
+findQuasiStreaks :: Player -> Int -> ([Maybe Player],[Coordinate]) -> Bool
+findQuasiStreaks p ctw (ps,cs) = 
   case winStreak ctw ps of
     p -> True
 
