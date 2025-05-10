@@ -9,13 +9,18 @@ import Game
 import Board
 
 findAiMove :: Game -> Coordinate
-findAiMove gm = findAiMove' ctw 
+findAiMove gm = findAiMove' $ countToWin gm
   where 
   findAiMove' 0    = findRandomEmpty aiLines
-  findAiMove' ctw' = case find (findStreaks p ctw') aiLines of
-      Just line -> choseNextStreak p line
-      otherwise -> findAiMove' $ ctw'- 1
-  ctw = countToWin gm
+  findAiMove' ctw = 
+    case find (findStreaks p ctw) aiLines of
+      Just line -> case choseNextStreakCell p line of
+                     Nothing -> findRandomEmpty aiLines
+                     -- ^should really look for possible other 
+                     --  incomplete streak, but I will keep it
+                     --  simple for this round.
+                     Just xy -> xy
+      otherwise -> findAiMove' $ ctw - 1
   b = board gm
   ls = boardlines b
   p = otherPlayer $ lastPlayer gm
@@ -33,8 +38,8 @@ findStreaks p ctw (ps,cs) =
   case winStreak ctw ps of
     p -> True
 
-choseNextStreak :: Player -> ([Maybe Player],[Coordinate]) -> Coordinate
-choseNextStreak p line = undefined
+choseNextStreakCell :: Player -> ([Maybe Player],[Coordinate]) -> Maybe Coordinate
+choseNextStreakCell p line = undefined
 
 findRandomEmpty :: [([Maybe Player], [Coordinate])] -> Coordinate
 findRandomEmpty b = undefined
