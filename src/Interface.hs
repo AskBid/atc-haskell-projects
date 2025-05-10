@@ -155,7 +155,7 @@ gameLoop = do
   displayGame state 
   let player = otherPlayer $ lastPlayer $ game state
   if takePlayersStatus player state 
-    then moveInGameState (findAiMove $ game state) $ game state
+    then moveInGameState (fromMaybe (Coordinate 0 0) $ findAiMove $ game state) $ game state
     else getPlayerCoordinates player state 
   state' <- get
   when ((isNothing $ win $ game state') && (not $ end $ game state')) gameLoop

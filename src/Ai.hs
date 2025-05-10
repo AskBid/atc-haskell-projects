@@ -10,7 +10,7 @@ import Data.Maybe (fromMaybe, isNothing)
 import Game
 import Board
 
-findAiMove :: Game -> Coordinate
+findAiMove :: Game -> Maybe Coordinate
 findAiMove gm = findAiMove' $ countToWin gm
   where 
   findAiMove' 0    = findRandomEmpty bwc
@@ -21,7 +21,7 @@ findAiMove gm = findAiMove' $ countToWin gm
                      -- ^should really look for possible other 
                      --  incomplete streak, but I will keep it
                      --  simple for this round.
-                     Just xy -> xy
+                     Just xy -> Just xy
       otherwise -> findAiMove' $ ctw - 1
   b = board gm
   ls = boardlines b
@@ -67,11 +67,11 @@ choseNextStreakCell p line = emptyCell $ findCoord $ maxCount counts
     emptyCell (Just (coo,_)) = Just coo
 
 findRandomEmpty :: [[(Maybe Player, Coordinate)]] -> Maybe Coordinate
-findRandomEmpty b = sortResult findEmpty 
+findRandomEmpty b = sortResult findEmpties 
   where 
-    findEmpty = find (\(cell,_) -> isNothing cell) $ concat b
-    sortResult Nothing      = Nothing
-    sortResult (Just (_,c)) = Just c
+    findEmpties = filter (\(cell,_) -> isNothing cell) $ concat b
+    sortResult []      = Nothing
+    sortResult ((_,c):_) = Just c
 
 
 -- listEmptyCells
