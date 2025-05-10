@@ -3,15 +3,23 @@
 --   exercise with a search tree tecnique in Graham Hutton's book style
 module Ai where
 
+import Data.List (find)
+
 import Game
 import Board
 
-makeAiMove :: Game -> Game
-makeAiMove gm = undefined
+findAiMove :: Game -> Coordinate
+findAiMove gm = 
+  case find (findStreaks p ctw) aiLines of
+    Just line -> findMove p line
+    otherwise -> undefined -- prolly recursion
   where 
+    ctw = countToWin gm
     b = board gm
     ls = boardlines b
     p = otherPlayer $ lastPlayer gm
+    cb = makeCoordsBoard b 
+    aiLines = boardAiLines b cb
 
 makeCoordsBoard :: Board -> [[Coordinate]]
 makeCoordsBoard b = undefined
@@ -25,7 +33,7 @@ findStreaks p ctw (ps,cs) =
     p -> True
 
 findMove :: Player -> ([Maybe Player],[Coordinate]) -> Coordinate
-findMove p line = undefined 
+findMove p line = undefined
 
 
 

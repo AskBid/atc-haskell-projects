@@ -155,7 +155,7 @@ gameLoop = do
   displayGame state 
   let player = otherPlayer $ lastPlayer $ game state
   if takePlayersStatus player state 
-    then getAiMove $ game state
+    then moveInGameState (findAiMove $ game state) $ game state
     else getPlayerCoordinates player state 
   state' <- get
   when ((isNothing $ win $ game state') && (not $ end $ game state')) gameLoop
@@ -163,12 +163,6 @@ gameLoop = do
     where 
       takePlayersStatus X state = aiX state 
       takePlayersStatus O state = aiO state
-
--- | connects AI functions to state modification.
-getAiMove :: Game -> StateT AppState IO ()
-getAiMove gm = modify (\s -> s{game= newGame})
-  where 
-    newGame = makeAiMove gm
 
 getPlayerCoordinates :: Player -> AppState -> StateT AppState IO ()
 getPlayerCoordinates p state = do 
@@ -179,9 +173,14 @@ getPlayerCoordinates p state = do
     Left e   -> printLn "You entered an invlaid coordinate format,\n\
                         \please stick to this patter examples:\n\
                         \`a1`, `A1`, `a 1`, `A 1`, `1 1`."
-    Right xy -> case move xy $ game state of
-      Left e   -> printLn e
-      Right gm -> modify (\s -> s {game=gm})
+    Right xy -> moveInGameState xy $ game state
+
+moveInGameState :: Coordinate -> Game -> StateT AppState IO ()
+moveInGameState xy gm = do 
+  case move xy gm of
+    Left e   -> printLn e
+    Right gm -> modify (\s -> s {game=gm})
+
 
 -- | to chose a different pawn for 1st player or modify the sqitching of starting 
 --   player after every game.
