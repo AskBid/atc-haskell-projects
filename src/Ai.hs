@@ -37,15 +37,17 @@ mkCoordsBoard l = (makeLine l) <$> [0..l]
 boardWithCoords :: Board -> [[Coordinate]] -> [[(Maybe Player, Coordinate)]]
 boardWithCoords b bc = (><) b bc
 
-findQuasiStreaks :: Player -> Int -> ([Maybe Player],[Coordinate]) -> Bool
-findQuasiStreaks p ctw (ps,cs) = 
+findQuasiStreaks :: Player -> Int -> [(Maybe Player, Coordinate)] -> Bool
+findQuasiStreaks p ctw rws = 
   case winStreak ctw ps of
     p -> True
+  where 
+    ps = fst $ unzip rws
 
-choseNextStreakCell :: Player -> ([Maybe Player],[Coordinate]) -> Maybe Coordinate
+choseNextStreakCell :: Player -> [(Maybe Player, Coordinate)] -> Maybe Coordinate
 choseNextStreakCell p line = undefined
 
-findRandomEmpty :: [([Maybe Player], [Coordinate])] -> Coordinate
+findRandomEmpty :: [[(Maybe Player, Coordinate)]] -> Coordinate
 findRandomEmpty b = undefined
 
 
