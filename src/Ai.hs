@@ -9,17 +9,18 @@ import Game
 import Board
 
 findAiMove :: Game -> Coordinate
-findAiMove gm = 
-  case find (findStreaks p ctw) aiLines of
-    Just line -> findMove p line
-    otherwise -> undefined -- prolly recursion
+findAiMove gm = findAiMove' ctw 
   where 
-    ctw = countToWin gm
-    b = board gm
-    ls = boardlines b
-    p = otherPlayer $ lastPlayer gm
-    cb = makeCoordsBoard b 
-    aiLines = boardAiLines b cb
+  findAiMove' 0    = findRandomEmpty aiLines
+  findAiMove' ctw' = case find (findStreaks p ctw') aiLines of
+      Just line -> choseNextStreak p line
+      otherwise -> findAiMove' $ ctw'- 1
+  ctw = countToWin gm
+  b = board gm
+  ls = boardlines b
+  p = otherPlayer $ lastPlayer gm
+  cb = makeCoordsBoard b 
+  aiLines = boardAiLines b cb
 
 makeCoordsBoard :: Board -> [[Coordinate]]
 makeCoordsBoard b = undefined
@@ -32,8 +33,11 @@ findStreaks p ctw (ps,cs) =
   case winStreak ctw ps of
     p -> True
 
-findMove :: Player -> ([Maybe Player],[Coordinate]) -> Coordinate
-findMove p line = undefined
+choseNextStreak :: Player -> ([Maybe Player],[Coordinate]) -> Coordinate
+choseNextStreak p line = undefined
+
+findRandomEmpty :: [([Maybe Player], [Coordinate])] -> Coordinate
+findRandomEmpty b = undefined
 
 
 
