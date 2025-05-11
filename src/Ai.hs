@@ -66,10 +66,9 @@ emptyAfter p row counter = emptyAfter' row counter
     emptyAfter' ((p',_):(Nothing,coord):ns) c
       | p' == p = (coord,c+1) : (emptyAfter' ns 0) 
       | otherwise = emptyAfter' ns 0 
-    emptyAfter' ((p',_):(b',_):ns) c
-      | p' == p && b'== p' = emptyAfter' ns (c+2)
+    emptyAfter' ((p',_):ns) c
+      | p' == p = emptyAfter' ns (c+1)
       | otherwise = emptyAfter' ns 0
-    emptyAfter' _ _ = []
 
 findRandomEmpty :: [[(Maybe Player, Coordinate)]] -> Maybe Coordinate
 findRandomEmpty b = sortResult findEmpties 
