@@ -17,7 +17,7 @@ findAiMove gm = findAiMove' $ countToWin gm
   findAiMove' ctw = 
     case find (findQuasiStreaks p ctw) bwc of
       Just line -> case choseNextStreakCell (Just p) line of
-                     Nothing -> Just $ Coordinate {y=1, x=1} -- findRandomEmpty bwc
+                     Nothing -> findRandomEmpty bwc
                      -- ^should really look for possible other 
                      --  incomplete streak, but I will keep it
                      --  simple for this round.

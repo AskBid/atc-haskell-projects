@@ -40,6 +40,11 @@ gm = Game {board = [[Nothing,Just O,Nothing],[Nothing,Just X,Nothing],[Nothing,N
                    , evaporCount = Nothing
                    , movesHistory = Moves {playerO = [], playerX = []}}
 
+gm2 = Game {board = [[Just O,Nothing,Nothing],[Nothing,Just X,Nothing],[Nothing,Nothing,Nothing]]
+                    , lastPlayer = O, countToWin = 3
+                    , evaporCount = Nothing
+                    , movesHistory = Moves {playerO = [], playerX = []}}
+
 b = board gm
 bwc = boardWithCoords b
 r0 = fromMaybe [] $ H.head bwc
