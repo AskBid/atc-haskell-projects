@@ -2,6 +2,7 @@
 
 module Game 
   ( Game(..) 
+  , Moves(..)
   , mkGame
   , win
   , end

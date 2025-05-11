@@ -21,7 +21,7 @@ data AppState = AppState
   , aiX       :: Bool
   , aiO       :: Bool
   , startingPawn :: Player
-  } -- deriving (Show)
+  } deriving (Show)
 
 -- | dialogue to set players as human or AI, used at the very beginning of the CLI.
 multiplayer :: AppState -> IO AppState
@@ -154,8 +154,10 @@ gameLoop = do
   state <- get
   displayGame state 
   let player = otherPlayer $ lastPlayer $ game state
+  printLn $ "AAAAAAAAAAAAAAA  " ++ show player ++ "    " ++ (show (takePlayersStatus player state))
+  printLn $ show state
   if takePlayersStatus player state 
-    then moveInGameState (fromMaybe (Coordinate 0 0) $ findAiMove $ game state) $ game state
+    then moveInGameState (fromMaybe (Coordinate 2 2) $ findAiMove $ game state) $ game state
     else getPlayerCoordinates player state 
   state' <- get
   when ((isNothing $ win $ game state') && (not $ end $ game state')) gameLoop
@@ -177,6 +179,7 @@ getPlayerCoordinates p state = do
 
 moveInGameState :: Coordinate -> Game -> StateT AppState IO ()
 moveInGameState xy gm = do 
+  printLn $ "THE MOOOOOVEEEEE   " ++ show xy
   case move xy gm of
     Left e   -> printLn e
     Right gm -> modify (\s -> s {game=gm})

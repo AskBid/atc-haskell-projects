@@ -2,6 +2,7 @@ module TestGHCI where
 
 import Game
 import Board
+import Ai
 
 -- only for testing:
 bb3 = [[Just X, Just O, Nothing]
@@ -30,3 +31,12 @@ bb0 = [[Nothing, Nothing, Nothing]
 
 gm1 = (Game bb3 O 3)
 gm0 = (Game bb0 O 3)
+
+gm = Game {board = [[Nothing,Just O,Nothing],[Nothing,Just X,Nothing],[Nothing,Nothing,Nothing]]
+                   , lastPlayer = X
+                   , countToWin = 3
+                   , evaporCount = Nothing
+                   , movesHistory = Moves {playerO = [], playerX = []}}
+
+b = board gm
+bwc = boardWithCoords b
