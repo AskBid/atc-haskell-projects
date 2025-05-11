@@ -219,7 +219,9 @@ endGame = do
     then printLn "The game was a Draw!"
     else do
       modify $ dispatchScores (fromMaybe X winner)
+      printLn   "* * * * * * * * *"
       printLn $ "Winner is: " ++ (show $ fromMaybe O winner)
+      printLn   "* * * * * * * * *"
   clearBoard
 
 -- | replaces esxisting board with a new board of Nothings, 
@@ -278,8 +280,8 @@ dispatchScores p as
   | p == X = as{scoresX= pXs}
   where
     ctw = countToWin $ game as
-    pOs = scoresO as
-    pXs = scoresX as
+    pOs = scoresO as + ctw
+    pXs = scoresX as + ctw
 
 -- | helper function to avoid using liftIO everytime I print something inside a StateT function.
 printLn :: String -> StateT AppState IO ()
