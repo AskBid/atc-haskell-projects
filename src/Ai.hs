@@ -4,11 +4,11 @@
 module Ai where
 
 import Data.List (find)
-import Test.LeanCheck ((><))
 import Data.Maybe (fromMaybe, isNothing)
 
 import Game
 import Board
+import Helpers ((><))
 
 findAiMove :: Game -> Maybe Coordinate
 findAiMove gm = findAiMove' $ countToWin gm
@@ -33,7 +33,7 @@ mkCoordsBoard l = (makeLine l) <$> [0..l-1]
   where 
     makeLine l row = [Coordinate row n | n <- [0..l-1]]
 
--- | proudly found (><) just by looking up the type on hoogle *o*
+-- | (><) :: [[a]] -> [[b]] -> [[(a,b)]] from Helpers
 boardWithCoords :: Board -> [[(Maybe Player, Coordinate)]]
 boardWithCoords b = (><) b bc
   where 

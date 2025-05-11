@@ -3,6 +3,8 @@ module TestGHCI where
 import Game
 import Board
 import Ai
+import Helpers as H
+import Data.Maybe
 
 -- only for testing:
 bb3 = [[Just X, Just O, Nothing]
@@ -40,3 +42,9 @@ gm = Game {board = [[Nothing,Just O,Nothing],[Nothing,Just X,Nothing],[Nothing,N
 
 b = board gm
 bwc = boardWithCoords b
+r0 = fromMaybe [] $ H.head (boardWithCoords b)
+
+
+
+
+

@@ -6,3 +6,5 @@ head :: [a] -> Maybe a
 head []     = Nothing
 head (x:xs) = Just x
 
+(><) :: [[a]] -> [[b]] -> [[(a,b)]]
+(><) (a:as) (b:bs) = zip a b : (as >< bs)  
