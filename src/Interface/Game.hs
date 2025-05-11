@@ -1,0 +1,97 @@
+-- | In this module all the CLI oprations to handle actions during the game cycle.
+module Interface.Game where
+
+import Control.Monad.State
+import Control.Monad
+import Data.Maybe (isNothing, fromMaybe)
+import Text.Parsec
+
+-- import Interface
+import Board
+import Game
+import Parser
+import Graphics
+import Ai
+import Interface.AppState
+import Interface.Helpers
+
+
+-- | the part of CLI where a recursive function get one move after the other,
+--   switching players
+gameLoop :: StateT AppState IO ()
+gameLoop = do
+  state <- get
+  displayGame state 
+  let player = otherPlayer $ lastPlayer $ game state
+  if takePlayersStatus player state 
+    then getAiCoordinates state
+    else getPlayerCoordinates player state
+  state' <- get
+  when ((isNothing $ win $ game state') && (not $ end $ game state')) gameLoop
+  handleInput "starting"
+    where 
+      takePlayersStatus X state = aiX state 
+      takePlayersStatus O state = aiO state
+
+-- | the part of CLI taking the coordinate from the human players. 
+--   the first argument @Player@ is only used to display information and not involved in 
+--   state modification.
+getPlayerCoordinates :: Player -> AppState -> StateT AppState IO ()
+getPlayerCoordinates p state = do 
+  printLn $ "Enter coordinates for player `" ++ show p ++ "` next move. (e.g. a1, A1, a 1, 1 1)"
+  input <- getLn
+  let letterIndexes = take (length $ board $ game state) $ charIndexes8 charsIxs 
+  case parse (coordinateParser letterIndexes) "" input of
+    Left e   -> printLn "You entered an invlaid coordinate format,\n\
+                        \please stick to this patter examples:\n\
+                        \`a1`, `A1`, `a 1`, `A 1`, `1 1`."
+    Right xy -> moveInGameState xy $ game state
+
+-- | the part of CLI taking the coordinate from the Ai module.
+getAiCoordinates :: AppState -> StateT AppState IO ()
+getAiCoordinates state = do 
+  let gm = game state
+  mcoords <- lift $ findAiMove gm
+  let coords = fromMaybe (Coordinate {y=0, x=0}) mcoords
+  moveInGameState coords gm
+
+-- | makes the move once taken coordinates from Player or Ai inputs.
+moveInGameState :: Coordinate -> Game -> StateT AppState IO ()
+moveInGameState xy gm = do 
+  case move xy gm of
+    Left e   -> printLn e
+    Right gm -> modify (\s -> s {game=gm})
+
+-- | clears board and updates scores. Change of player turn is handles in @Game.move@.
+endGame :: StateT AppState IO ()
+endGame = do
+  state <- get
+  displayGame state
+  let winner = win $ game state 
+  if isNothing winner 
+    then printLn "The game was a Draw!"
+    else do
+      modify $ dispatchScores (fromMaybe X winner)
+      printLn   "* * * * * * *"
+      printLn $ "Winner is: " ++ (show $ fromMaybe O winner)
+      printLn   "* * * * * * *"
+  clearBoard
+
+-- | replaces esxisting board with a new board of Nothings, 
+--   based on length of exisiting baord.
+clearBoard :: StateT AppState IO ()
+clearBoard = do
+  state <- get
+  let gm = game state
+  let boardSize = length $ board gm
+  modify (\s -> s {game= gm {board= mkBoard boardSize}})
+
+-- | helps updating scores after each game (@endGame@).
+dispatchScores :: Player -> AppState -> AppState
+dispatchScores p as 
+  | p == O = as{scoresO= pOs}
+  | p == X = as{scoresX= pXs}
+  where
+    ctw = countToWin $ game as
+    pOs = scoresO as + ctw
+    pXs = scoresX as + ctw

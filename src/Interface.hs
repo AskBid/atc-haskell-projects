@@ -12,16 +12,8 @@ import Board
 import Graphics
 import Parser
 import Ai
-
-data AppState = AppState
-  { game      :: Game
-  , isLooping :: Bool
-  , scoresO   :: Int
-  , scoresX   :: Int
-  , aiX       :: Bool
-  , aiO       :: Bool
-  , startingPawn :: Player
-  } deriving (Show)
+import Interface.Game
+import Interface.AppState
 
 -- | dialogue to set players as human or AI, used at the very beginning of the CLI.
 multiplayer :: AppState -> IO AppState
@@ -46,6 +38,7 @@ multiplayer as = do
     parseAiInput "human" = Just False 
     parseAiInput otherwise = Nothing
 
+-- | acts as main menu
 loop :: StateT AppState IO ()
 loop = do
   state <- get
@@ -115,8 +108,7 @@ handleInput "starting" = do
 handleInput "scores" = do
   state <- get
   printLn ""
-  printLn "Scores are calculated by assigning the winning streak number for each win."
-  printLn ""
+  printLn "Scores are calculated by assigning the winning streak for each win."
   printLn $ "Player X scores: " ++ (show $ scoresX state) 
   printLn $ "Player O scores: " ++ (show $ scoresO state) 
   printLn ""
@@ -133,163 +125,4 @@ handleInput "reset" = do
 handleInput input = do
   printLn $ "You entered: " ++ input
   printLn $ "err: `" ++ input ++ "` is not a valid command."
--- handleInput end
-
--- | @gameLoop@ always set the current player as the opposite to the last move (@lastPlayer@).
---   this function makes sure that at the beginning of each game the initial player (in 
---   AppState) has effect, changing the @lastPlayer@ state value accordingly.
-setStartintPawn :: StateT AppState IO ()
-setStartintPawn = do
-  state <- get
-  let gm = game state
-  let lastP = otherPlayer $ startingPawn state
-  let gm' = gm{lastPlayer= lastP}
-  modify (\s -> s{game= gm'})
-
--- | the part of CLI where a recursive function get one move after the other,
---   switching players
-gameLoop :: StateT AppState IO ()
-gameLoop = do
-  state <- get
-  displayGame state 
-  let player = otherPlayer $ lastPlayer $ game state
-  if takePlayersStatus player state 
-    then getAiCoordinates state
-    else getPlayerCoordinates player state
-  state' <- get
-  when ((isNothing $ win $ game state') && (not $ end $ game state')) gameLoop
-  handleInput "starting"
-    where 
-      takePlayersStatus X state = aiX state 
-      takePlayersStatus O state = aiO state
-
--- | the part of CLI taking the coordinate from the human players. 
---   the first argument @Player@ is only used to display information and not involved in 
---   state modification.
-getPlayerCoordinates :: Player -> AppState -> StateT AppState IO ()
-getPlayerCoordinates p state = do 
-  printLn $ "Enter coordinates for player `" ++ show p ++ "` next move. (e.g. a1, A1, a 1, 1 1)"
-  input <- getLn
-  let letterIndexes = take (length $ board $ game state) $ charIndexes8 charsIxs 
-  case parse (coordinateParser letterIndexes) "" input of
-    Left e   -> printLn "You entered an invlaid coordinate format,\n\
-                        \please stick to this patter examples:\n\
-                        \`a1`, `A1`, `a 1`, `A 1`, `1 1`."
-    Right xy -> moveInGameState xy $ game state
-
--- | the part of CLI taking the coordinate from the Ai module.
-getAiCoordinates :: AppState -> StateT AppState IO ()
-getAiCoordinates state = do 
-  let gm = game state
-  mcoords <- lift $ findAiMove gm
-  let coords = fromMaybe (Coordinate {y=0, x=0}) mcoords
-  moveInGameState coords gm
-
--- | makes the move once taken coordinates from Player or Ai inputs.
-moveInGameState :: Coordinate -> Game -> StateT AppState IO ()
-moveInGameState xy gm = do 
-  case move xy gm of
-    Left e   -> printLn e
-    Right gm -> modify (\s -> s {game=gm})
-
-
--- | to chose a different pawn  or reverse the autmatic player change after every game.
-switchStartingPlayer :: StateT AppState IO ()
-switchStartingPlayer = do
-  state <- get
-  let current = startingPawn state
-  modify (\s -> state{startingPawn= otherPlayer current})
-
--- | print board on screen with indexes.
-displayGame :: AppState -> StateT AppState IO ()
-displayGame state = do
-  printLn "\\/"
-  printLn ""
-  liftIO $ printBoard $ board $ game state
-  printLn ""
-  printLn ""
-
--- | clears board and updates scores. Change of player turn is handles in @Game.move@.
-endGame :: StateT AppState IO ()
-endGame = do
-  state <- get
-  displayGame state
-  let winner = win $ game state 
-  if isNothing winner 
-    then printLn "The game was a Draw!"
-    else do
-      modify $ dispatchScores (fromMaybe X winner)
-      printLn   "* * * * * * * * *"
-      printLn $ "Winner is: " ++ (show $ fromMaybe O winner)
-      printLn   "* * * * * * * * *"
-  clearBoard
-
--- | replaces esxisting board with a new board of Nothings, 
---   based on length of exisiting baord.
-clearBoard :: StateT AppState IO ()
-clearBoard = do
-  state <- get
-  let gm = game state
-  let boardSize = length $ board gm
-  modify (\s -> s {game= gm {board= mkBoard boardSize}})
-
--- | CLI dialogues to take user's input on creating differnet board size and 
---   game parameters.
-buildCustomGame :: StateT AppState IO ()
-buildCustomGame = do 
-  boardSize <- liftIO $ getSettingSize 3 "Enter board size:" 3 100 
-  printLn $ "Board size: " ++ show boardSize
-  countToWin <- liftIO $ getSettingSize 3 "Enter winning strake amount:" 3 boardSize
-  printLn $ "Winning strake amount: " ++ show countToWin
-  let gm = mkGame boardSize countToWin
-  evaporCount <- liftIO $ getSettingSize countToWin msgEC countToWin $ (boardSize^2) `div` 2
-  printLn $ "Evaporating after?: " ++ show evaporCount 
-  modify (\s -> s {game= (gm{evaporCount= Just evaporCount})})
-  printLn "Custom Game Started!"
-  printLn $ "Make a line of "++ show countToWin ++" pawns to win the game!" 
-    where 
-      msgEC = "                                                            \n\
-              \Evaporating or Standard game Setup:\\/\\/\\/                \n\
-              \Enter how many moves before the pawns start to evaporate.   \n\
-              \(it needs to be more than the winning streak)               \n\
-              \                                                            \n\
-              \Leave blank for standard game style (non evaporating pawns) \n\
-              \^^^^^^^^^^^         ^      ^    ^                           \n\                         
-              \Enter number or leave blank and press Enter:"
-
--- | common bit of interface reused for every integer value to be gatehred from 
---   user input. allows for a default -> message -> minimum value -> maximum value.
-getSettingSize :: Int -> String -> Int -> Int -> IO Int
-getSettingSize defaulT str min max = do
-  putStrLn str
-  input <- getLine 
-  if input == ""
-    then pure defaulT
-    else parseit input
-  where
-    parseit inp = case parse (acceptedNumber min max) "" inp of
-      Left e  -> do 
-        putStrLn $ last $ lines $ show e
-        getSettingSize defaulT str min max
-      Right boardSize -> return boardSize 
-
--- | helps updating scores after each game (@endGame@).
-dispatchScores :: Player -> AppState -> AppState
-dispatchScores p as 
-  | p == O = as{scoresO= pOs}
-  | p == X = as{scoresX= pXs}
-  where
-    ctw = countToWin $ game as
-    pOs = scoresO as + ctw
-    pXs = scoresX as + ctw
-
--- | helper function to avoid using liftIO everytime I print something inside a StateT function.
-printLn :: String -> StateT AppState IO ()
-printLn str = do 
-  liftIO $ putStrLn str
-
-getLn :: StateT AppState IO String
-getLn = do 
-  input <- liftIO $ getLine
-  return input
 

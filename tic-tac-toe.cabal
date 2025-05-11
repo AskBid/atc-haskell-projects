@@ -15,6 +15,10 @@ library ghci
     Graphics
     Helpers
     Interface
+    Interface.Game
+    Interface.AppState
+    Interface.Settings
+    Interface.Helpers
     Parser
     Ai
   hs-source-dirs:
@@ -39,4 +43,15 @@ executable tic-tac-toe
                      , parsec
                      , mtl
                      , random >= 1.1
-  other-modules:       Board, Game, Graphics, Helpers, Interface, Parser, Ai
+  other-modules:       
+    Board 
+    Game 
+    Graphics 
+    Helpers 
+    Parser 
+    Ai
+    Interface 
+    Interface.Game
+    Interface.AppState
+    Interface.Settings
+    Interface.Helpers
