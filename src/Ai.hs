@@ -11,7 +11,7 @@ import Game
 import Board
 import Helpers ((><))
 
-findAiMove :: Game -> Maybe Coordinate
+findAiMove :: Game -> IO (Maybe Coordinate)
 findAiMove gm = findAiMove' $ countToWin gm
   where 
   findAiMove' 0   = findRandomEmpty bwc
@@ -21,7 +21,7 @@ findAiMove gm = findAiMove' $ countToWin gm
                      -- ^should really look for possible other 
                      --  incomplete streak, but I will keep it
                      --  simple for this round.
-                     Just xy -> Just xy
+                     Just xy -> pure $ Just xy
       otherwise -> findAiMove' $ ctw - 1
   b = board gm
   ls = boardlines b
