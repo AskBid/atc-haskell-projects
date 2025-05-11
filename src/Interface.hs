@@ -154,11 +154,13 @@ gameLoop = do
   state <- get
   displayGame state 
   let player = otherPlayer $ lastPlayer $ game state
-  printLn $ "AAAAAAAAAAAAAAA  " ++ show player ++ "    " ++ (show (takePlayersStatus player state))
-  printLn $ show state
   if takePlayersStatus player state 
-    then moveInGameState (fromMaybe (Coordinate 2 2) $ findAiMove $ game state) $ game state
-    else getPlayerCoordinates player state 
+    then do 
+      let gm = game state
+      mcoords <- lift $ findAiMove gm 
+      let coords = fromMaybe (Coordinate {y=0, x=0}) mcoords
+      return $ moveInGameState coords gm
+    else lift $ getPlayerCoordinates player state
   state' <- get
   when ((isNothing $ win $ game state') && (not $ end $ game state')) gameLoop
   handleInput "starting"
@@ -179,7 +181,6 @@ getPlayerCoordinates p state = do
 
 moveInGameState :: Coordinate -> Game -> StateT AppState IO ()
 moveInGameState xy gm = do 
-  printLn $ "THE MOOOOOVEEEEE   " ++ show xy
   case move xy gm of
     Left e   -> printLn e
     Right gm -> modify (\s -> s {game=gm})
