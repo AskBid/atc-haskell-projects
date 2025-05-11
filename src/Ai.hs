@@ -5,6 +5,7 @@ module Ai where
 
 import Data.List (find)
 import Data.Maybe (fromMaybe, isNothing)
+import System.Random
 
 import Game
 import Board
@@ -76,28 +77,7 @@ findRandomEmpty b = sortResult findEmpties
     sortResult []        = Nothing
     sortResult ((_,c):_) = Just c
 
--- r3 = [(Just O,Coordinate {x = 0, y = 3})
---      ,(Just O,Coordinate {x = 0, y = 4})
---      ,(Nothing,Coordinate {x = 0, y = 5})
---      ]
-
--- r4 = [(Just O,Coordinate {x = 0, y = 3})
---      ,(Nothing,Coordinate {x = 0, y = 4})
---      ,(Nothing,Coordinate {x = 0, y = 5})
---      ]
-
--- [[(Just X,Coordinate {x = 0, y = 0})
--- ,(Just O,Coordinate {x = 0, y = 1})
--- ,(Nothing,Coordinate {x = 0, y = 2})]
--- ,[(Just O,Coordinate {x = 1, y = 0})
--- ,(Nothing,Coordinate {x = 1, y = 1})
--- ,(Nothing,Coordinate {x = 1, y = 2})]
--- ,[(Just X,Coordinate {x = 2, y = 0})
--- ,(Nothing,Coordinate {x = 2, y = 1})
--- ,(Nothing,Coordinate {x = 2, y = 2})]] 
---
--- [(Nothing,Coordinate {x = 0, y = 2})
--- ,(Nothing,Coordinate {x = 1, y = 1})
--- ,(Nothing,Coordinate {x = 1, y = 2})
--- ,(Nothing,Coordinate {x = 2, y = 1})
--- ,(Nothing,Coordinate {x = 2, y = 2})]
+randomNumber :: Int -> Int -> IO Int
+randomNumber mn mx = do
+  n <- randomRIO (mn, mx)
+  return n
