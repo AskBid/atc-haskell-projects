@@ -63,7 +63,6 @@ loop = do
           \reset     |                  Reinitiate App (select Multiplayer/AI)\n\
           \exit      |                                       Exit from the App\n\
           \-------------------------------------------------------------------"
-  printLn ""
   printLn $ "Player to start next: " ++ (show $ startingPawn state)
   printLn ""
   printLn "Please, enter a command from the list above:"
@@ -136,9 +135,9 @@ handleInput input = do
   printLn $ "err: `" ++ input ++ "` is not a valid command."
 -- handleInput end
 
--- | gameLoop always set the player opposite from what was the last move
---   this function makes sure at the beginning of each game the initial player
---   recorded in AppState has effect by changing the lastPlayer value accordingly
+-- | @gameLoop@ always set the current player as the opposite to the last move (@lastPlayer@).
+--   this function makes sure that at the beginning of each game the initial player (in 
+--   AppState) has effect, changing the @lastPlayer@ state value accordingly.
 setStartintPawn :: StateT AppState IO ()
 setStartintPawn = do
   state <- get
@@ -147,8 +146,8 @@ setStartintPawn = do
   let gm' = gm{lastPlayer= lastP}
   modify (\s -> s{game= gm'})
 
--- | the part of CLI where a recursive function get one move after the
---   other switching players
+-- | the part of CLI where a recursive function get one move after the other,
+--   switching players
 gameLoop :: StateT AppState IO ()
 gameLoop = do
   state <- get
@@ -164,7 +163,7 @@ gameLoop = do
       takePlayersStatus X state = aiX state 
       takePlayersStatus O state = aiO state
 
--- | the part of CLI taking the coordinate from the Players. 
+-- | the part of CLI taking the coordinate from the human players. 
 --   the first argument @Player@ is only used to display information and not involved in 
 --   state modification.
 getPlayerCoordinates :: Player -> AppState -> StateT AppState IO ()
@@ -178,7 +177,7 @@ getPlayerCoordinates p state = do
                         \`a1`, `A1`, `a 1`, `A 1`, `1 1`."
     Right xy -> moveInGameState xy $ game state
 
--- | the part of CLI taking the coordinate from the Ai.
+-- | the part of CLI taking the coordinate from the Ai module.
 getAiCoordinates :: AppState -> StateT AppState IO ()
 getAiCoordinates state = do 
   let gm = game state
@@ -194,14 +193,14 @@ moveInGameState xy gm = do
     Right gm -> modify (\s -> s {game=gm})
 
 
--- | to chose a different pawn for 1st player or reverse the autmatic
---   player change after every game.
+-- | to chose a different pawn  or reverse the autmatic player change after every game.
 switchStartingPlayer :: StateT AppState IO ()
 switchStartingPlayer = do
   state <- get
   let current = startingPawn state
   modify (\s -> state{startingPawn= otherPlayer current})
 
+-- | print board on screen with indexes.
 displayGame :: AppState -> StateT AppState IO ()
 displayGame state = do
   printLn "\\/"
@@ -210,6 +209,7 @@ displayGame state = do
   printLn ""
   printLn ""
 
+-- | clears board and updates scores. Change of player turn is handles in @Game.move@.
 endGame :: StateT AppState IO ()
 endGame = do
   state <- get
@@ -222,6 +222,8 @@ endGame = do
       printLn $ "Winner is: " ++ (show $ fromMaybe O winner)
   clearBoard
 
+-- | replaces esxisting board with a new board of Nothings, 
+--   based on length of exisiting baord.
 clearBoard :: StateT AppState IO ()
 clearBoard = do
   state <- get
@@ -229,6 +231,8 @@ clearBoard = do
   let boardSize = length $ board gm
   modify (\s -> s {game= gm {board= mkBoard boardSize}})
 
+-- | CLI dialogues to take user's input on creating differnet board size and 
+--   game parameters.
 buildCustomGame :: StateT AppState IO ()
 buildCustomGame = do 
   boardSize <- liftIO $ getSettingSize 3 "Enter board size:" 3 100 
@@ -249,7 +253,7 @@ buildCustomGame = do
               \                                                            \n\
               \Leave blank for standard game style (non evaporating pawns) \n\
               \^^^^^^^^^^^         ^      ^    ^                           \n\                         
-              \Enter number:"
+              \Enter number or leave blank and press Enter:"
 
 -- | common bit of interface reused for every integer value to be gatehred from 
 --   user input. allows for a default -> message -> minimum value -> maximum value.
@@ -267,6 +271,7 @@ getSettingSize defaulT str min max = do
         getSettingSize defaulT str min max
       Right boardSize -> return boardSize 
 
+-- | helps updating scores after each game (@endGame@).
 dispatchScores :: Player -> AppState -> AppState
 dispatchScores p as 
   | p == O = as{scoresO= pOs}

@@ -36,7 +36,8 @@ type CountToWin = Int
 data Moves = Moves {playerO :: [Coordinate], playerX :: [Coordinate]} 
   deriving Show
 
--- | uses placePawn to make a move in game, considering turn.
+-- | uses placePawn to make a move in game, considering turn. 
+--   Changes Last player after move.
 move :: Coordinate -> Game -> Either String Game
 move xy Game{..} = 
   case tryMove of  
