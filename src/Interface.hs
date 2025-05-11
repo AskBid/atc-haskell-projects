@@ -147,7 +147,7 @@ setStartintPawn = do
   let gm' = gm{lastPlayer= lastP}
   modify (\s -> s{game= gm'})
 
--- | the part of the interface where a recursive function get one move after the
+-- | the part of CLI where a recursive function get one move after the
 --   other switching players
 gameLoop :: StateT AppState IO ()
 gameLoop = do
@@ -155,12 +155,8 @@ gameLoop = do
   displayGame state 
   let player = otherPlayer $ lastPlayer $ game state
   if takePlayersStatus player state 
-    then do 
-      let gm = game state
-      mcoords <- lift $ findAiMove gm 
-      let coords = fromMaybe (Coordinate {y=0, x=0}) mcoords
-      return $ moveInGameState coords gm
-    else lift $ getPlayerCoordinates player state
+    then getAiCoordinates state
+    else getPlayerCoordinates player state
   state' <- get
   when ((isNothing $ win $ game state') && (not $ end $ game state')) gameLoop
   handleInput "starting"
@@ -168,6 +164,9 @@ gameLoop = do
       takePlayersStatus X state = aiX state 
       takePlayersStatus O state = aiO state
 
+-- | the part of CLI taking the coordinate from the Players. 
+--   the first argument @Player@ is only used to display information and not involved in 
+--   state modification.
 getPlayerCoordinates :: Player -> AppState -> StateT AppState IO ()
 getPlayerCoordinates p state = do 
   printLn $ "Enter coordinates for player `" ++ show p ++ "` next move. (e.g. a1, A1, a 1, 1 1)"
@@ -179,6 +178,15 @@ getPlayerCoordinates p state = do
                         \`a1`, `A1`, `a 1`, `A 1`, `1 1`."
     Right xy -> moveInGameState xy $ game state
 
+-- | the part of CLI taking the coordinate from the Ai.
+getAiCoordinates :: AppState -> StateT AppState IO ()
+getAiCoordinates state = do 
+  let gm = game state
+  mcoords <- lift $ findAiMove gm
+  let coords = fromMaybe (Coordinate {y=0, x=0}) mcoords
+  moveInGameState coords gm
+
+-- | makes the move once taken coordinates from Player or Ai inputs.
 moveInGameState :: Coordinate -> Game -> StateT AppState IO ()
 moveInGameState xy gm = do 
   case move xy gm of
@@ -186,8 +194,8 @@ moveInGameState xy gm = do
     Right gm -> modify (\s -> s {game=gm})
 
 
--- | to chose a different pawn for 1st player or modify the sqitching of starting 
---   player after every game.
+-- | to chose a different pawn for 1st player or reverse the autmatic
+--   player change after every game.
 switchStartingPlayer :: StateT AppState IO ()
 switchStartingPlayer = do
   state <- get
