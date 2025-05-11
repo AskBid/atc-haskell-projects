@@ -233,9 +233,13 @@ buildCustomGame = do
   printLn "Custom Game Started!"
   printLn $ "Make a line of "++ show countToWin ++" pawns to win the game!" 
     where 
-      msgEC = "Enter how many moves before the pawns start to evaporate.   \n\
-              \It needs to be more than the winning streak.                \n\
+      msgEC = "                                                            \n\
+              \Evaporating or Standard game Setup:\\/\\/\\/                \n\
+              \Enter how many moves before the pawns start to evaporate.   \n\
+              \(it needs to be more than the winning streak)               \n\
+              \                                                            \n\
               \Leave blank for standard game style (non evaporating pawns) \n\
+              \^^^^^^^^^^^         ^      ^    ^                           \n\                         
               \Enter number:"
 
 -- | common bit of interface reused for every integer value to be gatehred from 
