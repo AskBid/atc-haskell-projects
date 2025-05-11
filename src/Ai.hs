@@ -71,13 +71,16 @@ emptyAfter p row counter = emptyAfter' row counter
       | otherwise = emptyAfter' ns 0
 
 findRandomEmpty :: [[(Maybe Player, Coordinate)]] -> Maybe Coordinate
-findRandomEmpty b = sortResult findEmpties 
+findRandomEmpty b = extract $ pickOne findEmpties 
   where 
     findEmpties = filter (\(cell,_) -> isNothing cell) $ concat b
-    sortResult []        = Nothing
-    sortResult ((_,c):_) = Just c
+    l = length findEmpties - 1 
+    pickOne []      = Nothing
+    pickOne empties = Just $ findEmpties !! (randomNumber $ l)
+    extract Nothing = Nothing 
+    extract (Just (p,xy)) = Just xy
 
-randomNumber :: Int -> Int -> IO Int
-randomNumber mn mx = do
-  n <- randomRIO (mn, mx)
+randomNumber :: Int -> IO Int
+randomNumber mx = do
+  n <- randomRIO (0, mx)
   return n
