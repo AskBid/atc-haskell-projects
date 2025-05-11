@@ -59,14 +59,17 @@ choseNextStreakCell p line = emptyCell $ findCoord $ maxCount counts
     emptyCell (Just (coo,_)) = Just coo
 
 emptyAfter :: Maybe Player -> [(Maybe Player, Coordinate)] -> Int -> [(Coordinate, Int)]
-emptyAfter _ [] _ = []
-emptyAfter p ((p',_):(Nothing,coord):ns) c
-  | p' == p = (coord,c+1) : (emptyAfter p ns 0) 
-  | otherwise = emptyAfter p ns 0 
-emptyAfter p ((p',_):(b',_):ns) c
-  | p' == p && b'==p' = emptyAfter p ns (c+2)
-  | otherwise = emptyAfter p ns 0
-emptyAfter _ _ _ = []
+emptyAfter p row counter = emptyAfter' row counter 
+  where
+    emptyAfter' :: [(Maybe Player, Coordinate)] -> Int -> [(Coordinate, Int)]
+    emptyAfter' [] _ = []
+    emptyAfter' ((p',_):(Nothing,coord):ns) c
+      | p' == p = (coord,c+1) : (emptyAfter' ns 0) 
+      | otherwise = emptyAfter' ns 0 
+    emptyAfter' ((p',_):(b',_):ns) c
+      | p' == p && b'== p' = emptyAfter' ns (c+2)
+      | otherwise = emptyAfter' ns 0
+    emptyAfter' _ _ = []
 
 findRandomEmpty :: [[(Maybe Player, Coordinate)]] -> Maybe Coordinate
 findRandomEmpty b = sortResult findEmpties 
@@ -75,10 +78,13 @@ findRandomEmpty b = sortResult findEmpties
     sortResult []        = Nothing
     sortResult ((_,c):_) = Just c
 
+-- r3 = [(Just O,Coordinate {x = 0, y = 3})
+--      ,(Just O,Coordinate {x = 0, y = 4})
+--      ,(Nothing,Coordinate {x = 0, y = 5})
+--      ]
 
--- listEmptyCells
---
--- boardlines
--- winStreak with countToWin-1
--- if any winstreak -1  found add +1 pawn if possible
--- could be recursive up to countWin-2,-1,-3?
+-- r4 = [(Just O,Coordinate {x = 0, y = 3})
+--      ,(Nothing,Coordinate {x = 0, y = 4})
+--      ,(Nothing,Coordinate {x = 0, y = 5})
+--      ]
+

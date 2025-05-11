@@ -58,7 +58,6 @@ r1b = [(Just O,Coordinate {x = 0, y = 1})
      ,(Nothing,Coordinate {x = 0, y = 5})
      ]
 
-
 r2 = [(Just O,Coordinate {x = 0, y = 1})
      ,(Just O,Coordinate {x = 0, y = 2})
      ,(Nothing,Coordinate {x = 0, y = 3})
@@ -73,7 +72,7 @@ r3 = [(Just O,Coordinate {x = 0, y = 3})
      ]
 
 r4 = [(Just O,Coordinate {x = 0, y = 3})
-     ,(Nothing,Coordinate {x = 0, y = 5})
+     ,(Nothing,Coordinate {x = 0, y = 4})
      ,(Nothing,Coordinate {x = 0, y = 5})
      ]
 
