@@ -49,16 +49,7 @@ findQuasiStreaks p ctw rws =
 choseNextStreakCell :: Maybe Player -> [(Maybe Player, Coordinate)] -> Maybe Coordinate
 choseNextStreakCell p line = emptyCell $ findCoord $ maxCount counts
   where
-    emptyAfter :: [(Maybe Player, Coordinate)] -> Int -> [(Coordinate, Int)]
-    emptyAfter [] _ = []
-    emptyAfter ((p',_):(Nothing,coord):ns) c
-      | p' == p = (coord,c+1) : (emptyAfter ns 0) 
-      | otherwise = emptyAfter ns 0 
-    emptyAfter ((p',_):(b',_):ns) c
-      | p' == p && b'==p' = emptyAfter ns (c+2)
-      | otherwise = emptyAfter ns 0
-    emptyAfter _ _ = []
-    streaks = emptyAfter line 0 ++ emptyAfter (reverse line) 0
+    streaks = emptyAfter p line 0 ++ emptyAfter p (reverse line) 0
     counts = snd $ unzip streaks
     maxCount [] = Nothing
     maxCount ns = Just $ maximum ns
@@ -66,6 +57,16 @@ choseNextStreakCell p line = emptyCell $ findCoord $ maxCount counts
     findCoord (Just max) = find (\(_,count) -> max == count) streaks
     emptyCell Nothing = Nothing
     emptyCell (Just (coo,_)) = Just coo
+
+emptyAfter :: Maybe Player -> [(Maybe Player, Coordinate)] -> Int -> [(Coordinate, Int)]
+emptyAfter _ [] _ = []
+emptyAfter p ((p',_):(Nothing,coord):ns) c
+  | p' == p = (coord,c+1) : (emptyAfter p ns 0) 
+  | otherwise = emptyAfter p ns 0 
+emptyAfter p ((p',_):(b',_):ns) c
+  | p' == p && b'==p' = emptyAfter p ns (c+2)
+  | otherwise = emptyAfter p ns 0
+emptyAfter _ _ _ = []
 
 findRandomEmpty :: [[(Maybe Player, Coordinate)]] -> Maybe Coordinate
 findRandomEmpty b = sortResult findEmpties 

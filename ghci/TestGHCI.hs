@@ -42,9 +42,39 @@ gm = Game {board = [[Nothing,Just O,Nothing],[Nothing,Just X,Nothing],[Nothing,N
 
 b = board gm
 bwc = boardWithCoords b
-r0 = fromMaybe [] $ H.head (boardWithCoords b)
+r0 = fromMaybe [] $ H.head bwc
+
+r1 = [(Just O,Coordinate {x = 1, y = 1})
+     ,(Nothing,Coordinate {x = 2, y = 2})
+     ,(Just O,Coordinate {x = 3, y = 3})
+     ,(Just O,Coordinate {x = 4, y = 4})
+     ,(Nothing,Coordinate {x = 5, y = 5})
+     ]
+
+r1b = [(Just O,Coordinate {x = 0, y = 1})
+     ,(Nothing,Coordinate {x = 0, y = 2})
+     ,(Just O,Coordinate {x = 0, y = 3})
+     ,(Just O,Coordinate {x = 0, y = 4})
+     ,(Nothing,Coordinate {x = 0, y = 5})
+     ]
 
 
+r2 = [(Just O,Coordinate {x = 0, y = 1})
+     ,(Just O,Coordinate {x = 0, y = 2})
+     ,(Nothing,Coordinate {x = 0, y = 3})
+     ,(Just O,Coordinate {x = 0, y = 4})
+     ,(Just O,Coordinate {x = 0, y = 5})
+     ,(Nothing,Coordinate {x = 0, y = 6})
+     ]
 
+r3 = [(Just O,Coordinate {x = 0, y = 3})
+     ,(Just O,Coordinate {x = 0, y = 4})
+     ,(Nothing,Coordinate {x = 0, y = 5})
+     ]
+
+r4 = [(Just O,Coordinate {x = 0, y = 3})
+     ,(Nothing,Coordinate {x = 0, y = 5})
+     ,(Nothing,Coordinate {x = 0, y = 5})
+     ]
 
 
