@@ -70,15 +70,17 @@ emptyAfter p row counter = emptyAfter' row counter
       | p' == p = emptyAfter' ns (c+1)
       | otherwise = emptyAfter' ns 0
 
-findRandomEmpty :: [[(Maybe Player, Coordinate)]] -> Maybe Coordinate
-findRandomEmpty b = extract $ pickOne findEmpties 
-  where 
-    findEmpties = filter (\(cell,_) -> isNothing cell) $ concat b
-    l = length findEmpties - 1 
-    pickOne []      = Nothing
-    pickOne empties = Just $ findEmpties !! (randomNumber $ l)
-    extract Nothing = Nothing 
-    extract (Just (p,xy)) = Just xy
+findRandomEmpty :: [[(Maybe Player, Coordinate)]] -> IO (Maybe Coordinate)
+findRandomEmpty b = do
+  let emptyCells = filter (\(cell,_) -> isNothing cell) $ concat b
+  let len = length emptyCells 
+  rn <- randomNumber len 
+  empty <- pure (emptyCells !! rn)
+  return $ extract emptyCells
+    where
+      extract :: [(Maybe Player, Coordinate)] -> Maybe Coordinate
+      extract []           = Nothing 
+      extract ((_,xys):as) = Just xys
 
 randomNumber :: Int -> IO Int
 randomNumber mx = do
