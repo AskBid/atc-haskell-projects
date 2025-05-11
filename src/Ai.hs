@@ -30,7 +30,7 @@ findAiMove gm = findAiMove' $ countToWin gm
 mkCoordsBoard :: Int -> [[Coordinate]]
 mkCoordsBoard l = (makeLine l) <$> [0..l-1]
   where 
-    makeLine l row = [Coordinate row n | n <- [0..l-1]]
+    makeLine l row = [Coordinate {y=row, x=n} | n <- [0..l-1]]
 
 -- | (><) :: [[a]] -> [[b]] -> [[(a,b)]] from Helpers
 boardWithCoords :: Board -> [[(Maybe Player, Coordinate)]]
