@@ -54,4 +54,5 @@ switchStartingPlayer = do
   state <- get
   let current = startingPawn state
   modify (\s -> state{startingPawn= otherPlayer current})
+  printLn "Switched starting player"
 

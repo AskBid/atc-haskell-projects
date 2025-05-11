@@ -14,6 +14,8 @@ import Parser
 import Ai
 import Interface.Game
 import Interface.AppState
+import Interface.Helpers
+import Interface.Settings
 
 -- | dialogue to set players as human or AI, used at the very beginning of the CLI.
 multiplayer :: AppState -> IO AppState
@@ -103,7 +105,6 @@ handleInput "repeat" = handleInput "3"
 --  
 handleInput "starting" = do
   switchStartingPlayer
-  printLn "Switched starting player"
 -- 
 handleInput "scores" = do
   state <- get

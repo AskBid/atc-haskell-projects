@@ -3,6 +3,7 @@ module Main where
 import Control.Monad.State
 
 import Interface
+import Interface.AppState
 import Game
 import Board (Player(..))
 

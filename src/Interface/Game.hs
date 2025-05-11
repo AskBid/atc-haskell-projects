@@ -14,6 +14,7 @@ import Graphics
 import Ai
 import Interface.AppState
 import Interface.Helpers
+import Interface.Settings
 
 
 -- | the part of CLI where a recursive function get one move after the other,
@@ -28,7 +29,7 @@ gameLoop = do
     else getPlayerCoordinates player state
   state' <- get
   when ((isNothing $ win $ game state') && (not $ end $ game state')) gameLoop
-  handleInput "starting"
+  switchStartingPlayer
     where 
       takePlayersStatus X state = aiX state 
       takePlayersStatus O state = aiO state
