@@ -13,9 +13,8 @@ import Helpers ((><))
 findAiMove :: Game -> Maybe Coordinate
 findAiMove gm = findAiMove' $ countToWin gm
   where 
-  findAiMove' 0    = findRandomEmpty bwc
-  findAiMove' ctw = 
-    case find (findQuasiStreaks p ctw) bwc of
+  findAiMove' 0   = findRandomEmpty bwc
+  findAiMove' ctw = case find (findQuasiStreaks p ctw) bwc of
       Just line -> case choseNextStreakCell (Just p) line of
                      Nothing -> findRandomEmpty bwc
                      -- ^should really look for possible other 
@@ -87,3 +86,18 @@ findRandomEmpty b = sortResult findEmpties
 --      ,(Nothing,Coordinate {x = 0, y = 5})
 --      ]
 
+-- [[(Just X,Coordinate {x = 0, y = 0})
+-- ,(Just O,Coordinate {x = 0, y = 1})
+-- ,(Nothing,Coordinate {x = 0, y = 2})]
+-- ,[(Just O,Coordinate {x = 1, y = 0})
+-- ,(Nothing,Coordinate {x = 1, y = 1})
+-- ,(Nothing,Coordinate {x = 1, y = 2})]
+-- ,[(Just X,Coordinate {x = 2, y = 0})
+-- ,(Nothing,Coordinate {x = 2, y = 1})
+-- ,(Nothing,Coordinate {x = 2, y = 2})]] 
+--
+-- [(Nothing,Coordinate {x = 0, y = 2})
+-- ,(Nothing,Coordinate {x = 1, y = 1})
+-- ,(Nothing,Coordinate {x = 1, y = 2})
+-- ,(Nothing,Coordinate {x = 2, y = 1})
+-- ,(Nothing,Coordinate {x = 2, y = 2})]
