@@ -1,16 +1,18 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Main where
 
-import Control.Monad.State
+import Control.Monad.State (StateT(runStateT))
 
-import Interface
+import Interface (multiplayer, loop)
 import Interface.AppState
-import Game
+import Game (mkGame)
 import Board (Player(..))
 
 main :: IO ()
 main = do
   putStrLn ""
-  putStrLn "        X X O O"
+  putStrLn "        X X O O        "
   putStrLn "---------O---X---------"
   putStrLn "Welcome to Tic Tac Toe!"
   putStrLn "-----------------------"

@@ -1,10 +1,17 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Interface.Helpers where
 
 import Control.Monad.State
+  ( MonadIO(liftIO)
+  , MonadState(get)
+  , StateT
+  , modify
+  )
 
+import Game (Game(lastPlayer, board), otherPlayer)
+import Graphics (printBoard)
 import Interface.AppState
-import Game
-import Graphics
 
 -- | @gameLoop@ always set the current player as the opposite to the last move (@lastPlayer@).
 --   this function makes sure that at the beginning of each game the initial player (in 

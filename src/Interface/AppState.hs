@@ -1,7 +1,7 @@
 module Interface.AppState where
 
-import Board
-import Game
+import Board (Player)
+import Game  (Game)
 
 data AppState = AppState
   { game      :: Game

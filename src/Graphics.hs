@@ -1,12 +1,16 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 -- | This module is used to visualise boards and games statics
-module Graphics where
+module Graphics
+  ( printBoard
+  , charsIxs
+  , charIndexes8
+  ) where
 
 import Data.String (fromString)
 import Data.Char (toUpper)
 
-import Board
+import Board (Board, Player(..))
 import Helpers as H
 
 --       A   B   C

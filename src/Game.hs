@@ -14,14 +14,6 @@ module Game
 import Data.Maybe (isNothing, fromMaybe)
 
 import Board
-  ( Board(..)
-  , Player(..) 
-  , Coordinate(..)
-  , mkBoard
-  , boardlines 
-  , placePawn
-  , removePawn
-  )
 import Helpers as H
 
 data Game = Game

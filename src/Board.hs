@@ -1,6 +1,15 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE OverloadedStrings #-}
 
-module Board where
+module Board 
+  ( Board(..)
+  , Player(..) 
+  , Coordinate(..)
+  , mkBoard
+  , boardlines 
+  , placePawn
+  , removePawn
+  ) where
 
 import Data.List (transpose)
 import Data.Maybe (isNothing)

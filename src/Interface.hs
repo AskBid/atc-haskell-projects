@@ -1,4 +1,6 @@
-module Interface where
+{-# LANGUAGE OverloadedStrings #-}
+
+module Interface (multiplayer, loop) where
 
 import System.IO (hFlush, stdout)
 import Control.Monad.State
@@ -7,15 +9,12 @@ import Control.Monad (when)
 import Data.Maybe (isNothing, fromMaybe)
 import Text.Parsec (parse)
 
-import Game
-import Board
-import Graphics
-import Parser
-import Ai
-import Interface.Game
+import Game (Game(..), mkGame)
+import Board (Player(O,X))
+import Interface.Game (gameLoop, endGame)
+import Interface.Helpers (setStartintPawn, printLn, getLn)
+import Interface.Settings (switchStartingPlayer, buildCustomGame)
 import Interface.AppState
-import Interface.Helpers
-import Interface.Settings
 
 -- | dialogue to set players as human or AI, used at the very beginning of the CLI.
 multiplayer :: AppState -> IO AppState
@@ -40,7 +39,7 @@ multiplayer as = do
     parseAiInput "human" = Just False 
     parseAiInput otherwise = Nothing
 
--- | acts as main menu
+-- | acts as main menu.
 loop :: StateT AppState IO ()
 loop = do
   state <- get

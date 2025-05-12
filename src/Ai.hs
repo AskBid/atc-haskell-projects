@@ -1,7 +1,7 @@
 -- | in this module I will mockup a rudimentary Ai for the sole purpose 
 --   to test the interface with more ease, in the future I would like to
 --   exercise with a search tree tecnique in Graham Hutton's book style
-module Ai where
+module Ai (findAiMove) where
 
 import Data.List (find)
 import Data.Maybe (fromMaybe, isNothing)

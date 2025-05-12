@@ -1,20 +1,28 @@
+{-# LANGUAGE OverloadedStrings #-}
 -- | In this module all the CLI oprations to handle actions during the game cycle.
-module Interface.Game where
+module Interface.Game 
+  ( gameLoop
+  , endGame
+  ) where
 
 import Control.Monad.State
-import Control.Monad
+  ( MonadTrans(lift)
+  , MonadState(get)
+  , StateT
+  , modify
+  )
+import Control.Monad (when)
 import Data.Maybe (isNothing, fromMaybe)
-import Text.Parsec
+import Text.Parsec (parse)
 
--- import Interface
-import Board
-import Game
-import Parser
-import Graphics
-import Ai
+import Board (Coordinate(..), Player(..), mkBoard) 
+import Game (Game(..), move, end, win, otherPlayer)
+import Parser (coordinateParser)
+import Graphics (charsIxs, charIndexes8)
+import Ai (findAiMove)
+import Interface.Helpers (displayGame, printLn, getLn)
+import Interface.Settings (switchStartingPlayer)
 import Interface.AppState
-import Interface.Helpers
-import Interface.Settings
 
 
 -- | the part of CLI where a recursive function get one move after the other,

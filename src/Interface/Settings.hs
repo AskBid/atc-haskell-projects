@@ -1,12 +1,22 @@
-module Interface.Settings where
+{-# LANGUAGE OverloadedStrings #-}
+
+module Interface.Settings
+  ( buildCustomGame
+  , switchStartingPlayer
+  )where
 
 import Control.Monad.State
-import Text.Parsec
+  ( MonadIO(liftIO)
+  , MonadState(get)
+  , StateT
+  , modify
+  )
+import Text.Parsec (parse)
 
+import Interface.Helpers (printLn)
+import Parser (acceptedNumber)
+import Game (Game(evaporCount), mkGame, otherPlayer)
 import Interface.AppState
-import Interface.Helpers
-import Parser
-import Game
 
 -- | CLI dialogues to take user's input on creating differnet board size and 
 --   game parameters.

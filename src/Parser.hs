@@ -1,4 +1,7 @@
-module Parser where
+module Parser
+  ( coordinateParser
+  , acceptedNumber
+  ) where
 
 import Text.Parsec
 import Text.Parsec.String (Parser)
