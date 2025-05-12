@@ -11,7 +11,7 @@ import Game
 import Board
 import Helpers ((><))
 
-findAiMove :: Game -> IO (Maybe Coordinate)
+findAiMove :: Game -> IO Coordinate
 findAiMove gm = findAiMove' $ countToWin gm
   where 
   findAiMove' 1   = findRandomEmpty bwc
@@ -21,8 +21,12 @@ findAiMove gm = findAiMove' $ countToWin gm
                      -- ^should really look for possible other 
                      --  incomplete streak, but I will keep it
                      --  simple for this round.
-                     Just xy -> pure $ Just xy
-      Nothing   -> findAiMove' $ ctw - 1
+                     Just xy -> pure xy
+      Nothing   -> do
+        n <- randomNumber 1
+        case n of
+          1 -> findAiMove' $ ctw - 1
+          0 -> findRandomEmpty bwc
   b = board gm
   ls = boardlines b
   p = otherPlayer $ lastPlayer gm
@@ -71,17 +75,18 @@ rankEmptysAfterP p row counter = rankEmptysAfterP' row counter
       | p' == p = rankEmptysAfterP' ns (c+1)
       | otherwise = rankEmptysAfterP' ns 0
 
-findRandomEmpty :: [[(Maybe Player, Coordinate)]] -> IO (Maybe Coordinate)
+-- | in theory a board without empty space will never be fed here
+--   but otherwise need to sort out the edge case for @(!!)@
+findRandomEmpty :: [[(Maybe Player, Coordinate)]] -> IO Coordinate
 findRandomEmpty b = do
   let emptyCells = filter (\(cell,_) -> isNothing cell) $ concat b
   let len = length emptyCells 
   rn <- randomNumber len 
   empty <- pure (emptyCells !! rn)
-  return $ extract emptyCells
+  return $ extract empty
     where
-      extract :: [(Maybe Player, Coordinate)] -> Maybe Coordinate
-      extract []           = Nothing 
-      extract ((_,xys):as) = Just xys
+      extract :: (Maybe Player, Coordinate) -> Coordinate 
+      extract (_,xys) = xys
 
 randomNumber :: Int -> IO Int
 randomNumber mx = do
