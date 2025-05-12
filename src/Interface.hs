@@ -10,7 +10,7 @@ import Data.Maybe (isNothing, fromMaybe)
 import Text.Parsec (parse)
 
 import Game (Game(..), mkGame)
-import Board (Player(O,X))
+import Board (Player(O,X), mkBoard)
 import Interface.Game (gameLoop, endGame)
 import Interface.Helpers (setStartintPawn, printLn, getLn)
 import Interface.Settings (switchStartingPlayer, buildCustomGame)
@@ -72,13 +72,14 @@ handleInput "exit" = do
 --
 handleInput "0" = do
   printLn "Quick Standard Game Started!"
+  modify (\s -> s{game=(game s){board= mkBoard 3, evaporCount= Just 3, countToWin= 3}}) 
   setStartintPawn
   gameLoop
   endGame 
 -- 
 handleInput "1" = do
   printLn "Quick Evaporating Game Started!"
-  modify (\s -> s{game=(game s){evaporCount= Just 3}})
+  modify (\s -> s{game=(game s){board= mkBoard 3, evaporCount= Just 3, countToWin= 3}})
   setStartintPawn
   gameLoop
   endGame 
@@ -112,7 +113,7 @@ handleInput "scores" = do
   printLn $ "Player X scores: " ++ (show $ scoresX state) 
   printLn $ "Player O scores: " ++ (show $ scoresO state) 
   printLn ""
-  printLn "press Enter to continue."
+  printLn "press Enter to continue. <<<<---------!!!"
   input <- getLn
   printLn ""
 -- 
