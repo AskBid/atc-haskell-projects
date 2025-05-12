@@ -80,7 +80,7 @@ rankEmptysAfterP p row counter = rankEmptysAfterP' row counter
 findRandomEmpty :: [[(Maybe Player, Coordinate)]] -> IO Coordinate
 findRandomEmpty b = do
   let emptyCells = filter (\(cell,_) -> isNothing cell) $ concat b
-  let len = length emptyCells 
+  let len = (length emptyCells) - 1 
   rn <- randomNumber len 
   empty <- pure (emptyCells !! rn)
   return $ extract empty
