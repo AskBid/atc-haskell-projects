@@ -1,7 +1,7 @@
 -- | in this module I will mockup a rudimentary Ai for the sole purpose 
 --   to test the interface with more ease, in the future I would like to
 --   exercise with a search tree tecnique in Graham Hutton's book style
-module Ai (findAiMove) where
+module Ai where --(findAiMove) where
 
 import Data.List (find)
 import Data.Maybe (fromMaybe, isNothing)
@@ -14,7 +14,7 @@ import Helpers ((><))
 findAiMove :: Game -> IO (Maybe Coordinate)
 findAiMove gm = findAiMove' $ countToWin gm
   where 
-  findAiMove' 0   = findRandomEmpty bwc
+  findAiMove' 1   = findRandomEmpty bwc
   findAiMove' ctw = case find (isQuasiStreaks p ctw) bwc of
       Just line -> case choseNextStreakCell (Just p) line of
                      Nothing -> findRandomEmpty bwc
@@ -43,7 +43,7 @@ isQuasiStreaks :: Player -> Int -> [(Maybe Player, Coordinate)] -> Bool
 isQuasiStreaks p ctw rws = 
   case winStreak ctw ps of
     Nothing -> False
-    p       -> True
+    Just p'  -> p == p' 
   where 
     ps = fst $ unzip rws
 
