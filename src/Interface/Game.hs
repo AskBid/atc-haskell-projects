@@ -14,6 +14,7 @@ import Control.Monad.State
 import Control.Monad (when)
 import Data.Maybe (isNothing, fromMaybe)
 import Text.Parsec (parse)
+import Control.Monad.State (liftIO)
 
 import Board (Coordinate(..), Player(..), mkBoard) 
 import Game (Game(..), move, end, win, otherPlayer)
@@ -36,8 +37,9 @@ gameLoop = do
     then getAiCoordinates state
     else getPlayerCoordinates player state
   state' <- get
-  when ((isNothing $ win $ game state') && (not $ end $ game state')) gameLoop
-  switchStartingPlayer
+  let isWin = not $ isNothing $ win $ game state'
+  when (not isWin && (not $ end $ game state')) gameLoop
+  when (isWin || (end $ game state')) switchStartingPlayer
     where 
       takePlayersStatus X state = aiX state 
       takePlayersStatus O state = aiO state
