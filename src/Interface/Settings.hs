@@ -40,7 +40,7 @@ buildCustomGame = do
               \                                                            \n\
               \Leave blank for standard game style (non evaporating pawns) \n\
               \^^^^^^^^^^^         ^      ^    ^                           \n\                         
-              \Enter number or leave blank and press Enter:"
+              \Enter number or leave blank:"
 
 -- | common bit of interface reused for every integer value to be gatehred from 
 --   user input. allows for a default -> message -> minimum value -> maximum value.

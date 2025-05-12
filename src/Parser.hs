@@ -56,7 +56,7 @@ fromCharIndexToInt cixs cix = elemIndex cix cixs
 acceptedNumber :: Int -> Int -> Parser Int
 acceptedNumber min max = do
   digits <- many1 digit
-  let num = read digits :: Int
-  if num >= min && num < max
+  let num = read digits 
+  if num >= min && num <= max
     then return num
     else fail "Number must be 3 < num < 100."
