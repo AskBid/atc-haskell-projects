@@ -72,7 +72,7 @@ handleInput "exit" = do
 --
 handleInput "0" = do
   printLn "Quick Standard Game Started!"
-  modify (\s -> s{game=(game s){board= mkBoard 3, evaporCount= Just 3, countToWin= 3}}) 
+  modify (\s -> s{game=(game s){board= mkBoard 3, evaporCount= Nothing, countToWin= 3}}) 
   setStartintPawn
   gameLoop
   endGame 
