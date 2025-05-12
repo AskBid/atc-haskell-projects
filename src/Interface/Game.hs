@@ -64,6 +64,8 @@ getAiCoordinates state = do
   let gm = game state
   coords <- lift $ findAiMove gm
   moveInGameState coords gm
+  printLn "AI made its move with:"
+  printLn $ (show (x coords + 1)) ++ " " ++ (show (y coords + 1))
 
 -- | makes the move once taken coordinates from Player or Ai inputs.
 moveInGameState :: Coordinate -> Game -> StateT AppState IO ()

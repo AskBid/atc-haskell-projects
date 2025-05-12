@@ -52,6 +52,8 @@ charDigiCombo cxs = do
 --   integer index.
 --   first argument is the list of all possible board letter indexes 
 --   (limited by board size).
+--   e.g. 
+--   fromCharIndexToInt take $ (length (mkBoard 3)) charIndexes8 charsIxs
 fromCharIndexToInt :: [String] -> String -> Maybe Int
 fromCharIndexToInt cixs cix = elemIndex cix cixs
 

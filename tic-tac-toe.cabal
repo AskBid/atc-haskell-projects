@@ -31,15 +31,4 @@ executable tic-tac-toe
                      , parsec
                      , mtl
                      , random >= 1.1
-  other-modules:       
-    Board 
-    Game 
-    Graphics 
-    Helpers 
-    Parser 
-    Ai
-    Interface 
-    Interface.Game
-    Interface.AppState
-    Interface.Settings
-    Interface.Helpers
+  other-modules:       Board, Game, Graphics, Helpers, Parser, Ai, Interface, Interface.Game, Interface.AppState, Interface.Settings, Interface.Helpers

@@ -2,10 +2,9 @@
 
 module Interface (multiplayer, loop) where
 
-import System.IO (hFlush, stdout)
+-- import System.IO (hFlush, stdout)
 import Control.Monad.State
 import Control.Monad (when)
--- import Control.Monad.IO.Class
 import Data.Maybe (isNothing, fromMaybe)
 import Text.Parsec (parse)
 
