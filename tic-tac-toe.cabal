@@ -6,9 +6,9 @@ category:            CLI
 build-type:          Simple
 cabal-version:       >=1.10
 
-library ghci
+library test-ghci
   exposed-modules:
-    Board, Game, Main, TestGHCI, Graphics, Helpers, Interface, Interface.Game, Interface.AppState, Interface.Settings, Interface.Helpers, Parser, Ai
+    Board, Game, TestGHCI, Graphics, Helpers, Interface, Interface.Game, Interface.AppState, Interface.Settings, Interface.Helpers, Parser, Ai
   hs-source-dirs:
     src
     ghci
