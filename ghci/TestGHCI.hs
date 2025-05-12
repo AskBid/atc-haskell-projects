@@ -51,7 +51,7 @@ gm3 = Game {board = [[Just X,Just O,Nothing],[Just O,Nothing,Nothing],[Just X,No
                     , movesHistory = Moves {playerO = [], playerX = []}}
 
 b = board gm
-bwc = boardWithCoords b
+-- bwc = boardWithCoords b
 r0 = fromMaybe [] $ H.head bwc
 
 r1 = [(Just O,Coordinate {x = 1, y = 1})
