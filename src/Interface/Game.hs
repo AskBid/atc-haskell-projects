@@ -60,8 +60,7 @@ getPlayerCoordinates p state = do
 getAiCoordinates :: AppState -> StateT AppState IO ()
 getAiCoordinates state = do 
   let gm = game state
-  mcoords <- lift $ findAiMove gm
-  let coords = fromMaybe (Coordinate {y=0, x=0}) mcoords
+  coords <- lift $ findAiMove gm
   moveInGameState coords gm
 
 -- | makes the move once taken coordinates from Player or Ai inputs.
