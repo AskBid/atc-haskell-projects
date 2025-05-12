@@ -31,8 +31,8 @@ bb0 = [[Nothing, Nothing, Nothing]
       ,[Nothing, Nothing, Nothing]]
 
 
-gm1 = (Game bb3 O 3)
-gm0 = (Game bb0 O 3)
+-- gm1 = (Game bb3 O 3)
+-- gm0 = (Game bb0 O 3)
 
 gm = Game {board = [[Nothing,Just O,Nothing],[Nothing,Just X,Nothing],[Nothing,Nothing,Nothing]]
                    , lastPlayer = X

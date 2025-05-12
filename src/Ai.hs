@@ -15,14 +15,14 @@ findAiMove :: Game -> IO (Maybe Coordinate)
 findAiMove gm = findAiMove' $ countToWin gm
   where 
   findAiMove' 0   = findRandomEmpty bwc
-  findAiMove' ctw = case find (findQuasiStreaks p ctw) bwc of
+  findAiMove' ctw = case find (isQuasiStreaks p ctw) bwc of
       Just line -> case choseNextStreakCell (Just p) line of
                      Nothing -> findRandomEmpty bwc
                      -- ^should really look for possible other 
                      --  incomplete streak, but I will keep it
                      --  simple for this round.
                      Just xy -> pure $ Just xy
-      otherwise -> findAiMove' $ ctw - 1
+      Nothing   -> findAiMove' $ ctw - 1
   b = board gm
   ls = boardlines b
   p = otherPlayer $ lastPlayer gm
@@ -39,10 +39,11 @@ boardWithCoords b = (><) b bc
   where 
     bc = mkCoordsBoard $ length b
 
-findQuasiStreaks :: Player -> Int -> [(Maybe Player, Coordinate)] -> Bool
-findQuasiStreaks p ctw rws = 
+isQuasiStreaks :: Player -> Int -> [(Maybe Player, Coordinate)] -> Bool
+isQuasiStreaks p ctw rws = 
   case winStreak ctw ps of
-    p -> True
+    Nothing -> False
+    p       -> True
   where 
     ps = fst $ unzip rws
 
