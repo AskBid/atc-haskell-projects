@@ -28,12 +28,15 @@ import Common.Route
 frontend :: Frontend (R FrontendRoute)
 frontend = Frontend
   { _frontend_head = do
-      el "title" $ text "Obelisk Minimal Example"
+      el "title" $ text "My X"
       elAttr "script" ("type" =: "application/javascript" <> "src" =: $(static "lib.js")) blank
       elAttr "link" ("href" =: $(static "main.css") <> "type" =: "text/css" <> "rel" =: "stylesheet") blank
   , _frontend_body = do
-      el "h1" $ text "Welcome to Obelisk!"
-      el "p" $ text $ T.pack commonStuff
+      el "h1" $ text "Welcome to My X!"
+      -- el "p" $ text $ T.pack commonStuff
+
+      textAreaElement def
+      
 
       -- `prerender` and `prerender_` let you choose a widget to run on the server
       -- during prerendering and a different widget to run on the client with
@@ -44,15 +47,14 @@ frontend = Frontend
         ^. js ("skeleton_lib" :: T.Text)
         ^. js1 ("log" :: T.Text) ("Hello, World!" :: T.Text)
 
-      elAttr "img" ("src" =: $(static "obelisk.jpg")) blank
-      el "div" $ do
-        let
-          cfg = "common/example"
-          path = "config/" <> cfg
-        getConfig cfg >>= \case
-          Nothing -> text $ "No config file found in " <> path
-          Just bytes -> case T.decodeUtf8' bytes of
-            Left ue -> text $ "Couldn't decode " <> path <> " : " <> T.pack (show ue)
-            Right s -> text s
+      -- el "div" $ do
+      --   let
+      --     cfg = "common/example"
+      --     path = "config/" <> cfg
+      --   getConfig cfg >>= \case
+      --     Nothing -> text $ "No config file found in " <> path
+      --     Just bytes -> case T.decodeUtf8' bytes of
+      --       Left ue -> text $ "Couldn't decode " <> path <> " : " <> T.pack (show ue)
+      --       Right s -> text s
       return ()
   }
