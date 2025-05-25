@@ -34,9 +34,11 @@ frontend = Frontend
   , _frontend_body = do
       el "h1" $ text "Welcome to My X!"
       -- el "p" $ text $ T.pack commonStuff
-
-      textAreaElement def
       
+
+
+      area <- textAreaElement $ def & textAreaElementConfig_initialValue .~ "ciao"
+        & textAreaElementConfig_elementConfig . initialAttributes .~ ("placeholder" =: "Write your X here ..." <> "class" =: "classius") 
 
       -- `prerender` and `prerender_` let you choose a widget to run on the server
       -- during prerendering and a different widget to run on the client with
