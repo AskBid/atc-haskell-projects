@@ -37,8 +37,9 @@ frontend = Frontend
       
 
 
-      area <- textAreaElement $ def & textAreaElementConfig_initialValue .~ "ciao"
+      area <- textAreaElement $ def
         & textAreaElementConfig_elementConfig . initialAttributes .~ ("placeholder" =: "Write your X here ..." <> "class" =: "classius") 
+      -- you already have the lens textAreaElementConfig_elementConfig and elementConfig_initialAttributes, you can compose them to reach the nested field.
 
       -- `prerender` and `prerender_` let you choose a widget to run on the server
       -- during prerendering and a different widget to run on the client with
