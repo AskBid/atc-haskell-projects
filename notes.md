@@ -311,7 +311,7 @@ structure & lens .~ newValue
 
 ```
 
-## Assciativity
+## Associativity
 
 I was following an old Reflex video from Galen (https://youtu.be/7MuX6Z2AB70?si=ULZcQa2CcFPWhWJL) and ended up having a trip on associativity and precedence in Haskell.
 
@@ -401,3 +401,134 @@ Then the following precedence is `&`, and again it stops at the first operator e
 ```
 
 and you end up with a Lens that modifies one value of a default-InputElement that is then passed to `fmap value`.
+
+
+## Lenses
+
+Going through TextAreaElement to make sure I have in mind all of the "connections" used in the library
+
+```haskell
+data TextAreaElement er d t
+  = TextAreaElement { _textAreaElement_value :: Dynamic t Text
+               , _textAreaElement_input :: Event t Text
+               , _textAreaElement_hasFocus :: Dynamic t Bool
+               , _textAreaElement_element :: Element er d t
+               , _textAreaElement_raw :: RawTextAreaElement d
+               }
+
+textAreaElement :: TextAreaElementConfig er t (DomBuilderSpace m) -> m (TextAreaElement er (DomBuilderSpace m) t)
+  default textAreaElement :: ( MonadTransControl f
+                             , m ~ f m'
+                             , DomBuilderSpace m' ~ DomBuilderSpace m
+                             , DomBuilder t m'
+                             )
+                          => TextAreaElementConfig er t (DomBuilderSpace m) -> m (TextAreaElement er (DomBuilderSpace m) t)
+  textAreaElement = lift . textAreaElement
+```
+
+This function is defined via DomBuilder, which abstracts over DOM creation. The implementation you're seeing:
+`textAreaElement = lift . textAreaElement`
+means you're looking at a default instance for when `m` is a monad transformer — i.e., it just lifts to the underlying monad. You are not seeing the real implementation.
+
+The actual implementation of textAreaElement is defined deeper in Reflex-DOM — specifically in a module like `Reflex.Dom.Widget.Input`. 
+You don’t see it here because this file only defines the types and default lifted version.
+In the real implementation, it likely:
+
+1. Uses element (a function from Reflex-DOM) to create the DOM node.
+2. Applies the ElementConfig to set up the attributes and events.
+3. Sets the initial value into the DOM.
+
+```haskell
+data TextAreaElementConfig er t m = TextAreaElementConfig 
+  { _textAreaElementConfig_initialValue :: Text
+  , _textAreaElementConfig_setValue :: Maybe (Event t Text)
+  , _textAreaElementConfig_elementConfig :: ElementConfig er t m
+  }
+
+textAreaElementConfig_initialValue :: Lens' (TextAreaElementConfig er t m) Text
+textAreaElementConfig_initialValue f (TextAreaElementConfig a b c) = (\a' -> TextAreaElementConfig a' b c) <$> f a
+
+textAreaElementConfig_elementConfig :: Lens (TextAreaElementConfig er1 t m1) (TextAreaElementConfig er2 t m2) (ElementConfig er1 t m1) (ElementConfig er2 t m2)
+textAreaElementConfig_elementConfig f (TextAreaElementConfig a b c) = (\c' -> TextAreaElementConfig a b c') <$> f c
+
+instance (Reflex t, er ~ EventResult, DomSpace s) => Default (TextAreaElementConfig er t s) where
+  def = TextAreaElementConfig 
+    { _textAreaElementConfig_initialValue = ""
+    , _textAreaElementConfig_setValue = Nothing
+    , _textAreaElementConfig_elementConfig = def
+    }
+```
+
+Above we can see how the main config for the Area is defined, the lenses set up for its modification, and the default implementation.
+
+And below the same for the nested ElementConfig.
+
+```
+data ElementConfig er t s = ElementConfig 
+  { _elementConfig_namespace :: Maybe Namespace
+  , _elementConfig_initialAttributes :: Map AttributeName Text
+  , _elementConfig_modifyAttributes :: Maybe (Event t (Map AttributeName (Maybe Text)))
+  , _elementConfig_eventSpec :: EventSpec s er
+  }
+
+elementConfig_namespace :: Lens' (ElementConfig er t s) (Maybe Namespace)
+elementConfig_namespace f (ElementConfig a b c d) = (\a' -> ElementConfig a' b c d) <$> f a
+
+elementConfig_initialAttributes :: Lens' (ElementConfig er t s) (Map AttributeName Text)
+elementConfig_initialAttributes f (ElementConfig a b c d) = (\b' -> ElementConfig a b' c d) <$> f b
+
+elementConfig_eventSpec :: Lens (ElementConfig er1 t s1) (ElementConfig er2 t s2) (EventSpec s1 er1) (EventSpec s2 er2)
+elementConfig_eventSpec f (ElementConfig a b c d) = (\d' -> ElementConfig a b c d') <$> f d
+
+instance (Reflex t, er ~ EventResult, DomSpace s) => Default (ElementConfig er t s) wher
+  def = ElementConfig
+    { _elementConfig_namespace = Nothing
+    , _elementConfig_initialAttributes = mempty
+    , _elementConfig_modifyAttributes = Nothing
+    , _elementConfig_eventSpec = def
+    }
+```
+
+Now imagine you need to create a textArea with both setting a value in the the outer config and in the nested config:
+
+```
+area <- textareaelement $ def 
+  & textAreaElementConfig_initialValue .~ "ciao"
+  & textAreaElementConfig_elementConfig . elementConfig_initialAttributes .~ "class" =: "classius"
+```
+
+You can combine the lenses to achieve the wanted result.
+
+But here below is a technique used with class instances to avoid even the more verbose lenses combination:
+
+```haskell
+class InitialAttributes a where
+  initialAttributes :: Lens' a (Map AttributeName Text)
+
+instance InitialAttributes (ElementConfig er t m) where
+  initialAttributes = elementConfig_initialAttributes
+
+instance InitialAttributes (TextAreaElementConfig er t m) where
+  initialAttributes = textAreaElementConfig_elementConfig . elementConfig_initialAttributes
+```
+
+With this InitialAttributes class we can now do something like this:
+
+```
+area <- textAreaElement $ def 
+        & textAreaElementConfig_initialValue .~ "ciao"
+        & initialAttributes .~ "class" =: "classius"
+```
+
+Same concept is used for this other ElementConfig attribute:
+
+```
+class ModifyAttributes t a | a -> t where
+  modifyAttributes :: Reflex t => Lens' a (Event t (Map AttributeName (Maybe Text)))
+
+instance ModifyAttributes t (ElementConfig er t m) where
+  modifyAttributes = elementConfig_modifyAttributes
+
+instance ModifyAttributes t (TextAreaElementConfig er t m) where
+  modifyAttributes = textAreaElementConfig_elementConfig . elementConfig_modifyAttributes
+```
