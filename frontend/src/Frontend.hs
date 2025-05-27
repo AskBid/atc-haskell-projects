@@ -3,6 +3,8 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TemplateHaskell #-}
 
+{-# LANGUAGE GADTs #-}
+
 module Frontend where
 
 import Control.Lens ((^.))
@@ -21,6 +23,8 @@ import Reflex.Dom.Core
 import Common.Api
 import Common.Route
 
+import Obelisk.Route.Frontend
+
 
 -- This runs in a monad that can be run on the client or the server.
 -- To run code in a pure client or pure server context, use one of the
@@ -33,20 +37,25 @@ frontend = Frontend
       elAttr "script" ("src" =: "https://cdn.tailwindcss.com") blank
       -- elAttr "link" ("href" =: $(static "main.css") <> "type" =: "text/css" <> "rel" =: "stylesheet") blank
   , _frontend_body = do
-      el "h2" $ text "Welcome to My X!"
-      -- el "p" $ text $ T.pack commonStuff
-      
-      area <- textAreaElement $ def
-        & initialAttributes .~ ("placeholder" =: "Write your X here ..." <> "class" =: "bg-blue-100")
+      subRoute_ $ \case 
+        FrontendRoute_Main -> do
+          el "h2" $ text "Welcome to My X!"
+          -- el "p" $ text $ T.pack commonStuff
+          
+          area <- textAreaElement $ def
+            & initialAttributes .~ ("placeholder" =: "Write your X here ..." <> "class" =: "bg-blue-100")
+          return ()
+        FrontendRoute_Login -> el "h2" $ text "Login here."
+      pure ()
 
       -- `prerender` and `prerender_` let you choose a widget to run on the server
       -- during prerendering and a different widget to run on the client with
       -- JavaScript. The following will generate a `blank` widget on the server and
       -- print "Hello, World!" on the client.
-      prerender_ blank $ liftJSM $ void
-        $ jsg ("window" :: T.Text)
-        ^. js ("skeleton_lib" :: T.Text)
-        ^. js1 ("log" :: T.Text) ("Hello, World!" :: T.Text)
+      -- prerender_ blank $ liftJSM $ void
+      --   $ jsg ("window" :: T.Text)
+      --   ^. js ("skeleton_lib" :: T.Text)
+      --   ^. js1 ("log" :: T.Text) ("Hello, World!" :: T.Text)
 
       -- el "div" $ do
       --   let
