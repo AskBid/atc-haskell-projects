@@ -30,13 +30,14 @@ frontend = Frontend
   { _frontend_head = do
       el "title" $ text "My X"
       elAttr "script" ("type" =: "application/javascript" <> "src" =: $(static "lib.js")) blank
-      elAttr "link" ("href" =: $(static "main.css") <> "type" =: "text/css" <> "rel" =: "stylesheet") blank
+      elAttr "script" ("src" =: "https://cdn.tailwindcss.com") blank
+      -- elAttr "link" ("href" =: $(static "main.css") <> "type" =: "text/css" <> "rel" =: "stylesheet") blank
   , _frontend_body = do
-      el "h1" $ text "Welcome to My X!"
+      el "h2" $ text "Welcome to My X!"
       -- el "p" $ text $ T.pack commonStuff
       
       area <- textAreaElement $ def
-        & initialAttributes .~ ("placeholder" =: "Write your X here ..." <> "class" =: "classius")
+        & initialAttributes .~ ("placeholder" =: "Write your X here ..." <> "class" =: "bg-blue-100")
 
       -- `prerender` and `prerender_` let you choose a widget to run on the server
       -- during prerendering and a different widget to run on the client with
