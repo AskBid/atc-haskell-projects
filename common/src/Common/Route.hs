@@ -33,8 +33,8 @@ data FrontendRoute :: * -> * where
   FrontendRoute_Main :: FrontendRoute ()
   -- This type is used to define frontend routes, i.e. ones for which the backend will serve the frontend.
   FrontendRoute_Login  :: FrontendRoute ()
-  -- FrontendRoute_Signup :: FrontendRoute ()
-  -- FrontendRoute_Profile :: FrontendRoute Text
+  FrontendRoute_Signup :: FrontendRoute ()
+  FrontendRoute_Profile :: FrontendRoute Text
 
 -- | mkFullRouteEncoder is a helper function provided by Obelisk to create an Encoder that converts between:
 -- Obelisk uses a type-safe routing system: instead of using raw strings for URLs everywhere, 
@@ -51,7 +51,10 @@ fullRouteEncoder = mkFullRouteEncoder
     BackendRoute_Missing -> PathSegment "missing" $ unitEncoder mempty)
   (\case
     FrontendRoute_Main -> PathEnd $ unitEncoder mempty
-    FrontendRoute_Login -> PathSegment "login" $ unitEncoder mempty)
+    FrontendRoute_Login -> PathSegment "login" $ unitEncoder mempty
+    FrontendRoute_Signup -> PathSegment "signup" $ unitEncoder mempty
+    FrontendRoute_Profile -> PathSegment "profile" $ singlePathSegmentEncoder 
+  )
 
 -- unitEncoder is for static routes (no parameters).
 -- segmentEncoder is for routes with one dynamic segment (like a Text value).

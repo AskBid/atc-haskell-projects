@@ -46,7 +46,9 @@ frontend = Frontend
             & initialAttributes .~ ("placeholder" =: "Write your X here ..." <> "class" =: "bg-blue-100")
           return ()
         FrontendRoute_Login -> el "h2" $ text "Login here."
-      pure ()
+        FrontendRoute_Signup -> el "h2" $ text "Signup here."
+        FrontendRoute_Profile username -> do 
+          el "h1" $ text $ "Profile for " <> username
 
       -- `prerender` and `prerender_` let you choose a widget to run on the server
       -- during prerendering and a different widget to run on the client with
