@@ -39,16 +39,22 @@ frontend = Frontend
   , _frontend_body = do
       subRoute_ $ \case 
         FrontendRoute_Main -> do
-          el "h2" $ text "Welcome to My X!"
-          -- el "p" $ text $ T.pack commonStuff
-          
-          area <- textAreaElement $ def
-            & initialAttributes .~ ("placeholder" =: "Write your X here ..." <> "class" =: "bg-blue-100")
+          elClass "div" "grid grid-cols-3 min-h-screen" $ do
+            elClass "div" "bg-gray-100" blank
+
+            elClass "div" "bg-white flex flex-col p-4 space-y-4" $ do 
+              el "h2" $ text "Welcome to My X!"
+              -- el "p" $ text $ T.pack commonStuff
+              
+              area <- textAreaElement $ def
+                & initialAttributes .~ ("placeholder" =: "Write your X here ..." <> "class" =: "bg-blue-100  w-full p-2 rounded min-h-40")
+              return ()
+            elClass "div" "bg-gray-100" blank
           return ()
         FrontendRoute_Login -> el "h2" $ text "Login here."
         FrontendRoute_Signup -> el "h2" $ text "Signup here."
-        FrontendRoute_Profile username -> do 
-          el "h1" $ text $ "Profile for " <> username
+        -- FrontendRoute_Profile username -> do 
+        --   el "h1" $ text $ "Profile for " <> username
 
       -- `prerender` and `prerender_` let you choose a widget to run on the server
       -- during prerendering and a different widget to run on the client with
