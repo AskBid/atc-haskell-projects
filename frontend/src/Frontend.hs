@@ -53,8 +53,8 @@ frontend = Frontend
           return ()
         FrontendRoute_Login -> el "h2" $ text "Login here."
         FrontendRoute_Signup -> el "h2" $ text "Signup here."
-        -- FrontendRoute_Profile username -> do 
-        --   el "h1" $ text $ "Profile for " <> username
+        FrontendRoute_Profile -> do 
+          el "h1" $ text $ "Profile for " 
 
       -- `prerender` and `prerender_` let you choose a widget to run on the server
       -- during prerendering and a different widget to run on the client with
