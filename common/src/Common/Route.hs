@@ -54,9 +54,10 @@ data FrontendRoute :: * -> * where
 --  - When your app wants to generate a link, it encodes a route type back into a URL.
 fullRouteEncoder :: Encoder (Either Text) Identity (R (FullRoute BackendRoute FrontendRoute)) PageName
 fullRouteEncoder = mkFullRouteEncoder
-  (FullRoute_Backend BackendRoute_Missing :/ ()) 
-  -- ^ 404 handler
+  (FullRoute_Backend BackendRoute_Missing :/ ()) -- ^ 404 handler (first arg only, second is below)
   (\case
+    BackendRoute_Login -> PathSegment "blogin" $ unitEncoder mempty
+    BackendRoute_Logout -> PathSegment "blogout" $ unitEncoder mempty
     BackendRoute_Missing -> PathSegment "missing" $ unitEncoder mempty)
   (\case
     FrontendRoute_Main -> PathEnd $ unitEncoder mempty
