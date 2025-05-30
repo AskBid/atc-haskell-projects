@@ -1,4 +1,17 @@
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 module Common.Api where
 
-commonStuff :: String
-commonStuff = "Here is a string defined in Common.Api"
+import Data.Aeson (FromJSON, ToJSON)
+import Data.Text (Text)
+import GHC.Generics (Generic)
+
+data LoginReq = LoginReq
+  { username :: Text
+  , password :: Text
+  } deriving (Show, Generic, FromJSON, ToJSON)
+
+data LoginResp = LoginSuccess | LoginFailure Text
+  deriving (Show, Generic, FromJSON, ToJSON)
