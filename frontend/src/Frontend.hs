@@ -4,6 +4,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Frontend where
 
@@ -21,7 +22,7 @@ import Obelisk.Generated.Static
 import Reflex.Dom.Core
 
 import Common.Api
-import Common.Route
+import Common.Route -- (FrontendRoute(..), UserID(..), fullRouteEncoder)
 
 import Obelisk.Route.Frontend
 
@@ -35,26 +36,25 @@ frontend = Frontend
       el "title" $ text "My X"
       elAttr "script" ("type" =: "application/javascript" <> "src" =: $(static "lib.js")) blank
       elAttr "script" ("src" =: "https://cdn.tailwindcss.com") blank
-      -- elAttr "link" ("href" =: $(static "main.css") <> "type" =: "text/css" <> "rel" =: "stylesheet") blank
   , _frontend_body = do
-      subRoute_ $ \case 
+      subRoute_ $ \case
         FrontendRoute_Main -> do
           elClass "div" "grid grid-cols-3 min-h-screen" $ do
             elClass "div" "bg-gray-100" blank
 
             elClass "div" "bg-white flex flex-col p-4 space-y-4" $ do 
               el "h2" $ text "Welcome to My X!"
-              -- el "p" $ text $ T.pack commonStuff
-              
               area <- textAreaElement $ def
                 & initialAttributes .~ ("placeholder" =: "Write your X here ..." <> "class" =: "bg-blue-100  w-full p-2 rounded min-h-40")
               return ()
+
             elClass "div" "bg-gray-100" blank
           return ()
         FrontendRoute_Login -> el "h2" $ text "Login here."
         FrontendRoute_Signup -> el "h2" $ text "Signup here."
-        FrontendRoute_Profile -> do 
-          el "h1" $ text $ "Profile for " 
+        FrontendRoute_Profile -> do
+          dynUserId <- askRoute
+          el "h1" $ dynText $ fmap (\uid -> "Profile for " <> unUserID uid) dynUserId
 
       -- `prerender` and `prerender_` let you choose a widget to run on the server
       -- during prerendering and a different widget to run on the client with
