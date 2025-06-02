@@ -10,6 +10,8 @@ library
                , text
                , lens
                , aeson
+               , mtl
+               , universe
   exposed-modules:
     Common.Api
     Common.Route

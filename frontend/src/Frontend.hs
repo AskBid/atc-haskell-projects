@@ -54,7 +54,7 @@ frontend = Frontend
         FrontendRoute_Signup -> el "h2" $ text "Signup here."
         FrontendRoute_Profile -> do
           dynUserId <- askRoute
-          el "h1" $ dynText $ fmap (\uid -> "Profile for " <> unUserID uid) dynUserId
+          el "h1" $ dynText $ fmap (\uid -> "Profile for " <> uid) dynUserId
 
       -- `prerender` and `prerender_` let you choose a widget to run on the server
       -- during prerendering and a different widget to run on the client with

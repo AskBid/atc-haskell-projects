@@ -1,6 +1,7 @@
 {-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE PartialTypeSignatures #-}
 
 module Backend where
 
@@ -31,8 +32,8 @@ backend = Backend
 
 backendHandlers :: R BackendRoute -> Snap ()
 backendHandlers = \case
-  BackendRoute_Login :/ () -> writeBS "login backend"
-  BackendRoute_Logout :/ () -> writeBS "logout backend"
+  BackendRoute_Api :/ Tail_Login -> writeBS "login backend"
+  -- BackendRoute_Logout :/ () -> writeBS "logout backend"
   BackendRoute_Missing :/ () -> writeBS "404 - Not Found"
 
 -- `R` it’s the standard (advanced and complicated) way to refer to parsed routes in Obelisk.
