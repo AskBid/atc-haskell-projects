@@ -43,6 +43,12 @@ frontend = Frontend
             elClass "div" "bg-gray-100" blank
 
             elClass "div" "bg-white flex flex-col p-4 space-y-4" $ do 
+              (btnEl, _) <- elAttr' "button"
+                ("class" =: "bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded") $
+                text "Login"
+              let loginClick = domEvent Click btnEl
+              setRoute $ (FrontendRoute_Login :/ ()) <$ loginClick
+              -- _ <- widgetHold (text "Not clicked") $ ffor eventBttn $ \_ -> text "Button clicked!"
               el "h2" $ text "Welcome to My X!"
               area <- textAreaElement $ def
                 & initialAttributes .~ ("placeholder" =: "Write your X here ..." <> "class" =: "bg-blue-100  w-full p-2 rounded min-h-40")
