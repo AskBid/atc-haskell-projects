@@ -61,24 +61,5 @@ frontend = Frontend
         FrontendRoute_Profile -> do
           dynUserId <- askRoute
           el "h1" $ dynText $ fmap (\uid -> "Profile for " <> uid) dynUserId
-
-      -- `prerender` and `prerender_` let you choose a widget to run on the server
-      -- during prerendering and a different widget to run on the client with
-      -- JavaScript. The following will generate a `blank` widget on the server and
-      -- print "Hello, World!" on the client.
-      -- prerender_ blank $ liftJSM $ void
-      --   $ jsg ("window" :: T.Text)
-      --   ^. js ("skeleton_lib" :: T.Text)
-      --   ^. js1 ("log" :: T.Text) ("Hello, World!" :: T.Text)
-
-      -- el "div" $ do
-      --   let
-      --     cfg = "common/example"
-      --     path = "config/" <> cfg
-      --   getConfig cfg >>= \case
-      --     Nothing -> text $ "No config file found in " <> path
-      --     Just bytes -> case T.decodeUtf8' bytes of
-      --       Left ue -> text $ "Couldn't decode " <> path <> " : " <> T.pack (show ue)
-      --       Right s -> text s
       return ()
   }
