@@ -6,6 +6,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE PartialTypeSignatures #-}
+{-# LANGUAGE RecursiveDo         #-}
 
 module Frontend where
 
@@ -41,7 +42,6 @@ frontend = Frontend
   , _frontend_body = do
       elClass "div" "grid grid-cols-3 min-h-screen" $ do
         elClass "div" "bg-gray-100" blank
-
         elClass "div" "bg-white flex flex-col p-4 space-y-4" $ do 
           subRoute_ $ \case
             FrontendRoute_Main -> do
@@ -51,24 +51,29 @@ frontend = Frontend
               -- _ <- widgetHold (text "Not clicked") $ ffor eventBttn $ \_ -> text "Button clicked!"
               el "h2" $ text "Welcome to My X!"
               area <- textAreaElement $ def
-                & initialAttributes .~ ("placeholder" =: "Write your X here ..." <> "class" =: "bg-blue-100  w-full p-2 rounded min-h-40")
+                & initialAttributes .~ ("placeholder" =: "Write your X here ..." <> "class" =: "bg-blue-100 w-full p-2 rounded min-h-40")
               return ()
-            FrontendRoute_Login -> do 
+            FrontendRoute_Login -> do
               el "h2" $ text "Login here."
-              elAttr' "form" ("class" =: "flex flex-col space-y-4 text-sm") $ do 
-                el "label" $ text "Username: "
-                inputElement $ def & initialAttributes .~ ("class" =: "border")
-                el "label" $ text "Password: "
-                inputElement $ def & initialAttributes .~ ("class" =: "border" <> "type" =: "password")
-                lift $ myButton "Submit"
+              el "label" $ text "Username: "
+              usrEl <- inputElement $ def & initialAttributes .~ ("class" =: "border")
+              el "label" $ text "Password: "
+              pwsEl <- inputElement $ def & initialAttributes .~ ("class" =: "border" <> "type" =: "password")
+              (btnEl, _) <- lift $ myButton "Submit"
+              let submitClick = domEvent Click btnEl
+              let inputDyn = _inputElement_value usrEl
+              let usernameEvent = tagPromptlyDyn inputDyn submitClick
+              el "h2" $ dynText (_inputElement_value usrEl)
+              usernameDyn <- holdDyn "nonsense" usernameEvent
+              el "h1" $ dynText usernameDyn
               return ()
+              -- let buttonPress = tagPromptlyDyn newDyn submitClick
             FrontendRoute_Signup -> el "h2" $ text "Signup here."
             FrontendRoute_Profile -> do
               dynUserId <- askRoute
               el "h1" $ dynText $ fmap (\uid -> "Profile for " <> uid) dynUserId
               return ()
           return ()
-
         elClass "div" "bg-gray-100" blank
       return ()
   }
@@ -79,4 +84,4 @@ myButton :: DomBuilder t m => T.Text -> m (Element EventResult (DomBuilderSpace 
 myButton txt = 
   elAttr' "button" attr $ text txt
   where 
-    attr = ("class" =: "bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded")
+    attr = ("class" =: "bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded" <> "type" =: "button")
