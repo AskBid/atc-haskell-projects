@@ -56,7 +56,15 @@ frontend = Frontend
 
             elClass "div" "bg-gray-100" blank
           return ()
-        FrontendRoute_Login -> el "h2" $ text "Login here."
+        FrontendRoute_Login -> do 
+          el "h2" $ text "Login here."
+          elAttr' "form" ("class" =: "flex flex-col space-y-4 text-sm") $ do 
+            el "label" $ text "Username: "
+            inputElement $ def & initialAttributes .~ ("class" =: "border")
+            el "label" $ text "Password: "
+            inputElement $ def & initialAttributes .~ ("class" =: "border" <> "type" =: "password")
+          return ()
+
         FrontendRoute_Signup -> el "h2" $ text "Signup here."
         FrontendRoute_Profile -> do
           dynUserId <- askRoute
