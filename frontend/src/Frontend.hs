@@ -78,5 +78,5 @@ frontend = Frontend
 myButton :: DomBuilder t m => T.Text -> m (Element EventResult (DomBuilderSpace m) t, ())
 myButton txt = 
   elAttr' "button" attr $ text txt
-    where 
-      attr = ("class" =: "bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded")
+  where 
+    attr = ("class" =: "bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded")
