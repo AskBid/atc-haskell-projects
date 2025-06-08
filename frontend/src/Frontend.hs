@@ -26,6 +26,7 @@ import Common.Api
 import Common.Route -- (FrontendRoute(..), UserID(..), fullRouteEncoder)
 
 import Obelisk.Route.Frontend
+import Control.Monad.Trans (lift)
 
 
 -- This runs in a monad that can be run on the client or the server.
@@ -44,7 +45,7 @@ frontend = Frontend
         elClass "div" "bg-white flex flex-col p-4 space-y-4" $ do 
           subRoute_ $ \case
             FrontendRoute_Main -> do
-              (btnEl, _) <- myButton "Login"
+              (btnEl, _) <- lift $ myButton "Login"
               let loginClick = domEvent Click btnEl
               setRoute $ (FrontendRoute_Login :/ ()) <$ loginClick
               -- _ <- widgetHold (text "Not clicked") $ ffor eventBttn $ \_ -> text "Button clicked!"
@@ -59,7 +60,7 @@ frontend = Frontend
                 inputElement $ def & initialAttributes .~ ("class" =: "border")
                 el "label" $ text "Password: "
                 inputElement $ def & initialAttributes .~ ("class" =: "border" <> "type" =: "password")
-                myButton "Submit"
+                lift $ myButton "Submit"
               return ()
             FrontendRoute_Signup -> el "h2" $ text "Signup here."
             FrontendRoute_Profile -> do
@@ -73,7 +74,8 @@ frontend = Frontend
   }
 
 -- | Needs monad extended to @RoutedT@ because we run it in the @subRoute_@
-myButton :: DomBuilder t m => T.Text -> RoutedT t () m (Element EventResult (DomBuilderSpace m) t, ())
+-- used lift actually as a more generalised solution.
+myButton :: DomBuilder t m => T.Text -> m (Element EventResult (DomBuilderSpace m) t, ())
 myButton txt = 
   elAttr' "button" attr $ text txt
     where 
