@@ -37,12 +37,12 @@ frontend = Frontend
       elAttr "script" ("type" =: "application/javascript" <> "src" =: $(static "lib.js")) blank
       elAttr "script" ("src" =: "https://cdn.tailwindcss.com") blank
   , _frontend_body = do
-      subRoute_ $ \case
-        FrontendRoute_Main -> do
-          elClass "div" "grid grid-cols-3 min-h-screen" $ do
-            elClass "div" "bg-gray-100" blank
+      elClass "div" "grid grid-cols-3 min-h-screen" $ do
+        elClass "div" "bg-gray-100" blank
 
-            elClass "div" "bg-white flex flex-col p-4 space-y-4" $ do 
+        elClass "div" "bg-white flex flex-col p-4 space-y-4" $ do 
+          subRoute_ $ \case
+            FrontendRoute_Main -> do
               (btnEl, _) <- elAttr' "button"
                 ("class" =: "bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded") $
                 text "Login"
@@ -53,21 +53,22 @@ frontend = Frontend
               area <- textAreaElement $ def
                 & initialAttributes .~ ("placeholder" =: "Write your X here ..." <> "class" =: "bg-blue-100  w-full p-2 rounded min-h-40")
               return ()
-
-            elClass "div" "bg-gray-100" blank
+            FrontendRoute_Login -> do 
+              el "h2" $ text "Login here."
+              elAttr' "form" ("class" =: "flex flex-col space-y-4 text-sm") $ do 
+                el "label" $ text "Username: "
+                inputElement $ def & initialAttributes .~ ("class" =: "border")
+                el "label" $ text "Password: "
+                inputElement $ def & initialAttributes .~ ("class" =: "border" <> "type" =: "password")
+                button "ciao"
+              return ()
+            FrontendRoute_Signup -> el "h2" $ text "Signup here."
+            FrontendRoute_Profile -> do
+              dynUserId <- askRoute
+              el "h1" $ dynText $ fmap (\uid -> "Profile for " <> uid) dynUserId
+              return ()
           return ()
-        FrontendRoute_Login -> do 
-          el "h2" $ text "Login here."
-          elAttr' "form" ("class" =: "flex flex-col space-y-4 text-sm") $ do 
-            el "label" $ text "Username: "
-            inputElement $ def & initialAttributes .~ ("class" =: "border")
-            el "label" $ text "Password: "
-            inputElement $ def & initialAttributes .~ ("class" =: "border" <> "type" =: "password")
-          return ()
 
-        FrontendRoute_Signup -> el "h2" $ text "Signup here."
-        FrontendRoute_Profile -> do
-          dynUserId <- askRoute
-          el "h1" $ dynText $ fmap (\uid -> "Profile for " <> uid) dynUserId
+        elClass "div" "bg-gray-100" blank
       return ()
   }
