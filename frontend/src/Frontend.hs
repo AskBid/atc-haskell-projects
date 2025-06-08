@@ -5,6 +5,7 @@
 
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE PartialTypeSignatures #-}
 
 module Frontend where
 
@@ -43,9 +44,7 @@ frontend = Frontend
         elClass "div" "bg-white flex flex-col p-4 space-y-4" $ do 
           subRoute_ $ \case
             FrontendRoute_Main -> do
-              (btnEl, _) <- elAttr' "button"
-                ("class" =: "bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded") $
-                text "Login"
+              (btnEl, _) <- myButton "Login"
               let loginClick = domEvent Click btnEl
               setRoute $ (FrontendRoute_Login :/ ()) <$ loginClick
               -- _ <- widgetHold (text "Not clicked") $ ffor eventBttn $ \_ -> text "Button clicked!"
@@ -60,7 +59,7 @@ frontend = Frontend
                 inputElement $ def & initialAttributes .~ ("class" =: "border")
                 el "label" $ text "Password: "
                 inputElement $ def & initialAttributes .~ ("class" =: "border" <> "type" =: "password")
-                button "ciao"
+                myButton "Submit"
               return ()
             FrontendRoute_Signup -> el "h2" $ text "Signup here."
             FrontendRoute_Profile -> do
@@ -72,3 +71,10 @@ frontend = Frontend
         elClass "div" "bg-gray-100" blank
       return ()
   }
+
+-- | Needs monad extended to @RoutedT@ because we run it in the @subRoute_@
+myButton :: DomBuilder t m => T.Text -> RoutedT t () m (Element EventResult (DomBuilderSpace m) t, ())
+myButton txt = 
+  elAttr' "button" attr $ text txt
+    where 
+      attr = ("class" =: "bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded")
