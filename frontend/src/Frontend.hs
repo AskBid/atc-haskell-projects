@@ -58,14 +58,28 @@ frontend = Frontend
               el "label" $ text "Username: "
               usrEl <- inputElement $ def & initialAttributes .~ ("class" =: "border")
               el "label" $ text "Password: "
-              pwsEl <- inputElement $ def & initialAttributes .~ ("class" =: "border" <> "type" =: "password")
+              pwdEl <- inputElement $ def & initialAttributes .~ ("class" =: "border" <> "type" =: "password")
               (btnEl, _) <- lift $ myButton "Submit"
               let submitClick = domEvent Click btnEl
-              let inputDyn = _inputElement_value usrEl
-              let usernameEvent = tagPromptlyDyn inputDyn submitClick
+              let usrDyn = _inputElement_value usrEl
+              let usrEvt = tagPromptlyDyn usrDyn submitClick
+              let pwdDyn = _inputElement_value pwdEl
+              let pwdEvt = tagPromptlyDyn pwdDyn submitClick
               el "h2" $ dynText (_inputElement_value usrEl)
-              usernameDyn <- holdDyn "nonsense" usernameEvent
-              el "h1" $ dynText usernameDyn
+              usrDyn <- holdDyn "nonsense" usrEvt
+              pwdDyn <- holdDyn "nonsense" pwdEvt
+              el "h3" $ dynText usrDyn
+              el "h3" $ dynText pwdDyn
+              let lr = LoginReq <$> usrDyn
+              let rrr = fmap (\x -> x "text") lr
+              let evv = tagPromptlyDyn rrr submitClick
+              dynReq <- holdDyn (LoginReq "none" "none") evv
+              el "h3" $ text "here is the text extracted from the Dyn which firing evetn is the submit button click" 
+              el "h1" $ do 
+                text "username: "
+                dynText $ username <$> dynReq
+                text "password: "
+                dynText $ password <$> dynReq
               return ()
               -- let buttonPress = tagPromptlyDyn newDyn submitClick
             FrontendRoute_Signup -> el "h2" $ text "Signup here."
@@ -84,4 +98,5 @@ myButton :: DomBuilder t m => T.Text -> m (Element EventResult (DomBuilderSpace 
 myButton txt = 
   elAttr' "button" attr $ text txt
   where 
-    attr = ("class" =: "bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded" <> "type" =: "button")
+    attr = (  "class" =: "bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded" 
+           <> "type" =: "button")

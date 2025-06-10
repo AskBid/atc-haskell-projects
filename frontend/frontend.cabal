@@ -13,6 +13,7 @@ library
                , obelisk-frontend
                , obelisk-generated-static
                , obelisk-route
+               , reflex-dom
                , reflex-dom-core
                , text
                , containers
