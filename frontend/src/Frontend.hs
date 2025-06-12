@@ -28,6 +28,7 @@ import Common.Route -- (FrontendRoute(..), UserID(..), fullRouteEncoder)
 
 import Obelisk.Route.Frontend
 import Control.Monad.Trans (lift)
+import Control.Lens (Identity (..))
 
 
 -- This runs in a monad that can be run on the client or the server.
@@ -80,6 +81,9 @@ frontend = Frontend
                 dynText $ username <$> dynReq
                 text "password: "
                 dynText $ password <$> dynReq
+              -- encode safeEncoder (FullRoute_Frontend (ObeliskRoute_App FrontendRoute_Login) :/ ())
+              let url = fst $ encode safeEncoder $ FullRoute_Backend BackendRoute_Api :/ Tail_Login
+              -- response <- performRequestAsync $ (postJson $ fullRouteEncoder) <$ submitClick
               return ()
               -- let buttonPress = tagPromptlyDyn newDyn submitClick
             FrontendRoute_Signup -> el "h2" $ text "Signup here."
@@ -100,3 +104,26 @@ myButton txt =
   where 
     attr = (  "class" =: "bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded" 
            <> "type" =: "button")
+
+safeEncoder :: Encoder Identity Identity (R (FullRoute BackendRoute FrontendRoute)) PageName
+safeEncoder = 
+  case checkEncoder fullRouteEncoder of
+    Left x    -> undefined
+    Right enc -> enc
+-- routeToText
+--   :: Encoder (Either T.Text) Identity (R (FullRoute BackendRoute FrontendRoute)) PageName
+--   -> R (FullRoute BackendRoute FrontendRoute)
+--   -> T.Text
+-- routeToText enc r = case encode enc r of
+--   Right pn -> "/" <> T.intercalate "/" (toPathSegments pn)
+--   Left err -> error ("Route encode failed: " <> T.unpack err)
+-- myDecoding :: PageName
+-- myDecoding = 
+--   case decodeRouteEither fullRouteEncoder (FrontendRoute_Signup :/ ()) of
+--     _ciao -> _boh
+--
+-- decodeRouteEither
+--   :: Encoder (Either T.Text) Identity input output
+--   -> output
+--   -> Either T.Text input
+-- decodeRouteEither = decode
