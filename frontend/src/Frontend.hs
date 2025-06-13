@@ -29,6 +29,7 @@ import Common.Route -- (FrontendRoute(..), UserID(..), fullRouteEncoder)
 import Obelisk.Route.Frontend
 import Control.Monad.Trans (lift)
 import Control.Lens (Identity (..))
+import Data.Aeson (Value(..))
 
 
 -- This runs in a monad that can be run on the client or the server.
@@ -75,15 +76,25 @@ frontend = Frontend
               let rrr = fmap (\x -> x "text") lr
               let evv = tagPromptlyDyn rrr submitClick
               dynReq <- holdDyn (LoginReq "none" "none") evv
-              el "h3" $ text "here is the text extracted from the Dyn which firing evetn is the submit button click" 
+              el "h3" $ text "here is the text extracted from the Dyn which firing event is the submit button click" 
               el "h1" $ do 
                 text "username: "
                 dynText $ username <$> dynReq
                 text "password: "
                 dynText $ password <$> dynReq
-              -- encode safeEncoder (FullRoute_Frontend (ObeliskRoute_App FrontendRoute_Login) :/ ())
-              let url = fst $ encode safeEncoder $ FullRoute_Backend BackendRoute_Api :/ Tail_Login
-              -- response <- performRequestAsync $ (postJson $ fullRouteEncoder) <$ submitClick
+              let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Tail_Login
+              prerender (pure ()) $ do 
+                respEv <- (performRequestAsync ((postJson url Data.Aeson.Null) <$ submitClick))
+                let maybetextResp = _xhrResponse_responseText <$> respEv
+                let textResp = (maybe "Nothing_xx" id <$> maybetextResp) 
+                ddynResp <- (holdDyn "!! no request happened !!" $ textResp)
+                el "br" blank
+                el "br" blank
+
+                el "h1" $ do 
+                  text "----->>>  repsonse: "
+                  dynText ddynResp
+                return ()
               return ()
               -- let buttonPress = tagPromptlyDyn newDyn submitClick
             FrontendRoute_Signup -> el "h2" $ text "Signup here."
@@ -110,6 +121,17 @@ safeEncoder =
   case checkEncoder fullRouteEncoder of
     Left x    -> undefined
     Right enc -> enc
+
+-- | Given a FullRoute returns a Text Url
+--  getUrl (FullRoute_Frontend (ObeliskRoute_App FrontendRoute_Login) :/ ())
+--  getUrl $ FullRoute_Backend BackendRoute_Api :/ Tail_Login
+getUrl :: R (FullRoute BackendRoute FrontendRoute) -> T.Text
+getUrl route = T.intercalate "/" $ fst pageName
+  where 
+    pageName = encode safeEncoder route
+
+
+
 -- routeToText
 --   :: Encoder (Either T.Text) Identity (R (FullRoute BackendRoute FrontendRoute)) PageName
 --   -> R (FullRoute BackendRoute FrontendRoute)
