@@ -50,7 +50,6 @@ frontend = Frontend
               (btnEl, _) <- lift $ myButton "Login"
               let loginClick = domEvent Click btnEl
               setRoute $ (FrontendRoute_Login :/ ()) <$ loginClick
-              -- _ <- widgetHold (text "Not clicked") $ ffor eventBttn $ \_ -> text "Button clicked!"
               el "h2" $ text "Welcome to My X!"
               area <- textAreaElement $ def
                 & initialAttributes .~ ("placeholder" =: "Write your X here ..." <> "class" =: "bg-blue-100 w-full p-2 rounded min-h-40")
@@ -64,18 +63,18 @@ frontend = Frontend
               (btnEl, _) <- lift $ myButton "Submit"
               let submitClick = domEvent Click btnEl
               let usrDyn = _inputElement_value usrEl
-              -- let usrEvt = tagPromptlyDyn usrDyn submitClick
               let pwdDyn = _inputElement_value pwdEl
-              -- let pwdEvt = tagPromptlyDyn pwdDyn submitClick
               let logreqDyn = LoginReq <$> usrDyn <*> pwdDyn
 
-              let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Tail_Login
               prerender (pure ()) $ do 
+                let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Tail_Login
                 let loginReqEv = tagPromptlyDyn lgrqDyn submitClick
-                -- e l, (l -> xhr), e c 
+                -- loginReqEv, (postJson "text"), submitClick
+                -- ==
+                -- e l,        (l -> xhr),        e c 
                 -- :: (l -> xhr) -> e l -> e xhr 
                 -- (postJson "text") <$> e l :: e xhr 
-                -- e xhr -> m (e xhr) 
+                -- performRequestAsync       :: e xhr -> m (e xhr) 
                 respEv <- (performRequestAsync ((postJson url ) <$ submitClick))
                 let maybetextResp = _xhrResponse_responseText <$> respEv
                 let textResp = (maybe "Nothing_xx" id <$> maybetextResp) 
@@ -87,7 +86,6 @@ frontend = Frontend
                   dynText ddynResp
                 return ()
               return ()
-              -- let buttonPress = tagPromptlyDyn newDyn submitClick
             FrontendRoute_Signup -> el "h2" $ text "Signup here."
             FrontendRoute_Profile -> do
               dynUserId <- askRoute
