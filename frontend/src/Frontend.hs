@@ -64,33 +64,24 @@ frontend = Frontend
               (btnEl, _) <- lift $ myButton "Submit"
               let submitClick = domEvent Click btnEl
               let usrDyn = _inputElement_value usrEl
-              let usrEvt = tagPromptlyDyn usrDyn submitClick
+              -- let usrEvt = tagPromptlyDyn usrDyn submitClick
               let pwdDyn = _inputElement_value pwdEl
-              let pwdEvt = tagPromptlyDyn pwdDyn submitClick
-              el "h2" $ dynText (_inputElement_value usrEl)
-              usrDyn <- holdDyn "nonsense" usrEvt
-              pwdDyn <- holdDyn "nonsense" pwdEvt
-              el "h3" $ dynText usrDyn
-              el "h3" $ dynText pwdDyn
-              let lr = LoginReq <$> usrDyn
-              let rrr = fmap (\x -> x "text") lr
-              let evv = tagPromptlyDyn rrr submitClick
-              dynReq <- holdDyn (LoginReq "none" "none") evv
-              el "h3" $ text "here is the text extracted from the Dyn which firing event is the submit button click" 
-              el "h1" $ do 
-                text "username: "
-                dynText $ username <$> dynReq
-                text "password: "
-                dynText $ password <$> dynReq
+              -- let pwdEvt = tagPromptlyDyn pwdDyn submitClick
+              let logreqDyn = LoginReq <$> usrDyn <*> pwdDyn
+
               let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Tail_Login
               prerender (pure ()) $ do 
-                respEv <- (performRequestAsync ((postJson url Data.Aeson.Null) <$ submitClick))
+                let loginReqEv = tagPromptlyDyn lgrqDyn submitClick
+                -- e l, (l -> xhr), e c 
+                -- :: (l -> xhr) -> e l -> e xhr 
+                -- (postJson "text") <$> e l :: e xhr 
+                -- e xhr -> m (e xhr) 
+                respEv <- (performRequestAsync ((postJson url ) <$ submitClick))
                 let maybetextResp = _xhrResponse_responseText <$> respEv
                 let textResp = (maybe "Nothing_xx" id <$> maybetextResp) 
                 ddynResp <- (holdDyn "!! no request happened !!" $ textResp)
                 el "br" blank
                 el "br" blank
-
                 el "h1" $ do 
                   text "----->>>  repsonse: "
                   dynText ddynResp
