@@ -116,6 +116,10 @@ myButton txt =
     attr = (  "class" =: "bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded" 
            <> "type" =: "button")
 
+-- | @fullRouteEncoder@ has an `Either Text` as a first (check) argument
+--   to make it Identity as required from the use of @encode@, we need first to pass
+--   it under the check of @checkEncoder@ which gets rid off the uncertainty if we receive text
+--   or not.
 safeEncoder :: Encoder Identity Identity (R (FullRoute BackendRoute FrontendRoute)) PageName
 safeEncoder = 
   case checkEncoder fullRouteEncoder of
@@ -129,23 +133,3 @@ getUrl :: R (FullRoute BackendRoute FrontendRoute) -> T.Text
 getUrl route = T.intercalate "/" $ fst pageName
   where 
     pageName = encode safeEncoder route
-
-
-
--- routeToText
---   :: Encoder (Either T.Text) Identity (R (FullRoute BackendRoute FrontendRoute)) PageName
---   -> R (FullRoute BackendRoute FrontendRoute)
---   -> T.Text
--- routeToText enc r = case encode enc r of
---   Right pn -> "/" <> T.intercalate "/" (toPathSegments pn)
---   Left err -> error ("Route encode failed: " <> T.unpack err)
--- myDecoding :: PageName
--- myDecoding = 
---   case decodeRouteEither fullRouteEncoder (FrontendRoute_Signup :/ ()) of
---     _ciao -> _boh
---
--- decodeRouteEither
---   :: Encoder (Either T.Text) Identity input output
---   -> output
---   -> Either T.Text input
--- decodeRouteEither = decode
