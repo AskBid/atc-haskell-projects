@@ -82,8 +82,11 @@ frontend = Frontend
                 el "br" blank
                 el "h1" $ text "----->>>  repsonse: "
                 el "h3" $ dynText $ (\xhrRB -> case xhrRB of
-                  XhrResponseBody_Default text -> text
-                  _ -> "otehrsszzz") <$> dynResp
+                  XhrResponseBody_Default _     -> "XhrResponseBody_Default"
+                  XhrResponseBody_Text text     -> text
+                  XhrResponseBody_Blob _        -> "XhrResponseBody_Blob"
+                  XhrResponseBody_ArrayBuffer _ -> "XhrResponseBody_ArrayBuffer"
+                  otherwise                     -> "others") <$> dynResp
                 return ()
               return ()
             FrontendRoute_Signup -> el "h2" $ text "Signup here."
