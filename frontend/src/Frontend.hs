@@ -31,6 +31,8 @@ import Control.Monad.Trans (lift)
 import Control.Lens (Identity (..))
 import Data.Aeson (Value(..))
 
+import Common
+
 
 -- This runs in a monad that can be run on the client or the server.
 -- To run code in a pure client or pure server context, use one of the
@@ -98,15 +100,6 @@ frontend = Frontend
         elClass "div" "bg-gray-100" blank
       return ()
   }
-
--- | Needs monad extended to @RoutedT@ because we run it in the @subRoute_@
--- used lift actually as a more generalised solution.
-myButton :: DomBuilder t m => T.Text -> m (Element EventResult (DomBuilderSpace m) t, ())
-myButton txt = 
-  elAttr' "button" attr $ text txt
-  where 
-    attr = (  "class" =: "bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded" 
-           <> "type" =: "button")
 
 -- | @fullRouteEncoder@ has an `Either Text` as a first (check) argument
 --   to make it Identity as required from the use of @encode@, we need first to pass
