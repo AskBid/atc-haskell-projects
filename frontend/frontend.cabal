@@ -18,7 +18,7 @@ library
                , text
                , containers
   exposed-modules:
-    Frontend, Common
+    Frontend, Common, LoginPage
   ghc-options: -Wall -O -fno-show-valid-hole-fits
                -- unsafe code
                -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields
