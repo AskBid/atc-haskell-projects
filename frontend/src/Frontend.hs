@@ -64,26 +64,26 @@ frontend = Frontend
               let submitClick = domEvent Click btnEl
               let usrDyn = _inputElement_value usrEl
               let pwdDyn = _inputElement_value pwdEl
-              let logreqDyn = LoginReq <$> usrDyn <*> pwdDyn
-
+              let logReqDyn = LoginReq <$> usrDyn <*> pwdDyn
               prerender (pure ()) $ do 
                 let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Tail_Login
-                let loginReqEv = tagPromptlyDyn lgrqDyn submitClick
+                let loginReqEv = tagPromptlyDyn logReqDyn submitClick
                 -- loginReqEv, (postJson "text"), submitClick
-                -- ==
+                --         ==
                 -- e l,        (l -> xhr),        e c 
                 -- :: (l -> xhr) -> e l -> e xhr 
                 -- (postJson "text") <$> e l :: e xhr 
                 -- performRequestAsync       :: e xhr -> m (e xhr) 
-                respEv <- (performRequestAsync ((postJson url ) <$ submitClick))
-                let maybetextResp = _xhrResponse_responseText <$> respEv
-                let textResp = (maybe "Nothing_xx" id <$> maybetextResp) 
-                ddynResp <- (holdDyn "!! no request happened !!" $ textResp)
+                respEv <- (performRequestAsync $ (postJson url) <$> loginReqEv)
+                let maybetextResp = _xhrResponse_response <$> respEv
+                let resp = (maybe (XhrResponseBody_Default "error") id <$> maybetextResp) 
+                dynResp <- (holdDyn (XhrResponseBody_Default "error-2") resp)
                 el "br" blank
                 el "br" blank
-                el "h1" $ do 
-                  text "----->>>  repsonse: "
-                  dynText ddynResp
+                el "h1" $ text "----->>>  repsonse: "
+                el "h3" $ dynText $ (\xhrRB -> case xhrRB of
+                  XhrResponseBody_Default text -> text
+                  _ -> "otehrsszzz") <$> dynResp
                 return ()
               return ()
             FrontendRoute_Signup -> el "h2" $ text "Signup here."
