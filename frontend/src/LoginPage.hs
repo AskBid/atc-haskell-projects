@@ -17,7 +17,6 @@ import Common.Api (LoginReq(..))
 import Control.Monad.Trans (lift)
 
 
--- loginPage :: DomBuilder t m  => RoutedT t () m ()
 loginPage :: ObeliskWidget t (R FrontendRoute) m  => RoutedT t () m ()
 loginPage = do
   el "h2" $ text "Login here."
@@ -33,7 +32,6 @@ loginPage = do
   let pwdDyn = _inputElement_value pwdEl
   let logReqDyn = LoginReq <$> usrDyn <*> pwdDyn
   prerender (pure ()) $ do 
-    let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Tail_Login
     let loginReqEv = tagPromptlyDyn logReqDyn submitClick
     -- ^ loginReqEv, (postJson "text"), submitClick
     --         ==
@@ -41,6 +39,7 @@ loginPage = do
     -- :: (l -> xhr) -> e l -> e xhr 
     -- (postJson "text") <$> e l :: e xhr 
     -- performRequestAsync       :: e xhr -> m (e xhr) 
+    let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Tail_Login
     respEv <- (performRequestAsync $ (postJson url) <$> loginReqEv)
     let maybetextResp = _xhrResponse_response <$> respEv
     let resp = (maybe (XhrResponseBody_Default "error") id <$> maybetextResp) 
@@ -54,6 +53,10 @@ loginPage = do
       XhrResponseBody_Blob _        -> "XhrResponseBody_Blob"
       XhrResponseBody_ArrayBuffer _ -> "XhrResponseBody_ArrayBuffer"
       otherwise                     -> "others") <$> dynResp
+    let maybeText = _xhrResponse_responseText <$> respEv
+    let resp2 = (maybe "error" id <$> maybeText)
+    dynResp2 <- holdDyn "::" resp2
+    el "h3" $ dynText dynResp2
     return ()
   return ()
 

@@ -13,6 +13,7 @@ library
                , obelisk-backend
                , obelisk-route
                , snap
+               , bytestring
   exposed-modules:
     Backend
   ghc-options: -Wall -O -fno-show-valid-hole-fits

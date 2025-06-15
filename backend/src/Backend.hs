@@ -6,11 +6,17 @@
 module Backend where
 
 import Common.Route
--- import Common.Api
+import Common.Api (LoginReq(..))
 import Obelisk.Backend
 
 import Obelisk.Route -- (R(..))
 import Snap
+import qualified Data.ByteString.Lazy as BL
+-- import qualified Data.ByteString as BS
+import qualified Data.Aeson as A
+-- import qualified Data.Aeson.Types as A
+import qualified Data.Text.Encoding as TE
+import qualified Data.Text as T
 
 backend :: Backend BackendRoute FrontendRoute
 backend = Backend
@@ -33,8 +39,19 @@ backend = Backend
 
 backendHandlers :: R BackendRoute -> Snap ()
 backendHandlers = \case
-  BackendRoute_Api :/ Tail_Login -> do 
-    writeBS "login backend"
+  BackendRoute_Api :/ Tail_Login -> do
+    usrPwd <- readRequestBody 10000
+    let maybeUsrPwd = (A.decode usrPwd) :: Maybe LoginReq
+    case maybeUsrPwd of
+      Nothing -> do
+        modifyResponse $ setResponseStatus 401 "Unauthorized"
+        writeLBS "{\"error\": \"Invalid credentials\"}"
+      Just loginReq -> do 
+        let json = jwtIt loginReq
+        modifyResponse $ setContentType "application/json"
+        -- ^ Not really necessary but It changes the HTTP response headers that
+        --   the Snap backend sends back to the browser.
+        writeBS $ BL.toStrict json
   -- BackendRoute_Logout :/ () -> writeBS "logout backend"
   BackendRoute_Missing :/ () -> writeBS "404 - Not Found"
 
@@ -44,3 +61,5 @@ backendHandlers = \case
 -- It separates a route constructor from its parameter(s) — 
 -- think of it like a typed version of a slash (/) in a URL.
 
+jwtIt :: LoginReq -> BL.ByteString
+jwtIt req = A.encode $ A.toJSON req
