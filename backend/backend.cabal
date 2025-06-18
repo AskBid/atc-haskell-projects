@@ -21,6 +21,7 @@ library
                , text
                , time
                , containers
+               , jwt
   exposed-modules:
     Backend, Schema
   ghc-options: -Wall -O -fno-show-valid-hole-fits

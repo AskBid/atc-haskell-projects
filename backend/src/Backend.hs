@@ -17,7 +17,7 @@ import qualified Data.Aeson as A
 -- import qualified Data.Aeson.Types as A
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text as T
--- import Web.JWT
+import Web.JWT
 import Database.Persist
 import Database.Persist.Sqlite
 import Database.Persist.TH
