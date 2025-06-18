@@ -15,7 +15,10 @@
   }
 }:
 with obelisk;
-project ./. ({ ... }: {
+project ./. ({ pkgs, ... }: { 
+  overrides = self: super: {
+    persistent = pkgs.haskell.lib.doJailbreak super.persistent;
+  };
   android.applicationId = "systems.obsidian.obelisk.examples.minimal";
   android.displayName = "Obelisk Minimal Example";
   ios.bundleIdentifier = "systems.obsidian.obelisk.examples.minimal";

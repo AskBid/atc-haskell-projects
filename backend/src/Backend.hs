@@ -17,17 +17,26 @@ import qualified Data.Aeson as A
 -- import qualified Data.Aeson.Types as A
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text as T
+-- import Web.JWT
+import Database.Persist
+import Database.Persist.Sqlite
+import Database.Persist.TH
+import Schema 
 
 backend :: Backend BackendRoute FrontendRoute
 backend = Backend
-  { _backend_run = \serve -> serve backendHandlers
+  { _backend_run = \serve -> do
+      runSqlite "Xs.db" $ do runMigration migrateAll
+      serve backendHandlers
   , _backend_routeEncoder = fullRouteEncoder
   }
 
 -- The serve function is provided by Obelisk. It is passed into _backend_run.
 -- _backend_run = \serve -> serve backendHandlers
 -- ...means:
--- “When the Obelisk backend server starts, use backendHandlers to respond to requests. serve will automatically use the route encoder to map URLs to BackendRoute constructors and pass the right one into backendHandlers.”
+-- “When the Obelisk backend server starts, use backendHandlers to respond to requests. 
+-- serve will automatically use the route encoder to map URLs to BackendRoute constructors 
+-- and pass the right one into backendHandlers.”
 -- Sets up Snap (Obelisk uses Snap under the hood)
 -- Uses `fullRouteEncoder` to decode the request path into a `BackendRoute`
 -- Passes that `BackendRoute` to your handler: like `BackendRoute_Login :/ ()`
