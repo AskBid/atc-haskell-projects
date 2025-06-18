@@ -26,7 +26,12 @@ import Schema
 backend :: Backend BackendRoute FrontendRoute
 backend = Backend
   { _backend_run = \serve -> do
-      runSqlite "Xs.db" $ do runMigration migrateAll
+      runSqlite "Xs.db" $ do 
+        runMigration migrateAll
+        _ <- insert $ User "alice" "alice123" []
+        _ <- insert $ User "bob" "bob456" []
+        _ <- insert $ User "sergio" "pwd" []
+        return ()
       serve backendHandlers
   , _backend_routeEncoder = fullRouteEncoder
   }

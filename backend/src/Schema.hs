@@ -24,6 +24,7 @@ Tweet
   repltyTo TweetId Maybe
   owner UserId
   deriving Show
+
 User
   name Text
   pwd Text
