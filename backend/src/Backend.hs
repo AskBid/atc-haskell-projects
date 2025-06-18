@@ -22,15 +22,17 @@ import Database.Persist
 import Database.Persist.Sqlite
 import Database.Persist.TH
 import Schema 
+import Control.Monad.IO.Class --(liftIO)
 
 backend :: Backend BackendRoute FrontendRoute
 backend = Backend
   { _backend_run = \serve -> do
       runSqlite "Xs.db" $ do 
+      -- ^ this makes it eprsistent, use :memory: instead of Xs.db otherwise 
         runMigration migrateAll
-        _ <- insert $ User "alice" "alice123" []
-        _ <- insert $ User "bob" "bob456" []
-        _ <- insert $ User "sergio" "pwd" []
+        _ <- insertBy $ User "alice" "alice123" []
+        _ <- insertBy $ User "bob" "bob456" []
+        _ <- insertBy $ User "sergio" "pwd" []
         return ()
       serve backendHandlers
   , _backend_routeEncoder = fullRouteEncoder
@@ -58,10 +60,11 @@ backendHandlers = \case
     let maybeUsrPwd = (A.decode usrPwd) :: Maybe LoginReq
     case maybeUsrPwd of
       Nothing -> do
-        modifyResponse $ setResponseStatus 401 "Unauthorized"
+        -- modifyResponse $ setResponseStatus 401 "Unauthorized"
         writeLBS "{\"error\": \"Invalid credentials\"}"
       Just loginReq -> do 
-        let json = jwtIt loginReq
+        user <- loginDB loginReq
+        let json = jwtIt user
         modifyResponse $ setContentType "application/json"
         -- ^ Not really necessary but It changes the HTTP response headers that
         --   the Snap backend sends back to the browser.
@@ -75,5 +78,20 @@ backendHandlers = \case
 -- It separates a route constructor from its parameter(s) — 
 -- think of it like a typed version of a slash (/) in a URL.
 
-jwtIt :: LoginReq -> BL.ByteString
-jwtIt req = A.encode $ A.toJSON req
+jwtIt :: User -> BL.ByteString
+jwtIt user = A.encode $ A.toJSON user
+
+
+loginDB :: MonadIO m => LoginReq -> m User
+loginDB lr = do
+  liftIO $ runSqlite "Xs.db" $ do
+    user <- selectList [UserName ==. (username lr)] []
+    return $ entityVal $ head user
+
+  --   maybeUser <- selectFirst [UserName ==. name, UserPwd ==. pwd] []
+  --   case maybeUser of
+  --     Nothing -> User "errorNobody" "pwd"
+  --     Just (Entity uid user) -> user
+  where 
+    name = username lr 
+    pwd = password lr

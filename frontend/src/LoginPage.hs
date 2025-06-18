@@ -41,22 +41,23 @@ loginPage = do
     -- performRequestAsync       :: e xhr -> m (e xhr) 
     let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Tail_Login
     respEv <- (performRequestAsync $ (postJson url) <$> loginReqEv)
-    let maybetextResp = _xhrResponse_response <$> respEv
-    let resp = (maybe (XhrResponseBody_Default "error") id <$> maybetextResp) 
-    dynResp <- (holdDyn (XhrResponseBody_Default "error-2") resp)
-    el "br" blank
-    el "br" blank
-    el "h1" $ text "----->>>  repsonse: "
-    el "h3" $ dynText $ (\xhrRB -> case xhrRB of
-      XhrResponseBody_Default _     -> "XhrResponseBody_Default"
-      XhrResponseBody_Text text     -> text
-      XhrResponseBody_Blob _        -> "XhrResponseBody_Blob"
-      XhrResponseBody_ArrayBuffer _ -> "XhrResponseBody_ArrayBuffer"
-      otherwise                     -> "others") <$> dynResp
-    let maybeText = _xhrResponse_responseText <$> respEv
-    let resp2 = (maybe "error" id <$> maybeText)
-    dynResp2 <- holdDyn "::" resp2
-    el "h3" $ dynText dynResp2
+    let maybetextResp = _xhrResponse_responseText <$> respEv
+    let resp = maybe "error" id <$> maybetextResp
+    dynResp <- holdDyn "No Response received yet" resp
+    -- el "br" blank
+    -- el "br" blank
+    -- el "h1" $ text "----->>>  repsonse: "
+    -- el "h3" $ dynText $ (\xhrRB -> case xhrRB of
+    --   XhrResponseBody_Default _     -> "XhrResponseBody_Default"
+    --   XhrResponseBody_Text text     -> text
+    --   XhrResponseBody_Blob _        -> "XhrResponseBody_Blob"
+    --   XhrResponseBody_ArrayBuffer _ -> "XhrResponseBody_ArrayBuffer"
+    --   otherwise                     -> "others") <$> dynResp
+    -- let maybeText = _xhrResponse_responseText <$> respEv
+    -- let resp2 = (maybe "error" id <$> maybeText)
+    -- dynResp2 <- holdDyn "::" resp2
+    -- el "h3" $ dynText dynResp2
+    el "h3" $ dynText dynResp
     return ()
   return ()
 

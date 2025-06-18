@@ -12,11 +12,15 @@
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE DeriveAnyClass             #-}
+{-# LANGUAGE DeriveGeneric              #-}
 
 module Schema where
 
 import Database.Persist.TH
 import Data.Text (Text)
+import Data.Aeson (FromJSON, ToJSON)
+import GHC.Generics (Generic)
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 Tweet
@@ -30,6 +34,6 @@ User
   pwd Text
   follows [UserId]
   UniqueName name
-  deriving Show
+  deriving Show Generic FromJSON ToJSON
 |]
 
