@@ -26,6 +26,7 @@ import Database.Persist.TH
 import Schema 
 import Control.Monad.IO.Class --(liftIO)
 import Common.MyFunctions
+import Data.Time.Clock (getCurrentTime)
 
 backend :: Backend BackendRoute FrontendRoute
 backend = Backend
@@ -67,7 +68,7 @@ backendHandlers = \case
         writeLBS "{\"error\": \"Invalid credentials\"}"
       Just loginReq -> do 
         user <- loginDB loginReq
-        let json = jwtIt user
+        json <- liftIO $ jwtIt user
         modifyResponse $ setContentType "application/json"
         -- ^ Not really necessary but It changes the HTTP response headers that
         --   the Snap backend sends back to the browser.
@@ -81,9 +82,22 @@ backendHandlers = \case
 -- It separates a route constructor from its parameter(s) — 
 -- think of it like a typed version of a slash (/) in a URL.
 
-jwtIt :: Maybe User -> BL.ByteString
-jwtIt Nothing = BSC.pack "{error: \"no user found.\"}"
-jwtIt (Just user) = A.encode $ A.toJSON user
+jwtIt :: Maybe User -> IO BL.ByteString
+jwtIt Nothing = pure $ BSC.pack "{error: \"no user found.\"}"
+jwtIt (Just user) = do
+  now <- getCurrentTime
+  let expTime = JWT.numericDate $ addUTCTime 3600 now
+  let claims = JWT.ClaimsSet
+        { JWT.iss = Nothing
+        , JWT.sub = Just "user@example.com"
+        , JWT.aud = Nothing
+        , JWT.exp = expTime
+        , JWT.nbf = Nothing
+        , JWT.iat = Nothing
+        , JWT.jti = Nothing
+        , JWT.unregisteredClaims = mempty
+        }
+  return $ A.encode $ A.toJSON user
 
 
 loginDB :: MonadIO m => LoginReq -> m (Maybe User)
@@ -91,10 +105,6 @@ loginDB lr = do
   liftIO $ runSqlite "Xs.db" $ do
     user <- selectList [UserName ==. (username lr), UserPwd ==. (password lr)] []
     return $ entityVal <$> headSafe user
-  --   maybeUser <- selectFirst [UserName ==. name, UserPwd ==. pwd] []
-  --   case maybeUser of
-  --     Nothing -> User "errorNobody" "pwd"
-  --     Just (Entity uid user) -> user
   where 
     name = username lr 
     pwd = password lr
