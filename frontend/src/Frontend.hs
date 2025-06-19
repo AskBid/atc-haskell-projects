@@ -53,8 +53,8 @@ frontend = Frontend
               let loginClick = domEvent Click btnEl
               setRoute $ (FrontendRoute_Login :/ ()) <$ loginClick
               el "h2" $ text "Welcome to My X!"
-              area <- textAreaElement $ def
-                & initialAttributes .~ ("placeholder" =: "Write your X here ..." <> "class" =: "bg-blue-100 w-full p-2 rounded min-h-40")
+              area <- textAreaElement $ def & initialAttributes .~ 
+                ("placeholder" =: "Write your X here ..." <> "class" =: "bg-blue-100 w-full p-2 rounded min-h-40")
               return ()
             FrontendRoute_Login -> loginPage
             FrontendRoute_Signup -> el "h2" $ text "Signup here."

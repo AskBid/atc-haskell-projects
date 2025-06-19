@@ -12,7 +12,9 @@ import Obelisk.Backend
 import Obelisk.Route -- (R(..))
 import Snap
 import qualified Data.ByteString.Lazy as BL
--- import qualified Data.ByteString as BS
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy.Char8 as BSC
+
 import qualified Data.Aeson as A
 -- import qualified Data.Aeson.Types as A
 import qualified Data.Text.Encoding as TE
@@ -23,6 +25,7 @@ import Database.Persist.Sqlite
 import Database.Persist.TH
 import Schema 
 import Control.Monad.IO.Class --(liftIO)
+import Common.MyFunctions
 
 backend :: Backend BackendRoute FrontendRoute
 backend = Backend
@@ -78,16 +81,16 @@ backendHandlers = \case
 -- It separates a route constructor from its parameter(s) — 
 -- think of it like a typed version of a slash (/) in a URL.
 
-jwtIt :: User -> BL.ByteString
-jwtIt user = A.encode $ A.toJSON user
+jwtIt :: Maybe User -> BL.ByteString
+jwtIt Nothing = BSC.pack "{error: \"no user found.\"}"
+jwtIt (Just user) = A.encode $ A.toJSON user
 
 
-loginDB :: MonadIO m => LoginReq -> m User
+loginDB :: MonadIO m => LoginReq -> m (Maybe User)
 loginDB lr = do
   liftIO $ runSqlite "Xs.db" $ do
-    user <- selectList [UserName ==. (username lr)] []
-    return $ entityVal $ head user
-
+    user <- selectList [UserName ==. (username lr), UserPwd ==. (password lr)] []
+    return $ entityVal <$> headSafe user
   --   maybeUser <- selectFirst [UserName ==. name, UserPwd ==. pwd] []
   --   case maybeUser of
   --     Nothing -> User "errorNobody" "pwd"
