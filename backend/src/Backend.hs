@@ -88,15 +88,15 @@ jwtIt (Just user) = do
   now <- getCurrentTime
   let expTime = JWT.numericDate $ addUTCTime 3600 now
   let claims = JWT.ClaimsSet
-        { JWT.iss = Nothing
-        , JWT.sub = Just "user@example.com"
-        , JWT.aud = Nothing
-        , JWT.exp = expTime
-        , JWT.nbf = Nothing
-        , JWT.iat = Nothing
-        , JWT.jti = Nothing
-        , JWT.unregisteredClaims = mempty
-        }
+    { JWT.iss = Nothing
+    , JWT.sub = Just "user@example.com"
+    , JWT.aud = Nothing
+    , JWT.exp = expTime
+    , JWT.nbf = Nothing
+    , JWT.iat = Nothing
+    , JWT.jti = Nothing
+    , JWT.unregisteredClaims = mempty
+    }
   return $ A.encode $ A.toJSON user
 
 
