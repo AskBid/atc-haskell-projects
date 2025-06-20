@@ -13,7 +13,7 @@ import Obelisk.Route -- (R(..))
 import Snap
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy.Char8 as BSC
+-- import qualified Data.ByteString.Lazy.Char8 as BSC
 
 import qualified Data.Aeson as A
 -- import qualified Data.Aeson.Types as A
@@ -27,6 +27,7 @@ import Schema
 import Control.Monad.IO.Class --(liftIO)
 import Common.MyFunctions
 import Data.Time.Clock (getCurrentTime, addUTCTime, NominalDiffTime)
+import Data.Maybe (fromMaybe)
 
 backend :: Backend BackendRoute FrontendRoute
 backend = Backend
@@ -64,19 +65,17 @@ backendHandlers = \case
     let maybeUsrPwd = (A.decode usrPwd) :: Maybe LoginReq
     case maybeUsrPwd of
       Nothing -> do
-        -- modifyResponse $ setResponseStatus 401 "Unauthorized"
-        writeLBS "{\"error\": \"Invalid credentials\"}"
+        modifyResponse $ setResponseStatus 401 "Unauthorized"
+        writeLBS "{\"error\": \"No LoginReq\"}"
       Just loginReq -> do 
         user <- loginDB loginReq
-        let jwt = createJWT user
-        modifyResponse $ setContentType "application/json"
-        modifyResponse $ addHeader "Set-Cookie" 
-          ( "jwt=" 
-          <> TE.encodeUtf8 jwt 
-          <> "; Path=/; HttpOnly; Secure; SameSite=Strict")
-        -- ^ Not really necessary but It changes the HTTP response headers that
-        --   the Snap backend sends back to the browser.
-        writeBS $ BL.toStrict $ "logged in"
+        case user of
+          Nothing -> writeBS $ TE.encodeUtf8 "Invalid credentials."
+          Just user -> do
+            let jwt = createJWT user
+            modifyResponse $ setContentType "application/json"
+            modifyResponse $ addResponseCookie $ mkCookie jwt
+            writeBS $ TE.encodeUtf8 $ (userName $ user) <> " logged in."
   -- BackendRoute_Logout :/ () -> writeBS "logout backend"
   BackendRoute_Missing :/ () -> writeBS "404 - Not Found"
 
@@ -86,9 +85,8 @@ backendHandlers = \case
 -- It separates a route constructor from its parameter(s) — 
 -- think of it like a typed version of a slash (/) in a URL.
 
-createJWT :: Maybe User -> BL.ByteString
-createJWT Nothing = BSC.pack "{error: \"no user found.\"}"
-createJWT (Just (User name pwd userId)) = do
+createJWT :: User -> BS.ByteString
+createJWT (User name pwd userId) = do
   let expTime = JWT.numericDate 3600
   let claims = JWT.JWTClaimsSet { JWT.iss = Nothing
     , JWT.sub = JWT.stringOrURI name
@@ -99,8 +97,8 @@ createJWT (Just (User name pwd userId)) = do
     , JWT.jti = Nothing
     , JWT.unregisteredClaims = mempty
     }
-  let jwt = JWT.encodeSigned (JWT.hmacSecret "my-super-secret-key") mempty claims
-  A.encode $ A.toJSON jwt
+  TE.encodeUtf8 $ JWT.encodeSigned (JWT.hmacSecret "my-super-secret-key") mempty claims
+  
 
 
 loginDB :: MonadIO m => LoginReq -> m (Maybe User)
@@ -111,3 +109,14 @@ loginDB lr = do
   where 
     name = username lr 
     pwd = password lr
+
+mkCookie :: BS.ByteString -> Cookie
+mkCookie value = Cookie
+  { cookieName     = "jwt"
+  , cookieValue    = value
+  , cookieExpires  = Nothing
+  , cookieDomain   = Nothing
+  , cookiePath     = Just "/"
+  , cookieSecure   = True
+  , cookieHttpOnly = True
+  }
