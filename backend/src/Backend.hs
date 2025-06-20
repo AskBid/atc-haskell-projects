@@ -19,14 +19,14 @@ import qualified Data.Aeson as A
 -- import qualified Data.Aeson.Types as A
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text as T
-import Web.JWT
+import qualified Web.JWT as JWT
 import Database.Persist
 import Database.Persist.Sqlite
 import Database.Persist.TH
 import Schema 
 import Control.Monad.IO.Class --(liftIO)
 import Common.MyFunctions
-import Data.Time.Clock (getCurrentTime)
+import Data.Time.Clock (getCurrentTime, addUTCTime, NominalDiffTime)
 
 backend :: Backend BackendRoute FrontendRoute
 backend = Backend
@@ -68,11 +68,10 @@ backendHandlers = \case
         writeLBS "{\"error\": \"Invalid credentials\"}"
       Just loginReq -> do 
         user <- loginDB loginReq
-        json <- liftIO $ jwtIt user
         modifyResponse $ setContentType "application/json"
         -- ^ Not really necessary but It changes the HTTP response headers that
         --   the Snap backend sends back to the browser.
-        writeBS $ BL.toStrict json
+        writeBS $ BL.toStrict $ jwtIt user  
   -- BackendRoute_Logout :/ () -> writeBS "logout backend"
   BackendRoute_Missing :/ () -> writeBS "404 - Not Found"
 
@@ -82,14 +81,12 @@ backendHandlers = \case
 -- It separates a route constructor from its parameter(s) — 
 -- think of it like a typed version of a slash (/) in a URL.
 
-jwtIt :: Maybe User -> IO BL.ByteString
-jwtIt Nothing = pure $ BSC.pack "{error: \"no user found.\"}"
-jwtIt (Just user) = do
-  now <- getCurrentTime
-  let expTime = JWT.numericDate $ addUTCTime 3600 now
-  let claims = JWT.ClaimsSet
-    { JWT.iss = Nothing
-    , JWT.sub = Just "user@example.com"
+jwtIt :: Maybe User -> BL.ByteString
+jwtIt Nothing = BSC.pack "{error: \"no user found.\"}"
+jwtIt (Just (User name pwd userId)) = do
+  let expTime = JWT.numericDate 3600
+  let claims = JWT.JWTClaimsSet { JWT.iss = Nothing
+    , JWT.sub = JWT.stringOrURI name
     , JWT.aud = Nothing
     , JWT.exp = expTime
     , JWT.nbf = Nothing
@@ -97,7 +94,8 @@ jwtIt (Just user) = do
     , JWT.jti = Nothing
     , JWT.unregisteredClaims = mempty
     }
-  return $ A.encode $ A.toJSON user
+  let jwt = JWT.encodeSigned (JWT.hmacSecret "my-super-secret-key") mempty claims
+  A.encode $ A.toJSON jwt
 
 
 loginDB :: MonadIO m => LoginReq -> m (Maybe User)
