@@ -68,10 +68,15 @@ backendHandlers = \case
         writeLBS "{\"error\": \"Invalid credentials\"}"
       Just loginReq -> do 
         user <- loginDB loginReq
+        let jwt = createJWT user
         modifyResponse $ setContentType "application/json"
+        modifyResponse $ addHeader "Set-Cookie" 
+          ( "jwt=" 
+          <> TE.encodeUtf8 jwt 
+          <> "; Path=/; HttpOnly; Secure; SameSite=Strict")
         -- ^ Not really necessary but It changes the HTTP response headers that
         --   the Snap backend sends back to the browser.
-        writeBS $ BL.toStrict $ jwtIt user  
+        writeBS $ BL.toStrict $ "logged in"
   -- BackendRoute_Logout :/ () -> writeBS "logout backend"
   BackendRoute_Missing :/ () -> writeBS "404 - Not Found"
 
@@ -81,9 +86,9 @@ backendHandlers = \case
 -- It separates a route constructor from its parameter(s) — 
 -- think of it like a typed version of a slash (/) in a URL.
 
-jwtIt :: Maybe User -> BL.ByteString
-jwtIt Nothing = BSC.pack "{error: \"no user found.\"}"
-jwtIt (Just (User name pwd userId)) = do
+createJWT :: Maybe User -> BL.ByteString
+createJWT Nothing = BSC.pack "{error: \"no user found.\"}"
+createJWT (Just (User name pwd userId)) = do
   let expTime = JWT.numericDate 3600
   let claims = JWT.JWTClaimsSet { JWT.iss = Nothing
     , JWT.sub = JWT.stringOrURI name
