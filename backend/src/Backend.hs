@@ -80,6 +80,11 @@ backendHandlers = \case
             writeBS $ TE.encodeUtf8 $ (userName $ user) <> " logged in."
   -- BackendRoute_Logout :/ () -> writeBS "logout backend"
   BackendRoute_Missing :/ () -> writeBS "404 - Not Found"
+  BackendRoute_Api :/ Tail_Me -> do
+    maybeCookie <- getCookie "jwt"
+    case maybeCookie of
+      Nothing -> writeBS "Cookie not found."
+      Just (Cookie _ name _ _ _ _ _) -> writeBS name 
 
 -- `R` it’s the standard (advanced and complicated) way to refer to parsed routes in Obelisk.
 

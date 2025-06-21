@@ -47,6 +47,7 @@ frontend = Frontend
       elClass "div" "grid grid-cols-3 min-h-screen" $ do
         elClass "div" "bg-gray-100" blank
         elClass "div" "bg-white flex flex-col p-4 space-y-4" $ do 
+          let appState = AppState {loggedIn = False, loggedUser = Nothing}
           subRoute_ $ \case
             FrontendRoute_Main -> do
               (btnEl, _) <- lift $ myButton "Login"
@@ -56,7 +57,7 @@ frontend = Frontend
               area <- textAreaElement $ def & initialAttributes .~ 
                 ("placeholder" =: "Write your X here ..." <> "class" =: "bg-blue-100 w-full p-2 rounded min-h-40")
               return ()
-            FrontendRoute_Login -> loginPage
+            FrontendRoute_Login -> loginPage appState
             FrontendRoute_Signup -> el "h2" $ text "Signup here."
             FrontendRoute_Profile -> do
               dynUserId <- askRoute

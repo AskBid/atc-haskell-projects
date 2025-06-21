@@ -41,6 +41,7 @@ data BackendRoute :: * -> * where
 data Tail
   = Tail_Login
   | Tail_Logout
+  | Tail_Me
   deriving (Show, Eq, Ord, Enum, Bounded)
 
 instance Universe Tail
@@ -51,6 +52,7 @@ tailRouteEncoder
 tailRouteEncoder = enumEncoder $ \case
   Tail_Login  -> (["login"], mempty)
   Tail_Logout -> (["logout"], mempty)
+  Tail_Me     -> (["me"], mempty)
 
 -- newtype UserID = UserID { unUserID :: Text } deriving (Show, Eq)
 -- makeWrapped ''UserID

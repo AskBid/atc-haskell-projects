@@ -17,8 +17,8 @@ import Common.Api (LoginReq(..))
 import Control.Monad.Trans (lift)
 
 
-loginPage :: ObeliskWidget t (R FrontendRoute) m  => RoutedT t () m ()
-loginPage = do
+loginPage :: ObeliskWidget t (R FrontendRoute) m  => AppState -> RoutedT t () m ()
+loginPage appState = do
   el "h2" $ text "Login here."
   el "label" $ text "Username: "
   usrEl <- inputElement $ def & initialAttributes .~ 
@@ -43,7 +43,7 @@ loginPage = do
     respEv <- performRequestAsync $ (postJson url) <$> loginReqEv
     setRoute $ FrontendRoute_Main :/ () <$ ffilter (statusCheck 200 300) respEv
     message <- holdDyn "Enter your credentials." $ 
-      "Wrong credentials. Try again." <$ ffilter (statusCheck 400 600) respEv
+      "Wrong credentials. Try again." <$ ffilter (not . statusCheck 200 300) respEv
     el "h4" $ dynText message
     return ()
   return ()
