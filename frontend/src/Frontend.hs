@@ -14,7 +14,7 @@ import Control.Lens ((^.))
 import Control.Monad
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
-import Language.Javascript.JSaddle (liftJSM, js, js1, jsg)
+-- import Language.Javascript.JSaddle (liftJSM, js, js1, jsg)
 
 import Obelisk.Frontend
 import Obelisk.Configs
@@ -47,6 +47,11 @@ frontend = Frontend
       elClass "div" "grid grid-cols-3 min-h-screen" $ do
         elClass "div" "bg-gray-100" blank
         elClass "div" "bg-white flex flex-col p-4 space-y-4" $ do 
+          postBuildEv <- getPostBuild
+          let xhrRequest = XhrRequest { _xhrRequest_method = "GET"
+                                      , _xhrRequest_url = undefined
+                                      , _xhrRequest_config = def
+                                      }
           let appState = AppState {loggedIn = False, loggedUser = Nothing}
           subRoute_ $ \case
             FrontendRoute_Main -> do

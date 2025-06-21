@@ -83,8 +83,11 @@ backendHandlers = \case
   BackendRoute_Api :/ Tail_Me -> do
     maybeCookie <- getCookie "jwt"
     case maybeCookie of
-      Nothing -> writeBS "Cookie not found."
-      Just (Cookie _ name _ _ _ _ _) -> writeBS name 
+      Nothing -> do 
+        modifyResponse $ setResponseStatus 401 "Unauthorized"
+      Just (Cookie _ name _ _ _ _ _) -> 
+        modifyResponse $ setResponseStatus 200 "OK"
+
 
 -- `R` it’s the standard (advanced and complicated) way to refer to parsed routes in Obelisk.
 
