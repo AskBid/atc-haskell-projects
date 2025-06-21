@@ -43,16 +43,25 @@ frontend = Frontend
       el "title" $ text "My X"
       elAttr "script" ("type" =: "application/javascript" <> "src" =: $(static "lib.js")) blank
       elAttr "script" ("src" =: "https://cdn.tailwindcss.com") blank
+
   , _frontend_body = do
       elClass "div" "grid grid-cols-3 min-h-screen" $ do
+        
         elClass "div" "bg-gray-100" blank
         elClass "div" "bg-white flex flex-col p-4 space-y-4" $ do 
+
           postBuildEv <- getPostBuild
           let xhrRequest = XhrRequest { _xhrRequest_method = "GET"
               , _xhrRequest_url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Tail_Me 
               , _xhrRequest_config = def
               }
-          let appState = AppState {loggedIn = False, loggedUser = Nothing}
+          prerender (pure ()) $ do 
+            respEv <- performRequestAsync $ xhrRequest <$ postBuildEv
+            -- let loggedInEv = \resp -> undefined <$> respEv
+
+            let appState = AppState {loggedIn = False, loggedUser = Nothing}
+
+            return ()
           subRoute_ $ \case
             FrontendRoute_Main -> do
               (btnEl, _) <- lift $ myButton "Login"
@@ -69,6 +78,7 @@ frontend = Frontend
               el "h1" $ dynText $ fmap (\uid -> "Profile for " <> uid) dynUserId
               return ()
           return ()
+          
         elClass "div" "bg-gray-100" blank
       return ()
   }
