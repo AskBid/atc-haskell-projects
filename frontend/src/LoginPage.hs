@@ -40,13 +40,19 @@ loginPage = do
     -- (postJson "text") <$> e l :: e xhr 
     -- performRequestAsync       :: e xhr -> m (e xhr) 
     let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Tail_Login
-    respEv <- (performRequestAsync $ (postJson url) <$> loginReqEv)
-    let maybetextResp = _xhrResponse_responseText <$> respEv
-    let resp = maybe "error" id <$> maybetextResp
-    dynResp <- holdDyn "No Response received yet" resp
-    el "h3" $ dynText dynResp
+    respEv <- performRequestAsync $ (postJson url) <$> loginReqEv
+    setRoute $ FrontendRoute_Main :/ () <$ ffilter (statusCheck 200 300) respEv
+    message <- holdDyn "Enter your credentials." $ 
+      "Wrong credentials. Try again." <$ ffilter (statusCheck 400 600) respEv
+    el "h4" $ dynText message
     return ()
   return ()
+
+statusCheck :: Word -> Word -> XhrResponse -> Bool
+statusCheck min max xhr
+  | status >= min && status < max = True
+  | otherwise                     = False
+  where status = _xhrResponse_status xhr
 
 -- | @fullRouteEncoder@ has an `Either Text` as a first (check) argument
 --   to make it Identity as required from the use of @encode@, we need first to pass
@@ -55,7 +61,7 @@ loginPage = do
 safeEncoder :: Encoder Identity Identity (R (FullRoute BackendRoute FrontendRoute)) PageName
 safeEncoder = 
   case checkEncoder fullRouteEncoder of
-    Left x    -> undefined
+    Left err  -> error $ "Encoder check failed in safeEncoder: " <> T.unpack err
     Right enc -> enc
 
 -- | Given a FullRoute returns a Text Url

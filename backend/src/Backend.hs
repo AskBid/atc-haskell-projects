@@ -70,7 +70,9 @@ backendHandlers = \case
       Just loginReq -> do 
         user <- loginDB loginReq
         case user of
-          Nothing -> writeBS $ TE.encodeUtf8 "Invalid credentials."
+          Nothing -> do 
+            modifyResponse $ setResponseStatus 401 "Unauthorized"
+            writeBS $ TE.encodeUtf8 "Invalid credentials."
           Just user -> do
             let jwt = createJWT user
             modifyResponse $ setContentType "application/json"
@@ -88,7 +90,8 @@ backendHandlers = \case
 createJWT :: User -> BS.ByteString
 createJWT (User name pwd userId) = do
   let expTime = JWT.numericDate 3600
-  let claims = JWT.JWTClaimsSet { JWT.iss = Nothing
+  let claims = JWT.JWTClaimsSet { 
+      JWT.iss = Nothing
     , JWT.sub = JWT.stringOrURI name
     , JWT.aud = Nothing
     , JWT.exp = expTime
