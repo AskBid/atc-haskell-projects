@@ -41,3 +41,9 @@ getUrl :: R (FullRoute BackendRoute FrontendRoute) -> T.Text
 getUrl route = T.intercalate "/" $ fst pageName
   where 
     pageName = encode safeEncoder route
+
+statusCheck :: Word -> Word -> XhrResponse -> Bool
+statusCheck min max xhr
+  | status >= min && status < max = True
+  | otherwise                     = False
+  where status = _xhrResponse_status xhr

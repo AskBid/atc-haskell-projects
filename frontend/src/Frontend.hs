@@ -57,7 +57,7 @@ frontend = Frontend
               }
           prerender (pure ()) $ do 
             respEv <- performRequestAsync $ xhrRequest <$ postBuildEv
-            -- let loggedInEv = \resp -> undefined <$> respEv
+            let loggedInEv = ffilter (statusCheck 200 300) respEv
 
             let appState = AppState {loggedIn = False, loggedUser = Nothing}
 

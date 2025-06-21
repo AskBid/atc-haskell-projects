@@ -48,8 +48,3 @@ loginPage appState = do
     return ()
   return ()
 
-statusCheck :: Word -> Word -> XhrResponse -> Bool
-statusCheck min max xhr
-  | status >= min && status < max = True
-  | otherwise                     = False
-  where status = _xhrResponse_status xhr
