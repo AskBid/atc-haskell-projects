@@ -49,9 +49,9 @@ frontend = Frontend
         elClass "div" "bg-white flex flex-col p-4 space-y-4" $ do 
           postBuildEv <- getPostBuild
           let xhrRequest = XhrRequest { _xhrRequest_method = "GET"
-                                      , _xhrRequest_url = undefined
-                                      , _xhrRequest_config = def
-                                      }
+              , _xhrRequest_url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Tail_Me 
+              , _xhrRequest_config = def
+              }
           let appState = AppState {loggedIn = False, loggedUser = Nothing}
           subRoute_ $ \case
             FrontendRoute_Main -> do
