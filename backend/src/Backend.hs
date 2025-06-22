@@ -103,6 +103,8 @@ backendHandlers = \case
 -- It separates a route constructor from its parameter(s) — 
 -- think of it like a typed version of a slash (/) in a URL.
 
+-- | Using JWT library to create an encoded JWT ByteString, the likes of: 
+--  `asxcasas.asdasdasc.aierhuhdf`
 createJWT :: User -> BS.ByteString
 createJWT (User name pwd userId) = do
   let expTime = JWT.numericDate 3600
@@ -119,7 +121,7 @@ createJWT (User name pwd userId) = do
   TE.encodeUtf8 $ JWT.encodeSigned (JWT.hmacSecret "my-super-secret-key") mempty claims
   
 
-
+-- | checks if the data in the LoginReq is a valid user in the database.
 loginDB :: MonadIO m => LoginReq -> m (Maybe User)
 loginDB lr = do
   liftIO $ runSqlite "Xs.db" $ do
@@ -129,6 +131,7 @@ loginDB lr = do
     name = username lr 
     pwd = password lr
 
+-- | Value is supposed to be a JWT encoded ByteString.
 mkCookie :: BS.ByteString -> Cookie
 mkCookie value = Cookie
   { cookieName     = "jwt"
@@ -140,6 +143,8 @@ mkCookie value = Cookie
   , cookieHttpOnly = True
   }
 
+-- | Used to substitute any existent "jwt" token so that with a expired date,
+--   the browser should automatically logout the user.
 cookieLogout :: IO Cookie
 cookieLogout = do 
   now <- getCurrentTime
