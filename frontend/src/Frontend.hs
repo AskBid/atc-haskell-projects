@@ -50,22 +50,24 @@ frontend = Frontend
         elClass "div" "bg-gray-100" blank
         elClass "div" "bg-white flex flex-col p-4 space-y-4" $ do 
 
-          postBuildEv <- getPostBuild
-          let xhrRequest = XhrRequest { _xhrRequest_method = "GET"
-              , _xhrRequest_url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Tail_Me 
-              , _xhrRequest_config = def
-              }
-          prerender (pure ()) $ do 
+          loggedInDyn <- prerender (pure $ constDyn False) $ do 
+            postBuildEv <- getPostBuild
+            let xhrRequest = XhrRequest { _xhrRequest_method = "GET"
+                , _xhrRequest_url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Tail_Me 
+                , _xhrRequest_config = def
+                }
             respEv <- performRequestAsync $ xhrRequest <$ postBuildEv
-            let loggedInEv = ffilter (statusCheck 200 300) respEv
+            let loggedInEv = (ffilter (statusCheck 200 300) respEv) 
+            dyn <- holdDyn False $ True <$ loggedInEv 
+            return dyn 
+            
+          let appState = AppState {loggedIn = join loggedInDyn, loggedUser = Nothing}
 
-            let appState = AppState {loggedIn = False, loggedUser = Nothing}
-
-            return ()
           subRoute_ $ \case
             FrontendRoute_Main -> do
               (btnEl, _) <- lift $ myButton "Login"
               let loginClick = domEvent Click btnEl
+              dyn_ ((\logBool -> if logBool then el "h4" $ text $ "logged." else blank) <$> (loggedIn appState))
               setRoute $ (FrontendRoute_Login :/ ()) <$ loginClick
               el "h2" $ text "Welcome to My X!"
               area <- textAreaElement $ def & initialAttributes .~ 

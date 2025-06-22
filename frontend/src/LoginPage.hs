@@ -17,7 +17,7 @@ import Common.Api (LoginReq(..))
 import Control.Monad.Trans (lift)
 
 
-loginPage :: ObeliskWidget t (R FrontendRoute) m  => AppState -> RoutedT t () m ()
+loginPage :: ObeliskWidget t (R FrontendRoute) m  => AppState t -> RoutedT t () m ()
 loginPage appState = do
   el "h2" $ text "Login here."
   el "label" $ text "Username: "

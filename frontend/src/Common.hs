@@ -19,8 +19,8 @@ myButton txt =
     attr = (  "class" =: "bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded" 
            <> "type" =: "button")
 
-data AppState = AppState
-  { loggedIn :: Bool
+data AppState t = AppState 
+  { loggedIn :: Dynamic t Bool
   , loggedUser :: Maybe T.Text
   }
 
