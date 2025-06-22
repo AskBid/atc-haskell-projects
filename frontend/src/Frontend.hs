@@ -65,10 +65,15 @@ frontend = Frontend
 
           subRoute_ $ \case
             FrontendRoute_Main -> do
-              (btnEl, _) <- lift $ myButton "Login"
-              let loginClick = domEvent Click btnEl
-              dyn_ ((\logBool -> if logBool then el "h4" $ text $ "logged." else blank) <$> (loggedIn appState))
-              setRoute $ (FrontendRoute_Login :/ ()) <$ loginClick
+              dyn_ $ (\logBool -> 
+                if not logBool 
+                   then do 
+                     (btnEl, _) <- lift $ myButton "Login"
+                     let loginClick = domEvent Click btnEl
+                     setRoute $ (FrontendRoute_Login :/ ()) <$ loginClick
+                   else do 
+                     (btnEl, _) <- lift $ myButton "Logout"
+                     return ()) <$> (loggedIn appState)
               el "h2" $ text "Welcome to My X!"
               area <- textAreaElement $ def & initialAttributes .~ 
                 ("placeholder" =: "Write your X here ..." <> "class" =: "bg-blue-100 w-full p-2 rounded min-h-40")
