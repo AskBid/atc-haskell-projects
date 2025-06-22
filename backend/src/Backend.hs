@@ -78,7 +78,7 @@ backendHandlers = \case
             modifyResponse $ setContentType "application/json"
             modifyResponse $ addResponseCookie $ mkCookie jwt
             writeBS $ TE.encodeUtf8 $ (userName $ user) <> " logged in."
-  -- BackendRoute_Logout :/ () -> writeBS "logout backend"
+  BackendRoute_Api :/ Tail_Logout -> writeBS "logout backend"
   BackendRoute_Missing :/ () -> writeBS "404 - Not Found"
   BackendRoute_Api :/ Tail_Me -> do
     maybeCookie <- getCookie "jwt"
@@ -128,6 +128,19 @@ mkCookie value = Cookie
   , cookieExpires  = Nothing
   , cookieDomain   = Nothing
   , cookiePath     = Just "/"
-  , cookieSecure   = True
+  , cookieSecure   = False -- True for production
+  , cookieHttpOnly = True
+  }
+
+cookieLogout :: IO Cookie
+cookieLogout = do 
+  now <- getCurrentTime
+  return Cookie { 
+    cookieName     = "jwt"
+  , cookieValue    = ""
+  , cookieExpires  = Just $ addUTCTime (-3600) now 
+  , cookieDomain   = Nothing
+  , cookiePath     = Just "/"
+  , cookieSecure   = False -- True for production
   , cookieHttpOnly = True
   }
