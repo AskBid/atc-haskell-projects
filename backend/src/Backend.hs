@@ -60,6 +60,7 @@ backend = Backend
 
 backendHandlers :: R BackendRoute -> Snap ()
 backendHandlers = \case
+   
   BackendRoute_Api :/ Tail_Login -> do
     usrPwd <- readRequestBody 10000
     let maybeUsrPwd = (A.decode usrPwd) :: Maybe LoginReq
@@ -78,8 +79,13 @@ backendHandlers = \case
             modifyResponse $ setContentType "application/json"
             modifyResponse $ addResponseCookie $ mkCookie jwt
             writeBS $ TE.encodeUtf8 $ (userName $ user) <> " logged in."
-  BackendRoute_Api :/ Tail_Logout -> writeBS "logout backend"
-  BackendRoute_Missing :/ () -> writeBS "404 - Not Found"
+   
+  BackendRoute_Api :/ Tail_Logout -> do 
+    modifyResponse $ setContentType "application/json"
+    expiredJWTCookie <- liftIO cookieLogout
+    modifyResponse $ addResponseCookie $ expiredJWTCookie
+    writeBS "logout backend. You shouldn't be here!"
+   
   BackendRoute_Api :/ Tail_Me -> do
     maybeCookie <- getCookie "jwt"
     case maybeCookie of
@@ -87,6 +93,8 @@ backendHandlers = \case
         modifyResponse $ setResponseStatus 401 "Unauthorized"
       Just (Cookie _ name _ _ _ _ _) -> 
         modifyResponse $ setResponseStatus 200 "OK"
+   
+  BackendRoute_Missing :/ () -> writeBS "404 - Not Found"
 
 
 -- `R` it’s the standard (advanced and complicated) way to refer to parsed routes in Obelisk.
@@ -136,11 +144,11 @@ cookieLogout :: IO Cookie
 cookieLogout = do 
   now <- getCurrentTime
   return Cookie { 
-    cookieName     = "jwt"
-  , cookieValue    = ""
-  , cookieExpires  = Just $ addUTCTime (-3600) now 
-  , cookieDomain   = Nothing
-  , cookiePath     = Just "/"
-  , cookieSecure   = False -- True for production
-  , cookieHttpOnly = True
-  }
+      cookieName     = "jwt"
+    , cookieValue    = ""
+    , cookieExpires  = Just $ addUTCTime (-3600) now 
+    , cookieDomain   = Nothing
+    , cookiePath     = Just "/"
+    , cookieSecure   = False -- True for production
+    , cookieHttpOnly = True
+    }
