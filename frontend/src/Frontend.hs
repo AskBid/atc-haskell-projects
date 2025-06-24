@@ -30,6 +30,9 @@ import Obelisk.Route.Frontend
 import Control.Monad.Trans (lift)
 import Control.Lens (Identity (..))
 import Data.Aeson (Value(..))
+import Control.Monad.IO.Class --(liftIO)
+
+
 
 import Common
 import LoginPage
@@ -49,31 +52,36 @@ frontend = Frontend
         
         elClass "div" "bg-gray-100" blank
         elClass "div" "bg-white flex flex-col p-4 space-y-4" $ do 
-
-          loggedInDyn <- prerender (pure $ constDyn False) $ do 
+           
+          (evLoggedInByTrigger, triggerLoggedIn) <- newTriggerEvent
+          
+          evMeLoggedIn <- prerender (pure never) $ do 
             postBuildEv <- getPostBuild
             let xhrRequest = XhrRequest { _xhrRequest_method = "GET"
                 , _xhrRequest_url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Tail_Me 
                 , _xhrRequest_config = def
                 }
             respEv <- performRequestAsync $ xhrRequest <$ postBuildEv
-            let loggedInEv = (ffilter (statusCheck 200 300) respEv) 
-            dyn <- holdDyn False $ True <$ loggedInEv 
-            return dyn 
-            
-          let appState = AppState {loggedIn = join loggedInDyn, loggedUser = Nothing}
+            return $ ffilter (statusCheck 200 300) respEv
+
+          let dynLoggedInEvStation = leftmost [ True <$ (switchDyn evMeLoggedIn)
+                                              , True <$ evLoggedInByTrigger
+                                              ]
+          dynLoggedIn <- holdDyn False dynLoggedInEvStation
+
+          let appState = AppState {loggedIn = dynLoggedIn, loggedUser = Nothing}
 
           subRoute_ $ \case
             FrontendRoute_Main -> do
               dyn_ $ (\logBool -> 
                 if not logBool 
-                   then do 
-                     (btnEl, _) <- lift $ myButton "Login"
-                     let loginClick = domEvent Click btnEl
-                     setRoute $ (FrontendRoute_Login :/ ()) <$ loginClick
-                   else do 
-                     (btnEl, _) <- lift $ myButton "Logout"
-                     return ()) <$> (loggedIn appState)
+                  then do 
+                    (btnEl, _) <- lift $ myButton "Login"
+                    let loginClick = domEvent Click btnEl
+                    setRoute $ (FrontendRoute_Login :/ ()) <$ loginClick
+                  else do
+                    (btnEl, _) <- lift $ myButton "Logout"
+                    return ()) <$> (loggedIn appState)
               el "h2" $ text "Welcome to My X!"
               area <- textAreaElement $ def & initialAttributes .~ 
                 ("placeholder" =: "Write your X here ..." <> "class" =: "bg-blue-100 w-full p-2 rounded min-h-40")
