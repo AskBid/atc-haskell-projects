@@ -7,6 +7,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE RecursiveDo         #-}
+{-# LANGUAGE FlexibleContexts         #-}
 
 module Frontend where
 
@@ -73,15 +74,7 @@ frontend = Frontend
 
           subRoute_ $ \case
             FrontendRoute_Main -> do
-              dyn_ $ (\logBool -> 
-                if not logBool 
-                  then do 
-                    (btnEl, _) <- lift $ myButton "Login"
-                    let loginClick = domEvent Click btnEl
-                    setRoute $ (FrontendRoute_Login :/ ()) <$ loginClick
-                  else do
-                    (btnEl, _) <- lift $ myButton "Logout"
-                    return ()) <$> (loggedIn appState)
+              dyn_ $ buttonLogInOut <$> (loggedIn appState) <*> pure (FrontendRoute_Login :/ ()) 
               el "h2" $ text "Welcome to My X!"
               area <- textAreaElement $ def & initialAttributes .~ 
                 ("placeholder" =: "Write your X here ..." <> "class" =: "bg-blue-100 w-full p-2 rounded min-h-40")
@@ -97,3 +90,14 @@ frontend = Frontend
         elClass "div" "bg-gray-100" blank
       return ()
   }
+
+buttonLogInOut :: (DomBuilder t m, SetRoute t (R FrontendRoute) m)
+      => Bool -> R FrontendRoute -> RoutedT t a m ()
+buttonLogInOut logBool targetRoute = if not logBool 
+  then do 
+    (btnEl, _) <- lift $ myButton "Login"
+    let loginClick = domEvent Click btnEl
+    setRoute $ targetRoute <$ loginClick
+  else do
+    (btnEl, _) <- lift $ myButton "Logout"
+    return ()
