@@ -59,7 +59,7 @@ frontend = Frontend
            
           (evLoggedInByTrigger, triggerLoggedIn) <- newTriggerEvent
           
-          evMeLoggedIn <- prerender (pure never) $ do 
+          dMeLoggedIn <- prerender (pure never) $ do 
             postBuildEv <- getPostBuild
             let xhrRequest = XhrRequest { _xhrRequest_method = "GET"
                 , _xhrRequest_url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Tail_Me 
@@ -68,7 +68,7 @@ frontend = Frontend
             respEv <- performRequestAsync $ xhrRequest <$ postBuildEv
             return $ ffilter (statusCheck 200 300) respEv
 
-          let dynLoggedInEvStation = leftmost [ True <$ (switchDyn evMeLoggedIn)
+          let dynLoggedInEvStation = leftmost [ True <$ (switchDyn dMeLoggedIn)
                                               , True <$ evLoggedInByTrigger
                                               ]
           dynLoggedIn <- holdDyn False dynLoggedInEvStation
@@ -95,7 +95,7 @@ frontend = Frontend
   }
 
 buttonLogInOut 
-  :: (DomBuilder t m, SetRoute t (R FrontendRoute) m, MonadJSM (Performable m))
+  :: (DomBuilder t m, SetRoute t (R FrontendRoute) m, MonadJSM (Performable m), Prerender t m)
   => Bool -> RoutedT t a m ()
 buttonLogInOut logBool = 
   if not logBool 
@@ -112,9 +112,11 @@ buttonLogInOut logBool =
       , _xhrRequest_url = url
       , _xhrRequest_config = def & xhrRequestConfig_withCredentials .~ True
       }
-    respEv <- performRequestAsync $ xhrReq <$ logoutClick
+    dResp <- prerender (pure never) $ do  
+      respEv <- performRequestAsync $ xhrReq <$ logoutClick
+      return respEv
     -- dynCurrentRoute <- askRoute
-    setRoute $ FrontendRoute_Main :/ () <$ respEv 
+    setRoute $ FrontendRoute_Main :/ () <$ (switchDyn dResp)
 
 
 --     • Couldn't match type ‘FrontendRoute’ with ‘BackendRoute’
