@@ -103,10 +103,15 @@ buttonLogInOut logBool =
   else do
     (btnOutEl, _) <- myButton "Logout"
     let logoutClick = domEvent Click btnOutEl
-    let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Tail_Login
-    respEv <- performRequestAsync $ (postJson url) <$> loginReqEv
-    dynCurrentRoute <- askRoute
-    setRoute $  <$ logoutClick
+    let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Tail_Logout
+    let xhrReq = XhrRequest { 
+        _xhrRequest_method = "GET"
+      , _xhrRequest_url = url
+      , _xhrRequest_config = def & xhrRequestConfig_withCredentials .~ True
+      }
+    respEv <- performRequestAsync $ xhrReq <$ logoutClick
+    -- dynCurrentRoute <- askRoute
+    setRoute $ FrontendRoute_Main :/ () <$ respEv 
 
 
 --     • Couldn't match type ‘FrontendRoute’ with ‘BackendRoute’
