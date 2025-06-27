@@ -32,10 +32,6 @@ import Control.Monad.Trans (lift)
 import Control.Lens (Identity (..))
 import Data.Aeson (Value(..))
 import Control.Monad.IO.Class --(liftIO)
-import Language.Javascript.JSaddle (MonadJSM)
-
-
-
 
 
 import Common
@@ -95,7 +91,7 @@ frontend = Frontend
   }
 
 buttonLogInOut 
-  :: (DomBuilder t m, SetRoute t (R FrontendRoute) m, MonadJSM (Performable m), Prerender t m)
+  :: (DomBuilder t m, SetRoute t (R FrontendRoute) m, Prerender t m)
   => Bool -> RoutedT t a m ()
 buttonLogInOut logBool = 
   if not logBool 
