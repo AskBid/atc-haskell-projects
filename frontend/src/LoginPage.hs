@@ -17,7 +17,7 @@ import Common.Api (LoginReq(..))
 import Control.Monad.Trans (lift)
 
 
-loginPage :: ObeliskWidget t (R (FullRoute FrontendRoute BackendRoute)) m  => AppState t -> RoutedT t () m ()
+loginPage :: ObeliskWidget t (R FrontendRoute) m  => AppState t -> RoutedT t () m ()
 loginPage appState = do
 
   el "h2" $ text "Login here."
@@ -43,9 +43,7 @@ loginPage appState = do
   prerender (pure ()) $ do 
     let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Tail_Login
     respEv <- performRequestAsync $ (postJson url) <$> loginReqEv
-    -- \_ -> do 
-    --   appState -- how to update it here if login successful??
-    -- setRoute $ FrontendRoute_Main :/ () <$> ffilter (statusCheck 200 300) respEv
+    setRoute $ FrontendRoute_Main :/ () <$ ffilter (statusCheck 200 300) respEv
     message <- holdDyn "Enter your credentials." $ 
       "Wrong credentials. Try again." <$ ffilter (not . statusCheck 200 300) respEv
     el "h4" $ dynText message

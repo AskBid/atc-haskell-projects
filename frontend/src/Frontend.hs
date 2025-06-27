@@ -41,7 +41,7 @@ import LoginPage
 -- This runs in a monad that can be run on the client or the server.
 -- To run code in a pure client or pure server context, use one of the
 -- `prerender` functions.
-frontend :: Frontend (R (FullRoute FrontendRoute BackendRoute))
+frontend :: Frontend (R FrontendRoute)
 frontend = Frontend
   { _frontend_head = do
       el "title" $ text "My X"
@@ -73,15 +73,15 @@ frontend = Frontend
           let appState = AppState {loggedIn = dynLoggedIn, loggedUser = Nothing}
 
           subRoute_ $ \case
-            FullRoute_Frontend (ObeliskRoute_App FrontendRoute_Main) -> do
+            FrontendRoute_Main -> do
               dyn_ $ buttonLogInOut <$> (loggedIn appState)
               el "h2" $ text "Welcome to My X!"
               area <- textAreaElement $ def & initialAttributes .~ 
                 ("placeholder" =: "Write your X here ..." <> "class" =: "bg-blue-100 w-full p-2 rounded min-h-40")
               return ()
-            FullRoute_Frontend (ObeliskRoute_App FrontendRoute_Login) -> loginPage appState
-            FullRoute_Frontend (ObeliskRoute_App FrontendRoute_Signup) -> el "h2" $ text "Signup here."
-            FullRoute_Frontend (ObeliskRoute_App FrontendRoute_Profile) -> do
+            FrontendRoute_Login -> loginPage appState
+            FrontendRoute_Signup -> el "h2" $ text "Signup here."
+            FrontendRoute_Profile -> do
               dynUserId <- askRoute
               el "h1" $ dynText $ fmap (\uid -> "Profile for " <> uid) dynUserId
               return ()
@@ -91,17 +91,22 @@ frontend = Frontend
       return ()
   }
 
-buttonLogInOut :: (DomBuilder t m, SetRoute t (R (FullRoute FrontendRoute BackendRoute)) m)
-               => Bool -> RoutedT t a m ()
-buttonLogInOut logBool = if not logBool 
+buttonLogInOut 
+  :: (DomBuilder t m, SetRoute t (R FrontendRoute) m)
+  => Bool -> RoutedT t a m ()
+buttonLogInOut logBool = 
+  if not logBool 
   then do 
     (btnInEl, _) <- myButton "Login"
     let loginClick = domEvent Click btnInEl
-    setRoute $ (FullRoute_Frontend FrontendRoute_Login :/ ()) <$ loginClick
+    setRoute $ FrontendRoute_Login :/ () <$ loginClick
   else do
     (btnOutEl, _) <- myButton "Logout"
     let logoutClick = domEvent Click btnOutEl
-    setRoute $ (FullRoute_Backend BackendRoute_Api :/ Tail_Logout) <$ logoutClick
+    let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Tail_Login
+    respEv <- performRequestAsync $ (postJson url) <$> loginReqEv
+    dynCurrentRoute <- askRoute
+    setRoute $  <$ logoutClick
 
 
 --     • Couldn't match type ‘FrontendRoute’ with ‘BackendRoute’
