@@ -91,8 +91,12 @@ frontend = Frontend
   }
 
 buttonLogInOut 
-  :: (DomBuilder t m, SetRoute t (R FrontendRoute) m, Prerender t m)
-  => Bool -> RoutedT t a m ()
+  :: ( DomBuilder t m
+     , SetRoute t (R FrontendRoute) m
+     , Prerender t m
+     , Routed t (R FrontendRoute) m
+     )
+  => Bool -> RoutedT t (R FrontendRoute) m ()
 buttonLogInOut logBool = 
   if not logBool 
   then do 
@@ -108,22 +112,13 @@ buttonLogInOut logBool =
       , _xhrRequest_url = url
       , _xhrRequest_config = def & xhrRequestConfig_withCredentials .~ True
       }
+      -- ^ By default, browsers do not send cookies or store cookies from cross-origin 
+      --   requests made via fetch/XHR unless explicitly told to.
+      --   with @xhrRequestConfig_withCredentials .~ True@ you're telling the browser
+      --   to include my cookies in this request, and also accept any Set-Cookie headers 
+      --   in the response
     dResp <- prerender (pure never) $ do  
-      respEv <- performRequestAsync $ xhrReq <$ logoutClick
-      return respEv
-    -- dynCurrentRoute <- askRoute
-    setRoute $ FrontendRoute_Main :/ () <$ (switchDyn dResp)
-
-
---     • Couldn't match type ‘FrontendRoute’ with ‘BackendRoute’
---         arising from a functional dependency between constraints:
---           ‘SetRoute t (Data.Dependent.Sum.DSum BackendRoute Identity) m’
--- arising from a use of ‘setRoute’ at /home/marep/git/ATC/atc-haskell-projects/frontend/src/Frontend.hs:104:5-61
---           ‘SetRoute t (R FrontendRoute) m’
---             arising from the type signature for:
---             buttonLogInOut :: (DomBuilder t m, SetRoute t (R FrontendRoute) m) 
---                            => Bool
---                            -> R FrontendRoute
---                            -> RoutedT t a m () 
--- at /home/marep/git/ATC/atc-haskell-projects/frontend/src/Frontend.hs:(94,1)-(95,52)
-
+      evResp <- performRequestAsync $ xhrReq <$ logoutClick
+      return evResp
+    dCurrentRoute <- askRoute
+    setRoute $ updated dCurrentRoute
