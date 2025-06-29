@@ -32,11 +32,11 @@ mainPage appState = do
 
 buttonLogInOut 
   :: ( DomBuilder t m
-     , SetRoute t route m
+     , SetRoute t (R FrontendRoute) m
      , Prerender t m
-     , Routed t route m
+     , Routed t (R FrontendRoute) m
      )
-  => Bool -> RoutedT t route m ()
+  => Bool -> m ()
 buttonLogInOut logBool = 
   if not logBool 
   then do 
