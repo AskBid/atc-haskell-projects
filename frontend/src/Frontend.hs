@@ -36,6 +36,7 @@ import Control.Monad.IO.Class --(liftIO)
 
 import Common
 import LoginPage
+import MainPage
 
 -- This runs in a monad that can be run on the client or the server.
 -- To run code in a pure client or pure server context, use one of the
@@ -72,12 +73,7 @@ frontend = Frontend
           let appState = AppState {loggedIn = dynLoggedIn, loggedUser = Nothing}
 
           subRoute_ $ \case
-            FrontendRoute_Main -> do
-              dyn_ $ buttonLogInOut <$> (loggedIn appState)
-              el "h2" $ text "Welcome to My X!"
-              area <- textAreaElement $ def & initialAttributes .~ 
-                ("placeholder" =: "Write your X here ..." <> "class" =: "bg-blue-100 w-full p-2 rounded min-h-40")
-              return ()
+            FrontendRoute_Main -> mainPage appState
             FrontendRoute_Login -> loginPage appState
             FrontendRoute_Signup -> el "h2" $ text "Signup here."
             FrontendRoute_Profile -> do
@@ -89,36 +85,3 @@ frontend = Frontend
         elClass "div" "bg-gray-100" blank
       return ()
   }
-
-buttonLogInOut 
-  :: ( DomBuilder t m
-     , SetRoute t (R FrontendRoute) m
-     , Prerender t m
-     , Routed t (R FrontendRoute) m
-     )
-  => Bool -> RoutedT t (R FrontendRoute) m ()
-buttonLogInOut logBool = 
-  if not logBool 
-  then do 
-    (btnInEl, _) <- myButton "Login"
-    let loginClick = domEvent Click btnInEl
-    setRoute $ FrontendRoute_Login :/ () <$ loginClick
-  else do
-    (btnOutEl, _) <- myButton "Logout"
-    let logoutClick = domEvent Click btnOutEl
-    let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Tail_Logout
-    let xhrReq = XhrRequest { 
-        _xhrRequest_method = "GET"
-      , _xhrRequest_url = url
-      , _xhrRequest_config = def & xhrRequestConfig_withCredentials .~ True
-      }
-      -- ^ By default, browsers do not send cookies or store cookies from cross-origin 
-      --   requests made via fetch/XHR unless explicitly told to.
-      --   with @xhrRequestConfig_withCredentials .~ True@ you're telling the browser
-      --   to include my cookies in this request, and also accept any Set-Cookie headers 
-      --   in the response
-    dResp <- prerender (pure never) $ do  
-      evResp <- performRequestAsync $ xhrReq <$ logoutClick
-      return evResp
-    dCurrentRoute <- askRoute
-    setRoute $ updated dCurrentRoute
