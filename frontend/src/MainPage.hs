@@ -18,12 +18,11 @@ import Common.Api (LoginReq(..))
 
 
 mainPage 
-  :: ( ObeliskWidget t (R FrontendRoute) m
-     , Routed t (R FrontendRoute) m 
-     )  
-  => AppState t -> RoutedT t (R FrontendRoute) m ()
+  :: ( ObeliskWidget t (R FrontendRoute) m)  
+  => AppState t -> RoutedT t () m ()
 mainPage appState = do
-  dyn_ $ buttonLogInOut <$> (loggedIn appState)
+  -- dCurrentRoute <- askRoute
+  dyn_ $ (buttonLogInOut $ FrontendRoute_Signup :/ ()) <$> (loggedIn appState)
   el "h2" $ text "Welcome to My X!"
   area <- textAreaElement $ def & initialAttributes .~ 
     ("placeholder" =: "Write your X here ..." <> "class" =: "bg-blue-100 w-full p-2 rounded min-h-40")
@@ -34,10 +33,9 @@ buttonLogInOut
   :: ( DomBuilder t m
      , SetRoute t (R FrontendRoute) m
      , Prerender t m
-     , Routed t (R FrontendRoute) m
      )
-  => Bool -> m ()
-buttonLogInOut logBool = 
+  => (R FrontendRoute) -> Bool -> RoutedT t () m ()
+buttonLogInOut route logBool = 
   if not logBool 
   then do 
     (btnInEl, _) <- myButton "Login"
@@ -60,5 +58,4 @@ buttonLogInOut logBool =
     dResp <- prerender (pure never) $ do  
       evResp <- performRequestAsync $ xhrReq <$ logoutClick
       return evResp
-    dCurrentRoute <- askRoute
-    setRoute $ updated dCurrentRoute
+    setRoute $ route <$ logoutClick
