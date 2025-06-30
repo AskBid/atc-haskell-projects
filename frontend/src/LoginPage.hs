@@ -42,11 +42,15 @@ loginPage appState = do
    
   prerender (pure ()) $ do 
     let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Tail_Login
-    respEv <- performRequestAsync $ (postJson url) <$> loginReqEv
-    setRoute $ FrontendRoute_Main :/ () <$ ffilter (statusCheck 200 300) respEv
+    evResp <- performRequestAsync $ (postJson url) <$> loginReqEv
+
+    let evLoginSuccess = ffilter (statusCheck 200 300) evResp
+    setRoute $ FrontendRoute_Main :/ () <$ evLoginSuccess
+
     message <- holdDyn "Enter your credentials." $ 
-      "Wrong credentials. Try again." <$ ffilter (not . statusCheck 200 300) respEv
+      "Wrong credentials. Try again." <$ ffilter (not . statusCheck 200 300) evResp
     el "h4" $ dynText message
+
     return ()
    
   return ()

@@ -22,6 +22,7 @@ myButton txt =
 data AppState t = AppState 
   { loggedIn :: Dynamic t Bool
   , loggedUser :: Maybe T.Text
+  , loginTrigger :: Bool -> IO ()
   }
 
 -- | @fullRouteEncoder@ has an `Either Text` as a first (check) argument

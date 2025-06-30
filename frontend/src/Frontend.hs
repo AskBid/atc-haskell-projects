@@ -54,7 +54,7 @@ frontend = Frontend
         elClass "div" "bg-gray-100" blank
         elClass "div" "bg-white flex flex-col p-4 space-y-4" $ do 
            
-          (evLoggedInByTrigger, triggerLoggedIn) <- newTriggerEvent
+          (evLoggedInByTrigger, loginTrigger) <- newTriggerEvent
           
           dMeLoggedIn <- prerender (pure never) $ do 
             postBuildEv <- getPostBuild
@@ -70,7 +70,11 @@ frontend = Frontend
                                               ]
           dynLoggedIn <- holdDyn False dynLoggedInEvStation
 
-          let appState = AppState {loggedIn = dynLoggedIn, loggedUser = Nothing}
+          let appState = AppState {
+              loggedIn = dynLoggedIn
+            , loginTrigger = loginTrigger
+            , loggedUser = Nothing
+            }
 
           subRoute_ $ \case
             FrontendRoute_Main -> mainPage appState
