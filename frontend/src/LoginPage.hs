@@ -46,10 +46,10 @@ loginPage appState = do
     evResp <- performRequestAsync $ (postJson url) <$> loginReqEv
 
     let evLoginSuccess = ffilter (statusCheck 200 300) evResp
-    setRoute $ FrontendRoute_Main :/ () <$ evLoginSuccess
     let loginTriggerIO = loginTrigger appState True :: IO ()
     let evLoginTriggerIO = loginTriggerIO <$ evLoginSuccess -- :: Event t (IO ()) 
     performEvent_ $ liftIO <$> evLoginTriggerIO
+    setRoute $ FrontendRoute_Main :/ () <$ evLoginSuccess
 
     message <- holdDyn "Enter your credentials." $ 
       "Wrong credentials. Try again." <$ ffilter (not . statusCheck 200 300) evResp
