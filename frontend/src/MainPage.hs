@@ -15,14 +15,14 @@ import qualified Data.Text as T
 import Data.Functor.Identity
 import Common.Api (LoginReq(..))
 -- import Control.Monad.Trans (lift)
-
+import Control.Monad.IO.Class (liftIO)
 
 mainPage 
   :: ( ObeliskWidget t (R FrontendRoute) m)  
   => AppState t -> RoutedT t () m ()
 mainPage appState = do
   -- dCurrentRoute <- askRoute
-  dyn_ $ (buttonLogInOut $ FrontendRoute_Signup :/ ()) <$> (loggedIn appState)
+  dyn_ $ (buttonLogInOut appState $ FrontendRoute_Signup :/ ()) <$> (loggedIn appState)
   el "h2" $ text "Welcome to My X!"
   area <- textAreaElement $ def & initialAttributes .~ 
     ("placeholder" =: "Write your X here ..." <> "class" =: "bg-blue-100 w-full p-2 rounded min-h-40")
@@ -34,8 +34,8 @@ buttonLogInOut
      , SetRoute t (R FrontendRoute) m
      , Prerender t m
      )
-  => (R FrontendRoute) -> Bool -> RoutedT t () m ()
-buttonLogInOut route logBool = 
+  => AppState t -> (R FrontendRoute) -> Bool -> RoutedT t () m ()
+buttonLogInOut appState route logBool = 
   if not logBool 
   then do 
     (btnInEl, _) <- myButton "Login"
@@ -55,7 +55,12 @@ buttonLogInOut route logBool =
       --   with @xhrRequestConfig_withCredentials .~ True@ you're telling the browser
       --   to include my cookies in this request, and also accept any Set-Cookie headers 
       --   in the response
-    dResp <- prerender (pure never) $ do  
+    dynLogoutSuccess <- prerender (pure never) $ do  
       evResp <- performRequestAsync $ xhrReq <$ logoutClick
-      return evResp
-    setRoute $ route <$ logoutClick
+      let evLogoutSuccess = ffilter (statusCheck 200 300) evResp
+      let loginTriggerIO = loginTrigger appState True -- :: IO ()
+      let evLoginTriggerIO = loginTriggerIO <$ evLogoutSuccess -- :: Event t (IO ()) 
+      performEvent_ $ liftIO <$> evLoginTriggerIO
+      return evLogoutSuccess
+    setRoute $ route <$ (updated dynLogoutSuccess)
+    -- return ()
