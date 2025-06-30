@@ -15,6 +15,7 @@ import qualified Data.Text as T
 import Data.Functor.Identity
 import Common.Api (LoginReq(..))
 import Control.Monad.Trans (lift)
+import Control.Monad.IO.Class (liftIO)
 
 
 loginPage :: ObeliskWidget t (R FrontendRoute) m  => AppState t -> RoutedT t () m ()
@@ -46,6 +47,9 @@ loginPage appState = do
 
     let evLoginSuccess = ffilter (statusCheck 200 300) evResp
     setRoute $ FrontendRoute_Main :/ () <$ evLoginSuccess
+    let loginTriggerIO = loginTrigger appState True :: IO ()
+    let evLoginTriggerIO = loginTriggerIO <$ evLoginSuccess -- :: Event t (IO ()) 
+    performEvent_ $ liftIO <$> evLoginTriggerIO
 
     message <- holdDyn "Enter your credentials." $ 
       "Wrong credentials. Try again." <$ ffilter (not . statusCheck 200 300) evResp
