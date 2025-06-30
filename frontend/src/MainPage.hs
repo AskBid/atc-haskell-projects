@@ -55,12 +55,15 @@ buttonLogInOut appState route logBool =
       --   with @xhrRequestConfig_withCredentials .~ True@ you're telling the browser
       --   to include my cookies in this request, and also accept any Set-Cookie headers 
       --   in the response
-    dynLogoutSuccess <- prerender (pure never) $ do  
+    dynEvLogoutResp <- prerender (pure never) $ do  
       evResp <- performRequestAsync $ xhrReq <$ logoutClick
       let evLogoutSuccess = ffilter (statusCheck 200 300) evResp
       let loginTriggerIO = loginTrigger appState True -- :: IO ()
       let evLoginTriggerIO = loginTriggerIO <$ evLogoutSuccess -- :: Event t (IO ()) 
       performEvent_ $ liftIO <$> evLoginTriggerIO
       return evLogoutSuccess
-    setRoute $ route <$ (updated dynLogoutSuccess)
-    -- return ()
+
+    setRoute $ route <$ switchDyn dynEvLogoutResp
+
+
+
