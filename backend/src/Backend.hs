@@ -78,7 +78,7 @@ backendHandlers = \case
           Just user -> do
             let jwt = createJWT user
             modifyResponse $ setContentType "application/json"
-            modifyResponse $ addResponseCookie $ mkCookie jwt
+            modifyResponse $ addResponseCookie $ mkJWTCookie jwt
             writeBS $ TE.encodeUtf8 $ (userName $ user) <> " logged in."
    
   BackendRoute_Api :/ Tail_Logout -> do 
@@ -92,19 +92,21 @@ backendHandlers = \case
     case maybeCookie of
       Nothing -> do 
         modifyResponse $ setResponseStatus 401 "unauthorized"
-      Just (Cookie _ value _ _ _ _ _) -> do 
-        if value == "logout" 
+      Just (Cookie _ valueJWT _ _ _ _ _) -> do 
+        -- let unverifiedJWT = decode value
+        let mVerifiedJWT = JWT.decodeAndVerifySignature (JWT.toVerify jwtSecret) $ TE.decodeUtf8 valueJWT
+        if valueJWT == "logout" 
           then modifyResponse $ setResponseStatus 401 "unauthorized"
           else modifyResponse $ setResponseStatus 200 "OK"
    
   BackendRoute_Missing :/ () -> writeBS "404 - Not Found"
-
-
 -- `R` it’s the standard (advanced and complicated) way to refer to parsed routes in Obelisk.
-
 -- :/ is a type-safe path separator
 -- It separates a route constructor from its parameter(s) — 
 -- think of it like a typed version of a slash (/) in a URL.
+
+jwtSecret :: JWT.EncodeSigner
+jwtSecret = JWT.hmacSecret "my-super-secret-key"
 
 -- | Using JWT library to create an encoded JWT ByteString, the likes of: 
 --  `asxcasas.asdasdasc.aierhuhdf`
@@ -121,7 +123,7 @@ createJWT (User name pwd userId) = do
     , JWT.jti = Nothing
     , JWT.unregisteredClaims = mempty
     }
-  TE.encodeUtf8 $ JWT.encodeSigned (JWT.hmacSecret "my-super-secret-key") mempty claims
+  TE.encodeUtf8 $ JWT.encodeSigned jwtSecret mempty claims
   
 
 -- | checks if the data in the LoginReq is a valid user in the database.
@@ -135,8 +137,8 @@ loginDB lr = do
     pwd = password lr
 
 -- | Value (the first argument) is supposed to be a JWT encoded ByteString.
-mkCookie :: BS.ByteString -> Cookie
-mkCookie valueJWT = Cookie
+mkJWTCookie :: BS.ByteString -> Cookie
+mkJWTCookie valueJWT = Cookie
   { cookieName     = "jwt"
   , cookieValue    = valueJWT
   , cookieExpires  = Nothing
