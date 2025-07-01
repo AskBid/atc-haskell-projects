@@ -95,9 +95,15 @@ backendHandlers = \case
       Just (Cookie _ valueJWT _ _ _ _ _) -> do 
         -- let unverifiedJWT = decode value
         let mVerifiedJWT = JWT.decodeAndVerifySignature (JWT.toVerify jwtSecret) $ TE.decodeUtf8 valueJWT
-        if valueJWT == "logout" 
-          then modifyResponse $ setResponseStatus 401 "unauthorized"
-          else modifyResponse $ setResponseStatus 200 "OK"
+        case mVerifiedJWT of
+          Nothing  -> modifyResponse $ setResponseStatus 401 "unauthorized"
+          Just jwt -> do
+            case JWT.sub $ JWT.claims jwt of
+              Nothing       -> modifyResponse $ setResponseStatus 401 "unauthorized"
+              Just strOrUri -> do 
+                let username = JWT.stringOrURIToText strOrUri
+                modifyResponse $ setResponseStatus 200 "OK"
+                writeBS $ TE.encodeUtf8 username
    
   BackendRoute_Missing :/ () -> writeBS "404 - Not Found"
 -- `R` it’s the standard (advanced and complicated) way to refer to parsed routes in Obelisk.
@@ -111,11 +117,11 @@ jwtSecret = JWT.hmacSecret "my-super-secret-key"
 -- | Using JWT library to create an encoded JWT ByteString, the likes of: 
 --  `asxcasas.asdasdasc.aierhuhdf`
 createJWT :: User -> BS.ByteString
-createJWT (User name pwd userId) = do
+createJWT (User username pwd userId) = do
   let expTime = JWT.numericDate 3600
   let claims = JWT.JWTClaimsSet { 
       JWT.iss = Nothing
-    , JWT.sub = JWT.stringOrURI name
+    , JWT.sub = JWT.stringOrURI username
     , JWT.aud = Nothing
     , JWT.exp = expTime
     , JWT.nbf = Nothing
