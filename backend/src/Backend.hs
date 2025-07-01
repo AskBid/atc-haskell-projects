@@ -26,7 +26,8 @@ import Database.Persist.TH
 import Schema 
 import Control.Monad.IO.Class --(liftIO)
 import Common.MyFunctions
-import Data.Time.Clock (getCurrentTime, addUTCTime, NominalDiffTime)
+import Data.Time.Clock -- (getCurrentTime, addUTCTime, NominalDiffTime
+import Data.Time.Calendar
 import Data.Maybe (fromMaybe)
 
 backend :: Backend BackendRoute FrontendRoute
@@ -82,7 +83,7 @@ backendHandlers = \case
    
   BackendRoute_Api :/ Tail_Logout -> do 
     modifyResponse $ setContentType "application/json"
-    expiredJWTCookie <- liftIO cookieLogout
+    let expiredJWTCookie = cookieLogout
     modifyResponse $ addResponseCookie $ expiredJWTCookie
     writeBS "logout backend. You shouldn't be here!"
    
@@ -91,8 +92,8 @@ backendHandlers = \case
     case maybeCookie of
       Nothing -> do 
         modifyResponse $ setResponseStatus 401 "unauthorized"
-      Just (Cookie _ name _ _ _ _ _) -> do 
-        if name == "logout" 
+      Just (Cookie _ value _ _ _ _ _) -> do 
+        if value == "logout" 
           then modifyResponse $ setResponseStatus 401 "unauthorized"
           else modifyResponse $ setResponseStatus 200 "OK"
    
@@ -133,12 +134,15 @@ loginDB lr = do
     name = username lr 
     pwd = password lr
 
--- | Value is supposed to be a JWT encoded ByteString.
+-- | Value (the first argument) is supposed to be a JWT encoded ByteString.
 mkCookie :: BS.ByteString -> Cookie
-mkCookie value = Cookie
+mkCookie valueJWT = Cookie
   { cookieName     = "jwt"
-  , cookieValue    = value
+  , cookieValue    = valueJWT
   , cookieExpires  = Nothing
+  -- ^ notice this cookie will have Session as expire as the expiration we set
+  --   in the JWT is only relatable to the JWT encoding itself in Value. 
+  --   It is checked on the backend side.
   , cookieDomain   = Nothing
   , cookiePath     = Just "/"
   , cookieSecure   = False -- True for production
@@ -147,13 +151,14 @@ mkCookie value = Cookie
 
 -- | Used to substitute any existent "jwt" token so that with a expired date,
 --   the browser should automatically logout the user.
-cookieLogout :: IO Cookie
-cookieLogout = do 
-  now <- getCurrentTime
-  return Cookie { 
+cookieLogout :: Cookie
+cookieLogout = Cookie { 
       cookieName     = "jwt"
     , cookieValue    = "logout"
-    , cookieExpires  = Just $ addUTCTime (-3500) now 
+    , cookieExpires  = Just $ UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 0) 
+    -- ^ in Browser > Inspect > Application, you will see that if the date here is in
+    --   the future the JWT will remain in the cookies, otherwise if in the pat will
+    --   disappear.
     , cookieDomain   = Nothing
     , cookiePath     = Just "/"
     , cookieSecure   = False -- True for production

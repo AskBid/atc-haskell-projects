@@ -21,8 +21,8 @@ mainPage
   :: ( ObeliskWidget t (R FrontendRoute) m)  
   => AppState t -> RoutedT t () m ()
 mainPage appState = do
-  buttonLogInOut appState $ FrontendRoute_Signup :/ ()
-  el "h2" $ dynText (T.pack . show <$> loggedIn appState)
+  buttonLogInOut appState $ FrontendRoute_Main :/ ()
+  -- el "h2" $ dynText (T.pack . show <$> loggedIn appState)
   el "h2" $ text "Welcome to My X!"
   area <- textAreaElement $ def & initialAttributes .~ 
     ("placeholder" =: "Write your X here ..." <> "class" =: "bg-blue-100 w-full p-2 rounded min-h-40")
