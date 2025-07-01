@@ -88,21 +88,29 @@ backendHandlers = \case
     writeBS "logout backend. You shouldn't be here!"
    
   BackendRoute_Api :/ Tail_Me -> do
-    maybeCookie <- getCookie "jwt"
-    case maybeCookie of
-      Nothing -> do 
+    mUsername <- verifyJWT
+    case mUsername of
+      Nothing -> do
         modifyResponse $ setResponseStatus 401 "unauthorized"
-      Just (Cookie _ valueJWT _ _ _ _ _) -> do 
-        let mVerifiedJWT = JWT.decodeAndVerifySignature (JWT.toVerify jwtSecret) $ TE.decodeUtf8 valueJWT
-        case mVerifiedJWT of
-          Nothing  -> modifyResponse $ setResponseStatus 401 "unauthorized"
-          Just jwt -> do
-            case JWT.sub $ JWT.claims jwt of
-              Nothing       -> modifyResponse $ setResponseStatus 401 "unauthorized"
-              Just strOrUri -> do 
-                let username = JWT.stringOrURIToText strOrUri
-                modifyResponse $ setResponseStatus 200 "OK"
-                writeBS $ TE.encodeUtf8 username
+        writeBS "invalid JWT"
+      Just username -> do
+        modifyResponse $ setResponseStatus 200 "OK"
+        writeBS $ TE.encodeUtf8 username
+    -- maybeCookie <- getCookie "jwt"
+    -- case maybeCookie of
+    --   Nothing -> do 
+    --     modifyResponse $ setResponseStatus 401 "unauthorized"
+    --   Just (Cookie _ valueJWT _ _ _ _ _) -> do 
+    --     let mVerifiedJWT = JWT.decodeAndVerifySignature (JWT.toVerify jwtSecret) $ TE.decodeUtf8 valueJWT
+    --     case mVerifiedJWT of
+    --       Nothing  -> modifyResponse $ setResponseStatus 401 "unauthorized"
+    --       Just jwt -> do
+    --         case JWT.sub $ JWT.claims jwt of
+    --           Nothing       -> modifyResponse $ setResponseStatus 401 "unauthorized"
+    --           Just strOrUri -> do 
+    --             let username = JWT.stringOrURIToText strOrUri
+    --             modifyResponse $ setResponseStatus 200 "OK"
+    --             writeBS $ TE.encodeUtf8 username
    
   BackendRoute_Missing :/ () -> writeBS "404 - Not Found"
 -- `R` it’s the standard (advanced and complicated) way to refer to parsed routes in Obelisk.
