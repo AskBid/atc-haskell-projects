@@ -62,8 +62,11 @@ buttonLogInOut appState route = do
       dynEvLogoutResp <- prerender (pure never) $ do  
         evResp <- performRequestAsync $ xhrReq <$ logoutClick
         let evLogoutSuccess = ffilter (statusCheck 200 300) evResp
-            evLoginTriggerIO = (loginTrigger appState False) <$ evLogoutSuccess
-        performEvent_ $ liftIO <$> evLoginTriggerIO
+        -- let evLoginTriggerIO = (\_ -> loginTrigger appState False) <$> evLogoutSuccess
+        performEvent_ $ ffor evLogoutSuccess $ \_ -> liftIO $ do
+          putStrLn "Logout successful, triggering login state False"
+          loginTrigger appState False
+        -- performEvent_ $ liftIO <$> evLoginTriggerIO
         return evLogoutSuccess
       -- ^ Dynamic t (Event t XhrResponse) << returned from `prerender`
       setRoute $ route <$ switchDyn dynEvLogoutResp
