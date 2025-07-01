@@ -66,10 +66,11 @@ frontend = Frontend
             return $ ffilter (statusCheck 200 300) respEv
 
           let dynLoggedInEvStation = leftmost [ True <$ (switchDyn dMeLoggedIn)
-                                              , True <$ evLoggedInByTrigger
+                                              , evLoggedInByTrigger
                                               ]
           dynLoggedIn <- holdDyn False dynLoggedInEvStation
-
+          -- ^ this way we make the Dynamic that holds the login state to be dependent
+          --   on more than just one Event.
           let appState = AppState {
               loggedIn = dynLoggedIn
             , loginTrigger = loginTrigger
