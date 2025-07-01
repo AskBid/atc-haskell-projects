@@ -90,9 +90,11 @@ backendHandlers = \case
     maybeCookie <- getCookie "jwt"
     case maybeCookie of
       Nothing -> do 
-        modifyResponse $ setResponseStatus 401 "Unauthorized"
-      Just (Cookie _ name _ _ _ _ _) -> 
-        modifyResponse $ setResponseStatus 200 "OK"
+        modifyResponse $ setResponseStatus 401 "unauthorized"
+      Just (Cookie _ name _ _ _ _ _) -> do 
+        if name == "logout" 
+          then modifyResponse $ setResponseStatus 401 "unauthorized"
+          else modifyResponse $ setResponseStatus 200 "OK"
    
   BackendRoute_Missing :/ () -> writeBS "404 - Not Found"
 
@@ -150,8 +152,8 @@ cookieLogout = do
   now <- getCurrentTime
   return Cookie { 
       cookieName     = "jwt"
-    , cookieValue    = ""
-    , cookieExpires  = Just $ addUTCTime (-3600) now 
+    , cookieValue    = "logout"
+    , cookieExpires  = Just $ addUTCTime (-3500) now 
     , cookieDomain   = Nothing
     , cookiePath     = Just "/"
     , cookieSecure   = False -- True for production
