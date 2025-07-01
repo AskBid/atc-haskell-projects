@@ -93,7 +93,6 @@ backendHandlers = \case
       Nothing -> do 
         modifyResponse $ setResponseStatus 401 "unauthorized"
       Just (Cookie _ valueJWT _ _ _ _ _) -> do 
-        -- let unverifiedJWT = decode value
         let mVerifiedJWT = JWT.decodeAndVerifySignature (JWT.toVerify jwtSecret) $ TE.decodeUtf8 valueJWT
         case mVerifiedJWT of
           Nothing  -> modifyResponse $ setResponseStatus 401 "unauthorized"
@@ -110,6 +109,22 @@ backendHandlers = \case
 -- :/ is a type-safe path separator
 -- It separates a route constructor from its parameter(s) — 
 -- think of it like a typed version of a slash (/) in a URL.
+
+verifyJWT :: MonadSnap m => m (Maybe T.Text) 
+verifyJWT = do 
+  maybeCookie <- getCookie "jwt"
+  case maybeCookie of
+    Nothing -> return Nothing
+    Just (Cookie _ valueJWT _ _ _ _ _) -> do 
+      let mVerifiedJWT = JWT.decodeAndVerifySignature (JWT.toVerify jwtSecret) $ TE.decodeUtf8 valueJWT
+      case mVerifiedJWT of
+        Nothing  -> return Nothing
+        Just jwt -> do
+          case JWT.sub $ JWT.claims jwt of
+            Nothing       -> return Nothing
+            Just strOrUri -> do 
+              let username = JWT.stringOrURIToText strOrUri
+              return $ Just username
 
 jwtSecret :: JWT.EncodeSigner
 jwtSecret = JWT.hmacSecret "my-super-secret-key"
