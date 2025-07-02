@@ -32,7 +32,7 @@ import Control.Monad.Trans (lift)
 import Control.Lens (Identity (..))
 import Data.Aeson (Value(..))
 import Control.Monad.IO.Class --(liftIO)
-
+import Language.Javascript.JSaddle (MonadJSM)
 
 import Common
 import LoginPage
@@ -59,7 +59,6 @@ frontend = Frontend
           dMeLoggedIn <- prerender (pure never) $ do
             postBuildEv <- getPostBuild
             return postBuildEv
-            
 
           let dynLoggedInEvStation = leftmost [ True <$ (switchDyn dMeLoggedIn)
                                               , evLoggedInByTrigger
@@ -87,7 +86,13 @@ frontend = Frontend
       return ()
   }
 
-meRouteLoginCheck :: Event t a -> m (Event t XhrResponse)
+meRouteLoginCheck 
+  :: ( Monad m
+     , MonadJSM (Performable m)
+     , Reflex t, PerformEvent t m
+     , TriggerEvent t m
+     ) 
+  => Event t a -> m (Event t XhrResponse)
 meRouteLoginCheck evTrigger = do
   let xhrRequest = XhrRequest { _xhrRequest_method = "GET"
     , _xhrRequest_url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Tail_Me 
