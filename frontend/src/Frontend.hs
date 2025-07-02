@@ -56,14 +56,10 @@ frontend = Frontend
            
           (evLoggedInByTrigger, loginTrigger) <- newTriggerEvent
           
-          dMeLoggedIn <- prerender (pure never) $ do 
+          dMeLoggedIn <- prerender (pure never) $ do
             postBuildEv <- getPostBuild
-            let xhrRequest = XhrRequest { _xhrRequest_method = "GET"
-                , _xhrRequest_url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Tail_Me 
-                , _xhrRequest_config = def
-                }
-            respEv <- performRequestAsync $ xhrRequest <$ postBuildEv
-            return $ ffilter (statusCheck 200 300) respEv
+            return postBuildEv
+            
 
           let dynLoggedInEvStation = leftmost [ True <$ (switchDyn dMeLoggedIn)
                                               , evLoggedInByTrigger
@@ -90,3 +86,12 @@ frontend = Frontend
         elClass "div" "bg-gray-100" blank
       return ()
   }
+
+meRouteLoginCheck :: Event t a -> m (Event t XhrResponse)
+meRouteLoginCheck evTrigger = do
+  let xhrRequest = XhrRequest { _xhrRequest_method = "GET"
+    , _xhrRequest_url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Tail_Me 
+    , _xhrRequest_config = def
+  }
+  respEv <- performRequestAsync $ xhrRequest <$ evTrigger
+  return $ ffilter (statusCheck 200 300) respEv
