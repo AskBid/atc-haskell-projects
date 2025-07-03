@@ -48,7 +48,7 @@ buttonLogInOut appState route = do
     else do
       (btnOutEl, _) <- myButton "Logout"
       let logoutClick = domEvent Click btnOutEl
-          url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Tail_Logout
+          url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Logout
           xhrReq = XhrRequest
             { _xhrRequest_method = "GET"
             , _xhrRequest_url = url

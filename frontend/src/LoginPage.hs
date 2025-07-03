@@ -42,7 +42,7 @@ loginPage appState = do
   -- performRequestAsync       :: e xhr -> m (e xhr) 
    
   prerender (pure ()) $ do 
-    let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Tail_Login
+    let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Login
     evResp <- performRequestAsync $ (postJson url) <$> loginReqEv
 
     let evLoginSuccess = ffilter (statusCheck 200 300) evResp

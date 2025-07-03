@@ -58,7 +58,7 @@ backend = Backend
 backendHandlers :: R BackendRoute -> Snap ()
 backendHandlers = \case
    
-  BackendRoute_Api :/ Tail_Login -> do
+  BackendRoute_Api :/ Api_Login -> do
     usrPwd <- readRequestBody 10000
     let maybeUsrPwd = (A.decode usrPwd) :: Maybe LoginReq
     case maybeUsrPwd of
@@ -77,13 +77,13 @@ backendHandlers = \case
             modifyResponse $ addResponseCookie $ mkJWTCookie jwt
             writeBS $ TE.encodeUtf8 $ (userName $ user) <> " logged in."
    
-  BackendRoute_Api :/ Tail_Logout -> do 
+  BackendRoute_Api :/ Api_Logout -> do 
     modifyResponse $ setContentType "application/json"
     let expiredJWTCookie = cookieLogout
     modifyResponse $ addResponseCookie $ expiredJWTCookie
     writeBS "logout backend. You shouldn't be here!"
    
-  BackendRoute_Api :/ Tail_Me -> do
+  BackendRoute_Api :/ Api_Me -> do
     mUsername <- verifyJWT
     case mUsername of
       Nothing -> do

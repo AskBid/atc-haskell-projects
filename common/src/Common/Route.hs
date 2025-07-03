@@ -33,26 +33,28 @@ import Data.Universe
   -- | Used to handle unparseable routes.
 data BackendRoute :: * -> * where
   BackendRoute_Missing :: BackendRoute ()
-  BackendRoute_Api :: BackendRoute Tail
+  BackendRoute_Api :: BackendRoute Api
   -- BackendRoute_Logout :: BackendRoute ()
   -- You can define any routes that will be handled specially by the backend here.
   -- i.e. These do not serve the frontend, but do something different, such as serving static files.
 
-data Tail
-  = Tail_Login
-  | Tail_Logout
-  | Tail_Me
+data Api
+  = Api_Login
+  | Api_Logout
+  | Api_Me
+  | Api_Posts
   deriving (Show, Eq, Ord, Enum, Bounded)
 
-instance Universe Tail
+instance Universe Api
 
 tailRouteEncoder 
   :: (MonadError Text parse, MonadError Text check) 
-  => Encoder check parse Tail PageName
+  => Encoder check parse Api PageName
 tailRouteEncoder = enumEncoder $ \case
-  Tail_Login  -> (["login"], mempty)
-  Tail_Logout -> (["logout"], mempty)
-  Tail_Me     -> (["me"], mempty)
+  Api_Login  -> (["login"], mempty)
+  Api_Logout -> (["logout"], mempty)
+  Api_Me     -> (["me"], mempty)
+  Api_Posts  -> (["posts"], mempty)
 
 -- newtype UserID = UserID { unUserID :: Text } deriving (Show, Eq)
 -- makeWrapped ''UserID

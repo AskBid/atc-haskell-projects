@@ -3,11 +3,11 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE GADTs                 #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE PartialTypeSignatures #-}
-{-# LANGUAGE RecursiveDo         #-}
-{-# LANGUAGE FlexibleContexts         #-}
+{-# LANGUAGE RecursiveDo           #-}
+{-# LANGUAGE FlexibleContexts      #-}
 
 module Frontend where
 
@@ -87,6 +87,8 @@ frontend = Frontend
       return ()
   }
 
+-- | send XhrRequest to /me route to check if user is sending a valid JWT in the 
+--   headers/set-cookies.
 meRouteLoginCheck
   :: ( Monad m
      , MonadJSM (Performable m)
@@ -98,7 +100,7 @@ meRouteLoginCheck
 meRouteLoginCheck evTrigger = do
   let xhrRequest = XhrRequest { 
       _xhrRequest_method = "GET"
-    , _xhrRequest_url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Tail_Me 
+    , _xhrRequest_url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Me 
     , _xhrRequest_config = def
   }
   respEv <- performRequestAsync $ xhrRequest <$ evTrigger
