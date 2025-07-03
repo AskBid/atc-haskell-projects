@@ -8,27 +8,20 @@ module Backend where
 import Common.Route
 import Common.Api (LoginReq(..))
 import Obelisk.Backend
+import MyJWT (verifyJWT, createJWT, mkJWTCookie, cookieLogout)
+import Schema 
+import Common.MyFunctions
 
 import Obelisk.Route -- (R(..))
 import Snap
-import qualified Data.ByteString.Lazy as BL
-import qualified Data.ByteString as BS
--- import qualified Data.ByteString.Lazy.Char8 as BSC
 
 import qualified Data.Aeson as A
--- import qualified Data.Aeson.Types as A
 import qualified Data.Text.Encoding as TE
-import qualified Data.Text as T
-import qualified Web.JWT as JWT
 import Database.Persist
 import Database.Persist.Sqlite
-import Database.Persist.TH
-import Schema 
-import Control.Monad.IO.Class --(liftIO)
-import Common.MyFunctions
-import Data.Time.Clock -- (getCurrentTime, addUTCTime, NominalDiffTime
-import Data.Time.Calendar
+import Control.Monad.IO.Class (liftIO, MonadIO)
 import Data.Maybe (fromMaybe)
+
 
 backend :: Backend BackendRoute FrontendRoute
 backend = Backend
@@ -43,17 +36,16 @@ backend = Backend
       serve backendHandlers
   , _backend_routeEncoder = fullRouteEncoder
   }
-
--- The serve function is provided by Obelisk. It is passed into _backend_run.
--- _backend_run = \serve -> serve backendHandlers
--- ...means:
--- “When the Obelisk backend server starts, use backendHandlers to respond to requests. 
--- serve will automatically use the route encoder to map URLs to BackendRoute constructors 
--- and pass the right one into backendHandlers.”
--- Sets up Snap (Obelisk uses Snap under the hood)
--- Uses `fullRouteEncoder` to decode the request path into a `BackendRoute`
--- Passes that `BackendRoute` to your handler: like `BackendRoute_Login :/ ()`
--- You respond with a Snap action
+  -- ^ The serve function is provided by Obelisk. It is passed into _backend_run.
+  -- _backend_run = \serve -> serve backendHandlers
+  -- ...means:
+  -- “When the Obelisk backend server starts, use backendHandlers to respond to requests. 
+  -- serve will automatically use the route encoder to map URLs to BackendRoute constructors 
+  -- and pass the right one into backendHandlers.”
+  -- Sets up Snap (Obelisk uses Snap under the hood)
+  -- Uses `fullRouteEncoder` to decode the request path into a `BackendRoute`
+  -- Passes that `BackendRoute` to your handler: like `BackendRoute_Login :/ ()`
+  -- You respond with a Snap action
 
 
 -- backendHandlers :: R BackendRoute -> Snap ()
@@ -98,86 +90,9 @@ backendHandlers = \case
         writeBS $ TE.encodeUtf8 username
    
   BackendRoute_Missing :/ () -> writeBS "404 - Not Found"
--- `R` it’s the standard (advanced and complicated) way to refer to parsed routes in Obelisk.
--- :/ is a type-safe path separator
--- It separates a route constructor from its parameter(s) — 
--- think of it like a typed version of a slash (/) in a URL.
+  -- ^ `R` it’s the standard (advanced and complicated) way to refer to parsed routes in Obelisk.
+  -- :/ is a type-safe path separator
+  -- It separates a route constructor from its parameter(s) — 
+  -- think of it like a typed version of a slash (/) in a URL.
 
--- | returns a Maybe username Text if the JWT was valid (as in signed and with an username)
-verifyJWT :: MonadSnap m => m (Maybe T.Text) 
-verifyJWT = do 
-  maybeCookie <- getCookie "jwt"
-  case maybeCookie of
-    Nothing -> return Nothing
-    Just (Cookie _ valueJWT _ _ _ _ _) -> do 
-      let mVerifiedJWT = JWT.decodeAndVerifySignature (JWT.toVerify jwtSecret) $ TE.decodeUtf8 valueJWT
-      case mVerifiedJWT of
-        Nothing  -> return Nothing
-        Just jwt -> do
-          case JWT.sub $ JWT.claims jwt of
-            Nothing       -> return Nothing
-            Just strOrUri -> do 
-              let username = JWT.stringOrURIToText strOrUri
-              return $ Just username
 
-jwtSecret :: JWT.EncodeSigner
-jwtSecret = JWT.hmacSecret "my-super-secret-key"
-
--- | Using JWT library to create an encoded JWT ByteString, the likes of: 
---  `asxcasas.asdasdasc.aierhuhdf`
-createJWT :: User -> BS.ByteString
-createJWT (User username pwd userId) = do
-  let expTime = JWT.numericDate 3600
-  let claims = JWT.JWTClaimsSet { 
-      JWT.iss = Nothing
-    , JWT.sub = JWT.stringOrURI username
-    , JWT.aud = Nothing
-    , JWT.exp = expTime
-    , JWT.nbf = Nothing
-    , JWT.iat = Nothing
-    , JWT.jti = Nothing
-    , JWT.unregisteredClaims = mempty
-    }
-  TE.encodeUtf8 $ JWT.encodeSigned jwtSecret mempty claims
-  
-
--- | checks if the data in the LoginReq is a valid user in the database.
-loginDB :: MonadIO m => LoginReq -> m (Maybe User)
-loginDB lr = do
-  liftIO $ runSqlite "Xs.db" $ do
-    user <- selectList [UserName ==. (username lr), UserPwd ==. (password lr)] []
-    return $ entityVal <$> headSafe user
-  where 
-    name = username lr 
-    pwd = password lr
-
--- | Value (the first argument) is supposed to be a JWT encoded ByteString.
-mkJWTCookie :: BS.ByteString -> Cookie
-mkJWTCookie valueJWT = Cookie
-  { cookieName     = "jwt"
-  , cookieValue    = valueJWT
-  , cookieExpires  = Nothing
-  -- ^ notice this cookie will have Session as expire as the expiration we set
-  --   in the JWT is only relatable to the JWT encoding itself in Value. 
-  --   It is checked on the backend side.
-  , cookieDomain   = Nothing
-  , cookiePath     = Just "/"
-  , cookieSecure   = False -- True for production
-  , cookieHttpOnly = True
-  }
-
--- | Used to substitute any existent "jwt" token so that with a expired date,
---   the browser should automatically logout the user.
-cookieLogout :: Cookie
-cookieLogout = Cookie { 
-      cookieName     = "jwt"
-    , cookieValue    = "logout"
-    , cookieExpires  = Just $ UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 0) 
-    -- ^ in Browser > Inspect > Application, you will see that if the date here is in
-    --   the future the JWT will remain in the cookies, otherwise if in the pat will
-    --   disappear.
-    , cookieDomain   = Nothing
-    , cookiePath     = Just "/"
-    , cookieSecure   = False -- True for production
-    , cookieHttpOnly = True
-    }
