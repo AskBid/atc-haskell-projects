@@ -33,8 +33,9 @@ import Debug.Trace
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
   Tweet
     text Text
-    repltyTo TweetId Maybe
+    replyTo TweetId Maybe
     owner UserId
+    UniqueTweet text owner
     deriving Show
 
   User
@@ -58,9 +59,10 @@ loginDB lr = do
     name = username lr 
     pwd = password lr
 
-getPosts :: MonadIO m => SqlPersistT m [Entity Tweet]
-getPosts = do 
-  liftIO $ runSqlite myDB $ do 
-    tweets <- selectList [] []
-    return $ trace (show tweets) tweets
+getPosts :: IO [Entity Tweet]
+getPosts = runSqlite myDB $ selectList [TweetReplyTo ==. Nothing] []
 
+printSQL :: Show a => IO a -> IO ()
+printSQL query = do 
+  twts <- query
+  print twts

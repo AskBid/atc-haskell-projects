@@ -32,6 +32,10 @@ backend = Backend
         _ <- insertBy $ User "alice" "alice123" []
         _ <- insertBy $ User "bob" "bob456" []
         _ <- insertBy $ User "sergio" "pwd" []
+        _ <- insertBy $ Tweet "Ciao Mondo! my first tweet!" Nothing (toSqlKey 1)
+        _ <- insertBy $ Tweet "Am I the second?" Nothing (toSqlKey 2)
+        _ <- insertBy $ Tweet "the laggard I guess?" Nothing (toSqlKey 3)
+        _ <- insertBy $ Tweet "yup, I was first" (Just (toSqlKey 3)) (toSqlKey 3)
         return ()
       serve backendHandlers
   , _backend_routeEncoder = fullRouteEncoder
