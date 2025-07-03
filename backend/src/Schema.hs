@@ -28,28 +28,39 @@ import Control.Monad.IO.Class (liftIO, MonadIO)
 import Common.MyFunctions
 import Common.Api
 
-share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
-Tweet
-  text Text
-  repltyTo TweetId Maybe
-  owner UserId
-  deriving Show
+import Debug.Trace
 
-User
-  name Text
-  pwd Text
-  follows [UserId]
-  UniqueName name
-  deriving Show Generic FromJSON ToJSON
+share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
+  Tweet
+    text Text
+    repltyTo TweetId Maybe
+    owner UserId
+    deriving Show
+
+  User
+    name Text
+    pwd Text
+    follows [UserId]
+    UniqueName name
+    deriving Show Generic FromJSON ToJSON
 |]
+
+myDB :: Text
+myDB = "Xs.db"
 
 -- | checks if the data in the LoginReq is a valid user in the database.
 loginDB :: MonadIO m => LoginReq -> m (Maybe User)
 loginDB lr = do
-  liftIO $ runSqlite "Xs.db" $ do
+  liftIO $ runSqlite myDB $ do
     user <- selectList [UserName ==. (username lr), UserPwd ==. (password lr)] []
     return $ entityVal <$> headSafe user
   where 
     name = username lr 
     pwd = password lr
+
+getPosts :: MonadIO m => SqlPersistT m [Entity Tweet]
+getPosts = do 
+  liftIO $ runSqlite myDB $ do 
+    tweets <- selectList [] []
+    return $ trace (show tweets) tweets
 

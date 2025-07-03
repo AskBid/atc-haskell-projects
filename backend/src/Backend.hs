@@ -26,7 +26,7 @@ import Data.Maybe (fromMaybe)
 backend :: Backend BackendRoute FrontendRoute
 backend = Backend
   { _backend_run = \serve -> do
-      runSqlite "Xs.db" $ do 
+      runSqlite myDB $ do 
       -- ^ this makes it eprsistent, use :memory: instead of Xs.db otherwise 
         runMigration migrateAll
         _ <- insertBy $ User "alice" "alice123" []
