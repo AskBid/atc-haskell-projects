@@ -28,16 +28,7 @@ backend :: Backend BackendRoute FrontendRoute
 backend = Backend
   { _backend_run = \serve -> do
       runSqlite myDB $ do 
-      -- ^ this makes it eprsistent, use :memory: instead of Xs.db otherwise 
-        runMigration migrateAll
-        _watm 
-        _ <- insertBy $ User "alice" "alice123" []
-        _ <- insertBy $ User "bob" "bob456" []
-        _ <- insertBy $ User "sergio" "pwd" []
-        _ <- insertBy $ Tweet "Ciao Mondo! my first tweet!" Nothing (toSqlKey 1)
-        _ <- insertBy $ Tweet "Am I the second?" Nothing (toSqlKey 2)
-        _ <- insertBy $ Tweet "the laggard I guess?" Nothing (toSqlKey 3)
-        _ <- insertBy $ Tweet "yup, I was first" (Just (toSqlKey 3)) (toSqlKey 3)
+        populateDB
         return ()
       serve backendHandlers
   , _backend_routeEncoder = fullRouteEncoder

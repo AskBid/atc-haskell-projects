@@ -48,6 +48,7 @@ share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 
 myDB :: Text
 myDB = "Xs.db"
+-- ^ this makes it eprsistent, use :memory: instead of Xs.db otherwise 
 
 -- | checks if the data in the LoginReq is a valid user in the database.
 loginDB :: MonadIO m => LoginReq -> m (Maybe User)
@@ -62,12 +63,33 @@ loginDB lr = do
 getPosts :: IO [Entity Tweet]
 getPosts = runSqlite myDB $ selectList [TweetReplyTo ==. Nothing] []
 
-getPostReplies :: Tweet -> IO [Entity Tweet]
+getPostReplies :: Entity Tweet -> IO [Entity Tweet]
 getPostReplies tweet = do 
-  replies <- runSqlite myDB $ selectList [TweetReplyTo ==. Just (tweetId tweet)] []
+  replies <- runSqlite myDB $ selectList [TweetReplyTo ==. Just (entityKey tweet)] []
   return replies
   
 printSQL :: Show a => IO a -> IO ()
 printSQL query = do 
   twts <- query
   print twts
+
+populateDB :: MonadIO m => SqlPersistT m ()
+populateDB = do 
+  runMigration migrateAll
+  alice   <- insertBy $ User "alice" "alice123" []
+  bob     <- insertBy $ User "bob" "bob456" []
+  sergio  <- insertBy $ User "sergio" "pwd" []
+  mario   <- insertBy $ User "mario" "alice123" []
+  luigi   <- insertBy $ User "luigi" "bob456" []
+  alfredo <- insertBy $ User "alfredo" "pwd" []
+  _  <- insertBy $ Tweet "Ciao Mondo! my first tweet!" Nothing $ key' alice
+  _  <- insertBy $ Tweet "Am I the second?" Nothing $ key' bob
+  t3 <- insertBy $ Tweet "the laggard I guess?" Nothing $ key' sergio
+  _  <- insertBy $ Tweet "yup, I was first" (Just $ key' t3) $ key' sergio
+  -- ^ need @insertBy@ rather than @insert_@ because we need to check if record is already existend
+  --   from previously generated DataBase.
+  return ()
+    where 
+      key' (Left _)  = toSqlKey 1
+      key' (Right k) = k
+
