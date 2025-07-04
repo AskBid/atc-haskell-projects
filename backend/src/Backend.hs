@@ -17,6 +17,7 @@ import Snap
 
 import qualified Data.Aeson as A
 import qualified Data.Text.Encoding as TE
+import qualified Data.Text as T
 import Database.Persist
 import Database.Persist.Sqlite
 import Control.Monad.IO.Class (liftIO, MonadIO)
@@ -29,6 +30,7 @@ backend = Backend
       runSqlite myDB $ do 
       -- ^ this makes it eprsistent, use :memory: instead of Xs.db otherwise 
         runMigration migrateAll
+        _watm 
         _ <- insertBy $ User "alice" "alice123" []
         _ <- insertBy $ User "bob" "bob456" []
         _ <- insertBy $ User "sergio" "pwd" []
@@ -92,6 +94,11 @@ backendHandlers = \case
       Just username -> do
         modifyResponse $ setResponseStatus 200 "OK"
         writeBS $ TE.encodeUtf8 username
+   
+  BackendRoute_Api :/ Api_Posts -> do
+    posts <- liftIO $ getPosts 
+    writeBS $ "all the primary tweets (not replies)"
+    writeLBS $ A.encode $ entityVal <$> posts
    
   BackendRoute_Missing :/ () -> writeBS "404 - Not Found"
   -- ^ `R` it’s the standard (advanced and complicated) way to refer to parsed routes in Obelisk.

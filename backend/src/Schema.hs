@@ -36,7 +36,7 @@ share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
     replyTo TweetId Maybe
     owner UserId
     UniqueTweet text owner
-    deriving Show
+    deriving Show Generic FromJSON ToJSON
 
   User
     name Text
@@ -61,6 +61,10 @@ loginDB lr = do
 
 getPosts :: IO [Entity Tweet]
 getPosts = runSqlite myDB $ selectList [TweetReplyTo ==. Nothing] []
+
+getPostReplies :: Tweet -> IO [Entity Tweet]
+getPostReplies tweet = do 
+  runSqlite myDB $ selectList [TweetReplyTo ==. , TweetId ==. (tweetId tweet)] []
 
 printSQL :: Show a => IO a -> IO ()
 printSQL query = do 
