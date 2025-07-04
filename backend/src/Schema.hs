@@ -85,7 +85,7 @@ populateDB = do
   _  <- insertBy $ Tweet "Ciao Mondo! my first tweet!" Nothing $ key' alice
   _  <- insertBy $ Tweet "Am I the second?" Nothing $ key' bob
   t3 <- insertBy $ Tweet "the laggard I guess?" Nothing $ key' sergio
-  _  <- insertBy $ Tweet "yup, I was first" (Just $ key' t3) $ key' sergio
+  _  <- insertBy $ Tweet "yup, I was first" (Just $ key' t3) $ key' alice
   -- ^ need @insertBy@ rather than @insert_@ because we need to check if record is already existend
   --   from previously generated DataBase.
   return ()

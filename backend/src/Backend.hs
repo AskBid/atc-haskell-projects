@@ -88,7 +88,7 @@ backendHandlers = \case
    
   BackendRoute_Api :/ Api_Posts -> do
     posts <- liftIO $ getPosts 
-    writeBS $ "all the primary tweets (not replies)"
+    -- writeBS $ "all the primary tweets (not replies)"
     writeLBS $ A.encode $ entityVal <$> posts
    
   BackendRoute_Missing :/ () -> writeBS "404 - Not Found"

@@ -17,6 +17,8 @@ import Common.Api (LoginReq(..))
 -- import Control.Monad.Trans (lift)
 import Control.Monad.IO.Class (liftIO)
 
+import Data.Maybe
+
 mainPage 
   :: ( ObeliskWidget t (R FrontendRoute) m)  
   => AppState t -> RoutedT t () m ()
@@ -26,6 +28,20 @@ mainPage appState = do
   el "h2" $ text "Welcome to My X!"
   area <- textAreaElement $ def & initialAttributes .~ 
     ("placeholder" =: "Write your X here ..." <> "class" =: "bg-blue-100 w-full p-2 rounded min-h-40")
+   
+  prerender (pure never) $ do
+    evPostBuild <- getPostBuild
+    let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Posts
+        xhrReq = XhrRequest
+          { _xhrRequest_method = "GET"
+          , _xhrRequest_url = url
+          , _xhrRequest_config = def & xhrRequestConfig_withCredentials .~ True
+          }
+    evResp <- performRequestAsync $ xhrReq <$ evPostBuild
+    dRespT <- holdDyn "." $ (\r -> fromMaybe ".." $ _xhrResponse_responseText r) <$> evResp
+    el "h1" $ dynText dRespT
+    return evResp
+
   return ()
 
 
