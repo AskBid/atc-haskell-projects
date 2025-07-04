@@ -64,8 +64,9 @@ getPosts = runSqlite myDB $ selectList [TweetReplyTo ==. Nothing] []
 
 getPostReplies :: Tweet -> IO [Entity Tweet]
 getPostReplies tweet = do 
-  runSqlite myDB $ selectList [TweetReplyTo ==. , TweetId ==. (tweetId tweet)] []
-
+  replies <- runSqlite myDB $ selectList [TweetReplyTo ==. Just (tweetId tweet)] []
+  return replies
+  
 printSQL :: Show a => IO a -> IO ()
 printSQL query = do 
   twts <- query
