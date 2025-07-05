@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Common where
 
@@ -7,7 +8,8 @@ import qualified Data.Text as T
 import Obelisk.Route
 import Data.Functor.Identity
 import Common.Route 
--- import Obelisk.Route.Frontend
+import Obelisk.Route.Frontend
+import Control.Monad.IO.Class (liftIO)
 -- import Obelisk.Frontend
 
 -- | Needs monad extended to @RoutedT@ because we run it in the @subRoute_@
@@ -48,3 +50,48 @@ statusCheck min max xhr
   | status >= min && status < max = True
   | otherwise                     = False
   where status = _xhrResponse_status xhr
+
+-- | widget that shows login button if not loggedin and logout button otherwise
+--   takes appState to derive loggedin state and a route to decide where the logout
+--   button redirects.
+buttonLogInOut
+  :: ( DomBuilder t m
+     , SetRoute t (R FrontendRoute) m
+     , Prerender t m
+     , PostBuild t m
+     )
+  => AppState t -> R FrontendRoute -> RoutedT t () m ()
+buttonLogInOut appState route = do
+  let dynLoggedIn = loggedIn appState  -- Dynamic t Bool
+
+  dyn_ $ ffor dynLoggedIn $ \logBool ->
+    if not logBool
+    then do
+      (btnInEl, _) <- myButton "Login"
+      let loginClick = domEvent Click btnInEl
+      setRoute $ FrontendRoute_Login :/ () <$ loginClick
+    else do
+      (btnOutEl, _) <- myButton "Logout"
+      let logoutClick = domEvent Click btnOutEl
+          url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Logout
+          xhrReq = XhrRequest
+            { _xhrRequest_method = "GET"
+            , _xhrRequest_url = url
+            , _xhrRequest_config = def & xhrRequestConfig_withCredentials .~ True
+            }
+      -- ^ By default, browsers do not send cookies or store cookies from cross-origin 
+      --   requests made via fetch/XHR unless explicitly told to.
+      --   with @xhrRequestConfig_withCredentials .~ True@ you're telling the browser
+      --   to include my cookies in this request, and also accept any Set-Cookie headers 
+      --   in the response
+      dynEvLogoutResp <- prerender (pure never) $ do  
+        evResp <- performRequestAsync $ xhrReq <$ logoutClick
+        let evLogoutSuccess = ffilter (statusCheck 200 300) evResp
+        -- let evLoginTriggerIO = (\_ -> loginTrigger appState False) <$> evLogoutSuccess
+        performEvent_ $ ffor evLogoutSuccess $ \_ -> liftIO $ do
+          putStrLn "Logout successful, triggering login state False"
+          loginTrigger appState False
+        -- performEvent_ $ liftIO <$> evLoginTriggerIO
+        return evLogoutSuccess
+      -- ^ Dynamic t (Event t XhrResponse) << returned from `prerender`
+      setRoute $ route <$ switchDyn dynEvLogoutResp
