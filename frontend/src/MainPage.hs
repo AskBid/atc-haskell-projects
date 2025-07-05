@@ -49,9 +49,13 @@ mainPage appState = do
     el "h1" $ dynText $ 
       (\twts -> tweetText $ head twts) <$> 
       (\mtwts -> fromMaybe ([Tweet "" (Just $ toSqlKey 1) (toSqlKey 1)]) mtwts) <$> dMtweets
+    dynTweet (Tweet "" (Just $ toSqlKey 1) (toSqlKey 1))
     el "h1" $ dynText dRespT
     return ()
 
   return ()
 
-
+dynTweet :: DomBuilder t m => Tweet -> m ()
+dynTweet twt = do 
+  el "h1" $ text "Tweet will appear here."
+  return ()
