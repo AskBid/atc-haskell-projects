@@ -33,7 +33,7 @@ mainPage appState = do
   area <- textAreaElement $ def & initialAttributes .~ 
     ("placeholder" =: "Write your X here ..." <> "class" =: "bg-blue-100 w-full p-2 rounded min-h-40")
    
-  prerender (pure ()) $ do
+  prerender (el "h1" $ text "Loading...") $ do
     evPostBuild <- getPostBuild
     let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Posts
         xhrReq = XhrRequest
@@ -43,19 +43,21 @@ mainPage appState = do
           }
     evResp <- performRequestAsync $ xhrReq <$ evPostBuild
     dRespT <- holdDyn "." $ (\r -> fromMaybe ".." $ _xhrResponse_responseText r) <$> evResp
-    let fromTtoTweets :: T.Text -> Maybe [Tweet]
-        fromTtoTweets = A.decode . BL.fromStrict . TE.encodeUtf8
-        dMtweets = fromTtoTweets <$> dRespT
-    el "h1" $ dynText $ 
-      (\twts -> tweetText $ head twts) <$> 
-      (\mtwts -> fromMaybe ([Tweet "" (Just $ toSqlKey 1) (toSqlKey 1)]) mtwts) <$> dMtweets
-    dynTweet (Tweet "" (Just $ toSqlKey 1) (toSqlKey 1))
+    el "div" $ do
+      let fromTtoTweets :: T.Text -> Maybe [Tweet]
+          fromTtoTweets = A.decode . BL.fromStrict . TE.encodeUtf8
+          dMtweets = fromTtoTweets <$> dRespT
+      dyn_ $((\tweets -> mapM_ dynTweet tweets) <$> (\mTweets -> fromMaybe [] mTweets) <$> dMtweets)
+      return ()
+    dynTweet (Tweet "Dummy tweet, freshly made." (Just $ toSqlKey 1) (toSqlKey 1))
     el "h1" $ dynText dRespT
     return ()
 
   return ()
 
 dynTweet :: DomBuilder t m => Tweet -> m ()
-dynTweet twt = do 
-  el "h1" $ text "Tweet will appear here."
+dynTweet tweet = do 
+  el "h1" $ text $ tweetText tweet
   return ()
+
+
