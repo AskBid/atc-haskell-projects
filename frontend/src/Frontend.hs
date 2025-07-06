@@ -49,10 +49,10 @@ frontend = Frontend
       elAttr "script" ("src" =: "https://cdn.tailwindcss.com") blank
 
   , _frontend_body = do
-      elClass "div" "grid grid-cols-3 min-h-screen" $ do
+      elClass "div" "grid grid-cols-[1fr_auto_1fr] min-h-screen" $ do
         
         elClass "div" "bg-gray-100" blank
-        elClass "div" "bg-white flex flex-col p-4 space-y-4" $ do 
+        elClass "div" "min-w-[400px] max-w-[800px] w-full bg-white flex flex-col p-4 space-y-4" $ do 
            
           (evLoggedInByTrigger, loginTrigger) <- newTriggerEvent
           

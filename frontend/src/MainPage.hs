@@ -51,12 +51,13 @@ mainPage appState = do
       -- ^ dyn_ runs the Dynamic t (m ()), otherwise you'd only have a Dynamic not run.
       return ()
     return ()
-
   return ()
 
 dynTweet :: DomBuilder t m => Tweet -> m ()
 dynTweet tweet = do 
-  el "h1" $ text $ tweetText tweet
+  elAttr "div" ("class" =: "rounded-xl bg-gray-100 max-w-full w-full p-4 my-2") $ do 
+    elAttr "a" ("class" =: "text-blue-400 font-bold") $ text "user_here"
+    el "h3" $ text $ tweetText tweet
   return ()
 
 
