@@ -47,10 +47,9 @@ mainPage appState = do
       let fromTtoTweets :: T.Text -> Maybe [Tweet]
           fromTtoTweets = A.decode . BL.fromStrict . TE.encodeUtf8
           dMtweets = fromTtoTweets <$> dRespT
-      dyn_ $((\tweets -> mapM_ dynTweet tweets) <$> (\mTweets -> fromMaybe [] mTweets) <$> dMtweets)
+      dyn_ $ mapM_ dynTweet . fromMaybe [] <$> dMtweets
+      -- ^ dyn_ runs the Dynamic t (m ()), otherwise you'd only have a Dynamic not run.
       return ()
-    dynTweet (Tweet "Dummy tweet, freshly made." (Just $ toSqlKey 1) (toSqlKey 1))
-    el "h1" $ dynText dRespT
     return ()
 
   return ()
