@@ -60,8 +60,14 @@ loginDB lr = do
     name = username lr 
     pwd = password lr
 
-getPosts :: IO [Entity Tweet]
-getPosts = runSqlite myDB $ selectList [TweetReplyTo ==. Nothing] []
+getPosts :: IO ([Entity Tweet], [Entity User])
+getPosts = do 
+  posts <- runSqlite myDB $ selectList [TweetReplyTo ==. Nothing] []
+  users <- findUsers posts
+  return (posts, users)
+
+findUsers :: [Entity Tweet] -> IO [Entity User]
+findUsers = undefined
 
 getPostReplies :: Entity Tweet -> IO [Entity Tweet]
 getPostReplies tweet = do 
@@ -70,8 +76,8 @@ getPostReplies tweet = do
   
 printSQL :: Show a => IO a -> IO ()
 printSQL query = do 
-  twts <- query
-  print twts
+  tweets <- query
+  print tweets
 
 populateDB :: MonadIO m => SqlPersistT m ()
 populateDB = do 
@@ -81,7 +87,7 @@ populateDB = do
   sergio  <- insertBy $ User "sergio" "pwd" []
   mario   <- insertBy $ User "mario" "alice123" []
   luigi   <- insertBy $ User "luigi" "bob456" []
-  alfredo <- insertBy $ User "alfredo" "pwd" []
+  raoul   <- insertBy $ User "raoul" "pwd" []
   _  <- insertBy $ Tweet "Ciao Mondo! my first tweet!" Nothing $ key' alice
   _  <- insertBy $ Tweet "Am I the second?" Nothing $ key' bob
   t3 <- insertBy $ Tweet "the laggard I guess?" Nothing $ key' sergio
