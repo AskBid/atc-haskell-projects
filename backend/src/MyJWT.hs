@@ -2,12 +2,11 @@
 
 module MyJWT where
 
-import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString as BS
 import qualified Data.Text as T
 import qualified Web.JWT as JWT
 import qualified Data.Text.Encoding as TE
-import Data.Time.Clock (getCurrentTime, addUTCTime, NominalDiffTime, UTCTime(..), secondsToDiffTime)
+import Data.Time.Clock (UTCTime(..), secondsToDiffTime)
 import Data.Time.Calendar
 import Snap
 
@@ -37,7 +36,7 @@ verifyJWT = do
 -- | Using JWT library to create an encoded JWT ByteString, the likes of: 
 --  `asxcasas.asdasdasc.aierhuhdf`
 createJWT :: User -> BS.ByteString
-createJWT (User username pwd userId) = do
+createJWT (User username _ _) = do
   let expTime = JWT.numericDate 3600
   let claims = JWT.JWTClaimsSet { 
       JWT.iss = Nothing

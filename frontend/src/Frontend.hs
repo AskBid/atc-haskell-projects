@@ -11,27 +11,15 @@
 
 module Frontend where
 
-import Control.Lens ((^.))
-import Control.Monad
-import qualified Data.Text as T
-import qualified Data.Text.Encoding as T
--- import Language.Javascript.JSaddle (liftJSM, js, js1, jsg)
-
 import Obelisk.Frontend
-import Obelisk.Configs
 import Obelisk.Route
 import Obelisk.Generated.Static
 
 import Reflex.Dom.Core
 
-import Common.Api
 import Common.Route -- (FrontendRoute(..), UserID(..), fullRouteEncoder)
 
 import Obelisk.Route.Frontend
-import Control.Monad.Trans (lift)
-import Control.Lens (Identity (..))
-import Data.Aeson (Value(..))
-import Control.Monad.IO.Class --(liftIO)
 import Language.Javascript.JSaddle (MonadJSM)
 
 import Common

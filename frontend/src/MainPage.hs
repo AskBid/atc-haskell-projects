@@ -15,8 +15,6 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BL
-import Data.Functor.Identity
-import Common.Api (LoginReq(..))
 -- import Control.Monad.Trans (lift)
 -- import Control.Monad.IO.Class (liftIO)
 import Schema
@@ -30,7 +28,7 @@ mainPage appState = do
   buttonLogInOut appState $ FrontendRoute_Main :/ ()
   -- el "h2" $ dynText (T.pack . show <$> loggedIn appState)
   el "h2" $ text "Welcome to My X!"
-  area <- textAreaElement $ def & initialAttributes .~ 
+  _ <- textAreaElement $ def & initialAttributes .~ 
     ("placeholder" =: "Write your X here ..." <> "class" =: "bg-blue-100 w-full p-2 rounded min-h-40")
    
   prerender (el "h1" $ text "Loading...") $ do
