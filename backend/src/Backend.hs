@@ -10,17 +10,16 @@ import Common.Api (LoginReq(..))
 import Obelisk.Backend
 import MyJWT (verifyJWT, createJWT, mkJWTCookie, cookieLogout)
 import Schema 
-import Common.MyFunctions
+import DatabaseQueries 
 
 import Obelisk.Route -- (R(..))
 import Snap
 
 import qualified Data.Aeson as A
 import qualified Data.Text.Encoding as TE
-import qualified Data.Text as T
 import Database.Persist
 import Database.Persist.Sqlite
-import Control.Monad.IO.Class (liftIO, MonadIO)
+import Control.Monad.IO.Class (liftIO)
 import Data.Maybe (fromMaybe)
 
 
@@ -64,11 +63,11 @@ backendHandlers = \case
           Nothing -> do 
             modifyResponse $ setResponseStatus 401 "Unauthorized"
             writeBS $ TE.encodeUtf8 "Invalid credentials."
-          Just user -> do
-            let jwt = createJWT user
+          Just user' -> do
+            let jwt = createJWT user'
             modifyResponse $ setContentType "application/json"
             modifyResponse $ addResponseCookie $ mkJWTCookie jwt
-            writeBS $ TE.encodeUtf8 $ (userName $ user) <> " logged in."
+            writeBS $ TE.encodeUtf8 $ (userName $ user') <> " logged in."
    
   BackendRoute_Api :/ Api_Logout -> do 
     modifyResponse $ setContentType "application/json"
@@ -82,9 +81,9 @@ backendHandlers = \case
       Nothing -> do
         modifyResponse $ setResponseStatus 401 "unauthorized"
         writeBS "invalid JWT"
-      Just username -> do
+      Just username' -> do
         modifyResponse $ setResponseStatus 200 "OK"
-        writeBS $ TE.encodeUtf8 username
+        writeBS $ TE.encodeUtf8 username'
    
   BackendRoute_Api :/ Api_Posts -> do
     posts <- liftIO $ getPosts 

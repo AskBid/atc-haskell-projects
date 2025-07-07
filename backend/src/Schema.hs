@@ -23,12 +23,7 @@ import Database.Persist.Sqlite
 import Data.Text (Text)
 import Data.Aeson (FromJSON(..), ToJSON(..))
 import GHC.Generics (Generic)
-import Control.Monad.IO.Class (liftIO, MonadIO)
-
-import Common.MyFunctions
-import Common.Api
-
-import Debug.Trace
+import Control.Monad.IO.Class (MonadIO)
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
   Tweet
@@ -46,33 +41,17 @@ share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
     deriving Show Generic FromJSON ToJSON
 |]
 
+-- | To have database ids in the frontend better send the Entity Tweet as XhrResponse rather
+--   than Tweet alone. this instances enable Entity Tweet to port from and to JSON.
+instance FromJSON (Entity Tweet) where
+    parseJSON = entityIdFromJSON
+
+instance ToJSON (Entity Tweet) where
+    toJSON = entityIdToJSON
+
 -- | this makes it eprsistent, use :memory: instead of Xs.db otherwise 
 myDB :: Text
 myDB = "Xs.db"
-
--- | checks if the data in the LoginReq is a valid user in the database.
-loginDB :: MonadIO m => LoginReq -> m (Maybe User)
-loginDB lr = do
-  liftIO $ runSqlite myDB $ do
-    user <- selectList [UserName ==. (username lr), UserPwd ==. (password lr)] []
-    return $ entityVal <$> headSafe user
-  where 
-    name = username lr 
-    pwd = password lr
-
-getPosts :: IO ([Entity Tweet], [Entity User])
-getPosts = do 
-  posts <- runSqlite myDB $ selectList [TweetReplyTo ==. Nothing] []
-  users <- findUsers posts
-  return (posts, users)
-
-findUsers :: [Entity Tweet] -> IO [Entity User]
-findUsers = pure $ runSqlite myDB $ selectList [UserName ==. "sergio"] []
-
-getPostReplies :: Entity Tweet -> IO [Entity Tweet]
-getPostReplies tweet = do 
-  replies <- runSqlite myDB $ selectList [TweetReplyTo ==. Just (entityKey tweet)] []
-  return replies
 
 populateDB :: MonadIO m => SqlPersistT m ()
 populateDB = do
@@ -90,12 +69,6 @@ populateDB = do
   -- ^ need @insertBy@ rather than @insert_@ because we need to check if record is already exist
   --   from previously generated DataBase.
   return ()
-    where 
-      key' (Left _)  = toSqlKey 1
-      key' (Right k) = k
-
-instance FromJSON (Entity Tweet) where
-    parseJSON = entityIdFromJSON
-
-instance ToJSON (Entity Tweet) where
-    toJSON = entityIdToJSON
+  where 
+    key' (Left _)  = toSqlKey 1
+    key' (Right k) = k

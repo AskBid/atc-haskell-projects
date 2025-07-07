@@ -23,7 +23,7 @@ library
                , containers
                , jwt
   exposed-modules:
-    Backend, Schema, MyJWT
+    Backend, Schema, MyJWT, DatabaseQueries
   ghc-options: -Wall -O -fno-show-valid-hole-fits
                -- unsafe code
                -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields
