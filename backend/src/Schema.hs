@@ -56,17 +56,17 @@ myDB = "Xs.db"
 populateDB :: MonadIO m => SqlPersistT m ()
 populateDB = do
   runMigration migrateAll
-  alice   <- insertBy $ User "alice" "alice123" []
-  bob     <- insertBy $ User "bob" "bob456" []
-  sergio  <- insertBy $ User "sergio" "pwd" []
-  mario   <- insertBy $ User "mario" "alice123" []
-  luigi   <- insertBy $ User "luigi" "bob456" []
-  raoul   <- insertBy $ User "raoul" "pwd" []
-  _  <- insertBy $ Tweet "Ciao Mondo! my first tweet!" Nothing $ key' alice
-  _  <- insertBy $ Tweet "Am I the second?" Nothing $ key' bob
-  t3 <- insertBy $ Tweet "the laggard I guess?" Nothing $ key' sergio
-  _  <- insertBy $ Tweet "yup, I was first" (Just $ key' t3) $ key' alice
-  -- ^ need @insertBy@ rather than @insert_@ because we need to check if record is already exist
+  _  <- insertBy $ User "alice" "alice123" []
+  _  <- insertBy $ User "bob" "bob456" []
+  _  <- insertBy $ User "sergio" "pwd" []
+  _  <- insertBy $ User "mario" "alice123" []
+  _  <- insertBy $ User "luigi" "bob456" []
+  _  <- insertBy $ User "raoul" "pwd" []
+  _  <- insertBy $ Tweet "Ciao Mondo! my first tweet!" Nothing $ toSqlKey 1
+  _  <- insertBy $ Tweet "Am I the second?" Nothing $ toSqlKey 2
+  t3 <- insertBy $ Tweet "the laggard I guess?" Nothing $ toSqlKey 3
+  _  <- insertBy $ Tweet "yup, I was first" (Just $ key' t3) $ toSqlKey 1
+  -- ^ need @insertBy@ rather than @insert_@ because we need to check if record already exist
   --   from previously generated DataBase.
   return ()
   where 

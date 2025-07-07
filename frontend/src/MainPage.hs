@@ -45,18 +45,21 @@ mainPage appState = do
       let fromTtoTweets :: T.Text -> Maybe [Entity Tweet]
           fromTtoTweets = A.decode . BL.fromStrict . TE.encodeUtf8
           dMtweets = fromTtoTweets <$> dRespT
-      dyn_ $ mapM_ dynTweet . fromMaybe [] <$> dMtweets
+      dyn_ $ mapM_ elTweet . fromMaybe [] <$> dMtweets
       -- ^ dyn_ runs the Dynamic t (m ()), otherwise you'd only have a Dynamic not run.
       return ()
     el "h1" $ dynText dRespT
     return ()
   return ()
 
-dynTweet :: DomBuilder t m => Entity Tweet -> m ()
-dynTweet tweet = do 
-  elAttr "div" ("class" =: "rounded-xl bg-gray-100 max-w-full w-full p-4 my-2") $ do 
+elTweet :: (DomBuilder t m, SetRoute t (R FrontendRoute) m) => Entity Tweet -> m ()
+elTweet tweet = do 
+  (tweetDiv, _) <- elAttr' "div" ("class" =: "rounded-xl bg-gray-100 max-w-full w-full p-4 my-2"
+                                 <> "style" =: "cursor: pointer;") $ do 
     elAttr "a" ("class" =: "text-blue-400 font-bold") $ text "user_here"
     el "h3" $ text $ tweetText $ entityVal tweet
+  let tweetClick = domEvent Click tweetDiv 
+  setRoute $ FrontendRoute_Tweet :/ "trial" <$ tweetClick
   return ()
 
 

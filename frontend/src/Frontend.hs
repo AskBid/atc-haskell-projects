@@ -69,6 +69,10 @@ frontend = Frontend
               dynUserId <- askRoute
               el "h1" $ dynText $ fmap (\uid -> "Profile for " <> uid) dynUserId
               return ()
+            FrontendRoute_Tweet -> do 
+              dynTweetId <- askRoute
+              el "h1" $ dynText $ fmap (\uid -> "Tweet id is: " <> uid) dynTweetId
+              return ()
           return ()
           
         elClass "div" "bg-gray-100" blank

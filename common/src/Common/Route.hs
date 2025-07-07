@@ -64,6 +64,7 @@ data FrontendRoute :: * -> * where
   FrontendRoute_Login  :: FrontendRoute ()
   FrontendRoute_Signup :: FrontendRoute ()
   FrontendRoute_Profile :: FrontendRoute Text
+  FrontendRoute_Tweet :: FrontendRoute Text
 
 -- | mkFullRouteEncoder is a helper function provided by Obelisk to create an Encoder that converts between:
 -- Obelisk uses a type-safe routing system: instead of using raw strings for URLs everywhere, 
@@ -84,6 +85,7 @@ fullRouteEncoder = mkFullRouteEncoder
     FrontendRoute_Login -> PathSegment "login" $ unitEncoder mempty
     FrontendRoute_Signup -> PathSegment "signup" $ unitEncoder mempty
     FrontendRoute_Profile -> PathSegment "profile" $ singlePathSegmentEncoder
+    FrontendRoute_Tweet -> PathSegment "tweet" $ singlePathSegmentEncoder
   )
 
 concat <$> mapM deriveRouteComponent
