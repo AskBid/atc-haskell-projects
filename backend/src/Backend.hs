@@ -89,7 +89,7 @@ backendHandlers = \case
   BackendRoute_Api :/ Api_Posts -> do
     posts <- liftIO $ getPosts 
     -- writeBS $ "all the primary tweets (not replies)"
-    writeLBS $ A.encode $ entityVal <$> (fst posts)
+    writeLBS $ A.encode $ entityIdToJSON <$> (fst posts)
    
   BackendRoute_Missing :/ () -> writeBS "404 - Not Found"
   -- ^ `R` it’s the standard (advanced and complicated) way to refer to parsed routes in Obelisk.

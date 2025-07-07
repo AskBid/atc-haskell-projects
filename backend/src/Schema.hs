@@ -21,7 +21,7 @@ import Database.Persist.TH
 import Database.Persist
 import Database.Persist.Sqlite
 import Data.Text (Text)
-import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson (FromJSON(..), ToJSON(..))
 import GHC.Generics (Generic)
 import Control.Monad.IO.Class (liftIO, MonadIO)
 
@@ -46,9 +46,9 @@ share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
     deriving Show Generic FromJSON ToJSON
 |]
 
+-- | this makes it eprsistent, use :memory: instead of Xs.db otherwise 
 myDB :: Text
 myDB = "Xs.db"
--- ^ this makes it eprsistent, use :memory: instead of Xs.db otherwise 
 
 -- | checks if the data in the LoginReq is a valid user in the database.
 loginDB :: MonadIO m => LoginReq -> m (Maybe User)
@@ -67,20 +67,15 @@ getPosts = do
   return (posts, users)
 
 findUsers :: [Entity Tweet] -> IO [Entity User]
-findUsers = undefined
+findUsers = pure $ runSqlite myDB $ selectList [UserName ==. "sergio"] []
 
 getPostReplies :: Entity Tweet -> IO [Entity Tweet]
 getPostReplies tweet = do 
   replies <- runSqlite myDB $ selectList [TweetReplyTo ==. Just (entityKey tweet)] []
   return replies
-  
-printSQL :: Show a => IO a -> IO ()
-printSQL query = do 
-  tweets <- query
-  print tweets
 
 populateDB :: MonadIO m => SqlPersistT m ()
-populateDB = do 
+populateDB = do
   runMigration migrateAll
   alice   <- insertBy $ User "alice" "alice123" []
   bob     <- insertBy $ User "bob" "bob456" []
@@ -92,10 +87,15 @@ populateDB = do
   _  <- insertBy $ Tweet "Am I the second?" Nothing $ key' bob
   t3 <- insertBy $ Tweet "the laggard I guess?" Nothing $ key' sergio
   _  <- insertBy $ Tweet "yup, I was first" (Just $ key' t3) $ key' alice
-  -- ^ need @insertBy@ rather than @insert_@ because we need to check if record is already existend
+  -- ^ need @insertBy@ rather than @insert_@ because we need to check if record is already exist
   --   from previously generated DataBase.
   return ()
     where 
       key' (Left _)  = toSqlKey 1
       key' (Right k) = k
 
+instance FromJSON (Entity Tweet) where
+    parseJSON = entityIdFromJSON
+
+instance ToJSON (Entity Tweet) where
+    toJSON = entityIdToJSON

@@ -44,20 +44,21 @@ mainPage appState = do
     evResp <- performRequestAsync $ xhrReq <$ evPostBuild
     dRespT <- holdDyn "." $ (\r -> fromMaybe ".." $ _xhrResponse_responseText r) <$> evResp
     el "div" $ do
-      let fromTtoTweets :: T.Text -> Maybe [Tweet]
+      let fromTtoTweets :: T.Text -> Maybe [Entity Tweet]
           fromTtoTweets = A.decode . BL.fromStrict . TE.encodeUtf8
           dMtweets = fromTtoTweets <$> dRespT
       dyn_ $ mapM_ dynTweet . fromMaybe [] <$> dMtweets
       -- ^ dyn_ runs the Dynamic t (m ()), otherwise you'd only have a Dynamic not run.
       return ()
+    el "h1" $ dynText dRespT
     return ()
   return ()
 
-dynTweet :: DomBuilder t m => Tweet -> m ()
+dynTweet :: DomBuilder t m => Entity Tweet -> m ()
 dynTweet tweet = do 
   elAttr "div" ("class" =: "rounded-xl bg-gray-100 max-w-full w-full p-4 my-2") $ do 
     elAttr "a" ("class" =: "text-blue-400 font-bold") $ text "user_here"
-    el "h3" $ text $ tweetText tweet
+    el "h3" $ text $ tweetText $ entityVal tweet
   return ()
 
 
