@@ -17,6 +17,7 @@ import Snap
 
 import qualified Data.Aeson as A
 import qualified Data.Text.Encoding as TE
+import qualified Data.ByteString.Lazy.Char8 as BL
 import Database.Persist
 import Database.Persist.Sqlite
 import Control.Monad.IO.Class (liftIO)
@@ -91,7 +92,16 @@ backendHandlers = \case
     writeLBS $ A.encode postsUsers
 
   BackendRoute_Api :/ Api_Submit -> do
-    mEUser <- liftIO $ insertTweet $ Tweet "dummy tweet" Nothing $ toSqlKey 1
+    mUsername <- verifyJWT
+    payload <- readRequestBody 10000
+    liftIO $ putStrLn $ BL.unpack payload
+    let mTweet :: Maybe Tweet
+        mTweet = A.decode payload
+    case mTweet of 
+      Nothing -> error "could not decode tweet from JSON."
+      Just tweet -> do 
+        keyUser <- liftIO $ insertTweet tweet
+        writeBS "all Good"
     writeBS "TODO: check if cookies have JWT of loggedIn,"
     writeBS "TODO: insert new tweet in database"
    

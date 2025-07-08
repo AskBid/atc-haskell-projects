@@ -37,13 +37,17 @@ mainPage appState = do
   (elBtnPost, _) <- myButton "Post"
   let evPost = domEvent Click elBtnPost
   let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Submit
+      post = Tweet { tweetText = "lazyyyy"
+                   , tweetReplyTo = Nothing
+                   , tweetOwner = toSqlKey 1 
+                   }
       xhrReqPost = XhrRequest
         { _xhrRequest_method = "POST"
         , _xhrRequest_url = url
         , _xhrRequest_config = def 
             & xhrRequestConfig_withCredentials .~ True
             & xhrRequestConfig_headers .~ ("Content-Type" =: "application/json")
-            & xhrRequestConfig_sendData .~ T.pack "undefined but happy"
+            & xhrRequestConfig_sendData .~ BL.toStrict (A.encode post)
         }
 
   dResp <- prerender (pure never) $ do 
