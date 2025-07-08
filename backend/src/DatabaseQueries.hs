@@ -6,6 +6,7 @@ import Database.Persist
 import Database.Persist.Sqlite
 import Control.Monad.IO.Class (liftIO, MonadIO)
 import Data.Maybe (catMaybes)
+import Control.Monad.Reader
 
 import Common.MyFunctions
 import Common.Api
@@ -30,6 +31,11 @@ findUsers et = do
   return mEUser
   where 
     id = tweetOwner $ entityVal et 
+
+insertTweet :: Tweet -> IO (Key Tweet)
+insertTweet eTweet = do 
+  k <- runSqlite myDB $ insert eTweet
+  return k
 
 getPostReplies :: Entity Tweet -> IO [Entity Tweet]
 getPostReplies tweet = do 

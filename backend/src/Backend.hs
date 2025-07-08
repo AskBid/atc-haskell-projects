@@ -91,6 +91,7 @@ backendHandlers = \case
     writeLBS $ A.encode postsUsers
 
   BackendRoute_Api :/ Api_Submit -> do
+    mEUser <- liftIO $ insertTweet $ Tweet "dummy tweet" Nothing $ toSqlKey 1
     writeBS "TODO: check if cookies have JWT of loggedIn,"
     writeBS "TODO: insert new tweet in database"
    

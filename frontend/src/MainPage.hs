@@ -36,16 +36,22 @@ mainPage appState = do
   (elBtnPost, _) <- myButton "Post"
   let evPost = domEvent Click elBtnPost
   let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Submit
-      xhrReq = XhrRequest
+      xhrReqPost = XhrRequest
         { _xhrRequest_method = "POST"
         , _xhrRequest_url = url
         , _xhrRequest_config = def 
             & xhrRequestConfig_withCredentials .~ True
             & xhrRequestConfig_headers .~ ("Content-Type" =: "application/json")
-            & xhrRequestConfig_sendData .~ undefined
+            & xhrRequestConfig_sendData .~ T.pack "undefined but happy"
         }
-   
-  prerender (el "h1" $ text "Loading...") $ do
+
+  dResp <- prerender (pure never) $ do 
+    evResp <- performRequestAsync $ xhrReqPost <$ evPost
+    return evResp
+
+  setRoute $ FrontendRoute_Main :/ () <$ switchDyn dResp
+  
+  prerender_ (el "h1" $ text "Loading...") $ do
     evPostBuild <- getPostBuild
     let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Posts
         xhrReq = XhrRequest
