@@ -58,11 +58,15 @@ elTweet :: (DomBuilder t m, SetRoute t (R FrontendRoute) m) => [Entity User] -> 
 elTweet users tweet = do 
   (tweetDiv, _) <- elAttr' "div" ("class" =: "rounded-xl bg-gray-100 max-w-full w-full p-4 my-2"
                                  <> "style" =: "cursor: pointer;") $ do 
-    elAttr "a" ("class" =: "text-blue-400 font-bold") $ text "user_here"
-    el "h3" $ text $ tweetText $ entityVal tweet
+    elAttr "a" ("class" =: "text-blue-400 font-bold") $ text $ userName . entityVal $ user 
+    el "h3" $ text $ tweetText $ tweet'
   let tweetId = T.pack $ show $ fromSqlKey $ entityKey tweet
   let tweetClick = domEvent Click tweetDiv 
   setRoute $ FrontendRoute_Tweet :/ tweetId <$ tweetClick
   return ()
+  where 
+    tweet' = entityVal tweet
+    user = findRecord users $ tweetOwner tweet'
 
-
+findRecord :: [Entity record] -> Schema.Key record -> Entity record
+findRecord recs id = undefined
