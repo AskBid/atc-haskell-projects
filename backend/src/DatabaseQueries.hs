@@ -18,11 +18,11 @@ loginDB lr = do
     user <- selectList [UserName ==. (username lr), UserPwd ==. (password lr)] []
     return $ entityVal <$> headSafe user
 
-getPosts :: IO ([Entity Tweet], [Entity User])
+getPosts :: IO TweetUserResp
 getPosts = do 
   posts <- runSqlite myDB $ selectList [TweetReplyTo ==. Nothing] []
   users <- catMaybes <$> mapM findUsers posts
-  return (posts, users)
+  return $ TweetUserResp posts users
 
 findUsers :: Entity Tweet -> IO (Maybe (Entity User))
 findUsers et = do 

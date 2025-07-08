@@ -49,6 +49,12 @@ instance FromJSON (Entity Tweet) where
 instance ToJSON (Entity Tweet) where
     toJSON = entityIdToJSON
 
+instance FromJSON (Entity User) where
+    parseJSON = entityIdFromJSON
+
+instance ToJSON (Entity User) where
+    toJSON = entityIdToJSON
+
 -- | this makes it eprsistent, use :memory: instead of Xs.db otherwise 
 myDB :: Text
 myDB = "Xs.db"

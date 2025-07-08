@@ -6,7 +6,7 @@
 module Backend where
 
 import Common.Route
-import Common.Api (LoginReq(..))
+import Common.Api (LoginReq(..), TweetUserResp(..))
 import Obelisk.Backend
 import MyJWT (verifyJWT, createJWT, mkJWTCookie, cookieLogout)
 import Schema 
@@ -86,9 +86,9 @@ backendHandlers = \case
         writeBS $ TE.encodeUtf8 username'
    
   BackendRoute_Api :/ Api_Posts -> do
-    posts <- liftIO $ getPosts 
+    postsUsers <- liftIO $ getPosts 
     -- writeBS $ "all the primary tweets (not replies)"
-    writeLBS $ A.encode $ entityIdToJSON <$> (fst posts)
+    writeLBS $ A.encode $ entityIdToJSON <$> (tweets postsUsers)
    
   BackendRoute_Missing :/ () -> writeBS "404 - Not Found"
   -- ^ `R` it’s the standard (advanced and complicated) way to refer to parsed routes in Obelisk.
