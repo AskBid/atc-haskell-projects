@@ -35,9 +35,11 @@ mainPage appState = do
     ("placeholder" =: "Write your X here ..." 
     <> "class" =: "bg-blue-100 w-full p-2 rounded min-h-40")
   (elBtnPost, _) <- myButton "Post"
+
+  let dTextArea = _textAreaElement_value textArea
   let evPost = domEvent Click elBtnPost
   let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Submit
-      post = Tweet { tweetText = "lazyyyy"
+      post = Tweet { tweetText = tagPromptlyDyn dTextArea evPost
                    , tweetReplyTo = Nothing
                    , tweetOwner = toSqlKey 1 
                    }
