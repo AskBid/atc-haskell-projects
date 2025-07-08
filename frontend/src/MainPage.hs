@@ -58,8 +58,9 @@ elTweet tweet = do
                                  <> "style" =: "cursor: pointer;") $ do 
     elAttr "a" ("class" =: "text-blue-400 font-bold") $ text "user_here"
     el "h3" $ text $ tweetText $ entityVal tweet
+  let tweetId = T.pack $ show $ fromSqlKey $ entityKey tweet
   let tweetClick = domEvent Click tweetDiv 
-  setRoute $ FrontendRoute_Tweet :/ "trial" <$ tweetClick
+  setRoute $ FrontendRoute_Tweet :/ tweetId <$ tweetClick
   return ()
 
 
