@@ -63,9 +63,13 @@ populateDB = do
   _  <- insertBy $ User "luigi" "bob456" []
   _  <- insertBy $ User "raoul" "pwd" []
   _  <- insertBy $ Tweet "Ciao Mondo! my first tweet!" Nothing $ toSqlKey 1
-  _  <- insertBy $ Tweet "Am I the second?" Nothing $ toSqlKey 2
+  t2  <- insertBy $ Tweet "Am I the second?" Nothing $ toSqlKey 2
   t3 <- insertBy $ Tweet "the laggard I guess?" Nothing $ toSqlKey 3
   _  <- insertBy $ Tweet "yup, I was first" (Just $ key' t3) $ toSqlKey 1
+  _  <- insertBy $ Tweet "y8888888" (Just $ key' t3) $ toSqlKey 4
+  t4  <- insertBy $ Tweet "t88878787, replyy" (Just $ key' t3) $ toSqlKey 5
+  t5  <- insertBy $ Tweet "tdsfdsfdsf787, replyy" (Just $ key' t2) $ toSqlKey 2
+  _  <- insertBy $ Tweet "replyy of replyy woo" (Just $ key' t5) $ toSqlKey 6
   -- ^ need @insertBy@ rather than @insert_@ because we need to check if record already exist
   --   from previously generated DataBase.
   return ()
