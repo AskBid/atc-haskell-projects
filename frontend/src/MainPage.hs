@@ -49,10 +49,9 @@ mainPage appState = do
     evResp <- performRequestAsync $ xhrReqPost <$ evPost
     return evResp
 
-  setRoute $ FrontendRoute_Main :/ () <$ switchDyn dResp
-  
   prerender_ (el "h1" $ text "Loading...") $ do
     evPostBuild <- getPostBuild
+    let evReload = leftmost [evPostBuild, () <$ switchDyn dResp]
     let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Posts
         xhrReq = XhrRequest
           { _xhrRequest_method = "GET"
@@ -60,7 +59,7 @@ mainPage appState = do
           , _xhrRequest_config = def & xhrRequestConfig_withCredentials .~ True
           }
     
-    evResp <- performRequestAsync $ xhrReq <$ evPostBuild
+    evResp <- performRequestAsync $ xhrReq <$ evReload
     dRespT <- holdDyn "." $ (\r -> fromMaybe ".." $ _xhrResponse_responseText r) <$> evResp
     
     el "div" $ do
