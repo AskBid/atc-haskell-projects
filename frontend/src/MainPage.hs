@@ -51,7 +51,6 @@ mainPage appState = do
       dyn_ $ ffor dTUResp $ \tuResp -> mapM_ (elTweet $ users tuResp) (tweets tuResp)     
       -- ^ dyn_ runs the Dynamic t (m ()), otherwise you'd only have a Dynamic not run.
       return ()
-    el "h1" $ dynText dRespT
     return ()
   return ()
 
@@ -59,9 +58,10 @@ elTweet :: (DomBuilder t m, SetRoute t (R FrontendRoute) m) => [Entity User] -> 
 elTweet users tweet = do 
   (tweetDiv, _) <- elAttr' "div" ("class" =: "rounded-xl bg-gray-100 max-w-full w-full p-4 my-2"
                                  <> "style" =: "cursor: pointer;") $ do
+    let usernameT = fromMaybe "" $ userName . entityVal <$> user
     elAttr "a" ("class" =: "text-blue-400 font-bold" 
-               <> "href" =: "/api/sergio") 
-               $ text $ fromMaybe "" $ userName . entityVal <$> user
+               <> "href" =: (getUrl $ FullRoute_Frontend (ObeliskRoute_App FrontendRoute_Profile) :/ usernameT)) 
+               $ text usernameT
     el "h3" $ text $ tweetText $ tweet'
   let tweetId = T.pack $ show $ fromSqlKey $ entityKey tweet
   let tweetClick = domEvent Click tweetDiv 
