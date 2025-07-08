@@ -37,23 +37,25 @@ mainPage appState = do
   (elBtnPost, _) <- myButton "Post"
 
   let dTextArea = _textAreaElement_value textArea
-  let evPost = domEvent Click elBtnPost
-  let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Submit
-      post = Tweet { tweetText = tagPromptlyDyn dTextArea evPost
-                   , tweetReplyTo = Nothing
-                   , tweetOwner = toSqlKey 1 
-                   }
-      xhrReqPost = XhrRequest
+      evPost = domEvent Click elBtnPost
+      url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Submit
+      evTextTweet = tagPromptlyDyn dTextArea evPost
+      evTweet = ffor evTextTweet $ \text -> Tweet
+        { tweetText = text
+        , tweetReplyTo = Nothing
+        , tweetOwner = toSqlKey 1 
+        }
+      evTweetReq = ffor evTweet $ \tweet -> XhrRequest
         { _xhrRequest_method = "POST"
         , _xhrRequest_url = url
         , _xhrRequest_config = def 
             & xhrRequestConfig_withCredentials .~ True
             & xhrRequestConfig_headers .~ ("Content-Type" =: "application/json")
-            & xhrRequestConfig_sendData .~ BL.toStrict (A.encode post)
+            & xhrRequestConfig_sendData .~ BL.toStrict (A.encode tweet)
         }
 
   dResp <- prerender (pure never) $ do 
-    evResp <- performRequestAsync $ xhrReqPost <$ evPost
+    evResp <- performRequestAsync evTweetReq
     return evResp
 
   prerender_ (el "h1" $ text "Loading...") $ do
