@@ -28,10 +28,22 @@ mainPage
   => AppState t -> RoutedT t () m ()
 mainPage appState = do
   buttonLogInOut appState $ FrontendRoute_Main :/ ()
-  -- el "h2" $ dynText (T.pack . show <$> loggedIn appState)
+
   el "h2" $ text "Welcome to My X!"
-  _ <- textAreaElement $ def & initialAttributes .~ 
-    ("placeholder" =: "Write your X here ..." <> "class" =: "bg-blue-100 w-full p-2 rounded min-h-40")
+  textArea <- textAreaElement $ def & initialAttributes .~ 
+    ("placeholder" =: "Write your X here ..." 
+    <> "class" =: "bg-blue-100 w-full p-2 rounded min-h-40")
+  (elBtnPost, _) <- myButton "Post"
+  let evPost = domEvent Click elBtnPost
+  let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Submit
+      xhrReq = XhrRequest
+        { _xhrRequest_method = "POST"
+        , _xhrRequest_url = url
+        , _xhrRequest_config = def 
+            & xhrRequestConfig_withCredentials .~ True
+            & xhrRequestConfig_headers .~ ("Content-Type" =: "application/json")
+            & xhrRequestConfig_sendData .~ undefined
+        }
    
   prerender (el "h1" $ text "Loading...") $ do
     evPostBuild <- getPostBuild
@@ -41,8 +53,10 @@ mainPage appState = do
           , _xhrRequest_url = url
           , _xhrRequest_config = def & xhrRequestConfig_withCredentials .~ True
           }
+    
     evResp <- performRequestAsync $ xhrReq <$ evPostBuild
     dRespT <- holdDyn "." $ (\r -> fromMaybe ".." $ _xhrResponse_responseText r) <$> evResp
+    
     el "div" $ do
       let fromTtoTweets :: T.Text -> Maybe TweetUserResp
           fromTtoTweets = A.decode . BL.fromStrict . TE.encodeUtf8

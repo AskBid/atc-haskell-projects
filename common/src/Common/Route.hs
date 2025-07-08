@@ -43,6 +43,7 @@ data Api
   | Api_Logout
   | Api_Me
   | Api_Posts
+  | Api_Submit
   deriving (Show, Eq, Ord, Enum, Bounded)
 
 instance Universe Api
@@ -55,6 +56,7 @@ tailRouteEncoder = enumEncoder $ \case
   Api_Logout -> (["logout"], mempty)
   Api_Me     -> (["me"], mempty)
   Api_Posts  -> (["posts"], mempty)
+  Api_Submit -> (["submit"], mempty)
 
 -- newtype UserID = UserID { unUserID :: Text } deriving (Show, Eq)
 -- makeWrapped ''UserID

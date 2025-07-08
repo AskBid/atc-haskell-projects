@@ -40,7 +40,7 @@ frontend = Frontend
       elClass "div" "grid grid-cols-[1fr_auto_1fr] min-h-screen" $ do
         
         elClass "div" "bg-gray-100" blank
-        elClass "div" "min-w-[400px] max-w-[800px] w-full bg-white flex flex-col p-4 space-y-4" $ do 
+        elClass "div" "min-w-[600px] max-w-[800px] w-full bg-white flex flex-col p-4 space-y-4" $ do 
            
           (evLoggedInByTrigger, loginTrigger) <- newTriggerEvent
           
