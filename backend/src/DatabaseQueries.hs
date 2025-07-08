@@ -5,6 +5,7 @@ module DatabaseQueries where
 import Database.Persist
 import Database.Persist.Sqlite
 import Control.Monad.IO.Class (liftIO, MonadIO)
+import Data.Maybe (catMaybes)
 
 import Common.MyFunctions
 import Common.Api
@@ -20,11 +21,15 @@ loginDB lr = do
 getPosts :: IO ([Entity Tweet], [Entity User])
 getPosts = do 
   posts <- runSqlite myDB $ selectList [TweetReplyTo ==. Nothing] []
-  users <- findUsers posts
+  users <- catMaybes <$> mapM findUsers posts
   return (posts, users)
 
-findUsers :: [Entity Tweet] -> IO [Entity User]
-findUsers = pure $ runSqlite myDB $ selectList [] []
+findUsers :: Entity Tweet -> IO (Maybe (Entity User))
+findUsers et = do 
+  mEUser <- runSqlite myDB $ selectFirst [UserId ==. id] []
+  return mEUser
+  where 
+    id = tweetOwner $ entityVal et 
 
 getPostReplies :: Entity Tweet -> IO [Entity Tweet]
 getPostReplies tweet = do 
