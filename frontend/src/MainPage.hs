@@ -40,11 +40,13 @@ mainPage appState = do
       evPost = domEvent Click elBtnPost
       url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Submit
       evTextTweet = tagPromptlyDyn dTextArea evPost
+
       evTweet = ffor evTextTweet $ \text -> Tweet
         { tweetText = text
         , tweetReplyTo = Nothing
         , tweetOwner = toSqlKey 1 
         }
+
       evTweetReq = ffor evTweet $ \tweet -> XhrRequest
         { _xhrRequest_method = "POST"
         , _xhrRequest_url = url

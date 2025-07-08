@@ -84,7 +84,12 @@ backendHandlers = \case
         writeBS "invalid JWT"
       Just username' -> do
         modifyResponse $ setResponseStatus 200 "OK"
-        writeBS $ TE.encodeUtf8 username'
+        mEUser <- liftIO $ runSqlite myDB $ selectFirst [UserName ==. username'] [] 
+        case mEUser of
+          Nothing -> do 
+            modifyResponse $ setResponseStatus 401 "unauthorized"
+            writeBS "User did not exist."
+          Just entityUser -> writeBS $ BL.toStrict $ A.encode entityUser
    
   BackendRoute_Api :/ Api_Posts -> do
     postsUsers <- liftIO $ getPosts

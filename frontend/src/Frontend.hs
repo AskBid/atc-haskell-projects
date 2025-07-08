@@ -56,8 +56,7 @@ frontend = Frontend
           -- ^ this way we make the Dynamic that holds the login state to be dependent
           --   on more than just one Event.
           let appState = AppState {
-              loggedIn = dynLoggedIn
-            , loginTrigger = loginTrigger
+              loginTrigger = loginTrigger
             , loggedUser = Nothing
             }
 

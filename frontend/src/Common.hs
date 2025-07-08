@@ -27,8 +27,7 @@ myButton txt =
            <> "type" =: "button")
 
 data AppState t = AppState 
-  { loggedIn :: Dynamic t Bool
-  , loggedUser :: Maybe T.Text
+  { loggedUser :: Dynamic t (Maybe User)
   , loginTrigger :: Bool -> IO ()
   }
 
@@ -67,10 +66,10 @@ buttonLogInOut
      )
   => AppState t -> R FrontendRoute -> RoutedT t () m ()
 buttonLogInOut appState route = do
-  let dynLoggedIn = loggedIn appState  -- Dynamic t Bool
+  let dynLoggedIn = loggedUser appState  -- Dynamic t Bool
 
-  dyn_ $ ffor dynLoggedIn $ \logBool ->
-    if not logBool
+  dyn_ $ ffor dynLoggedIn $ \mLoggedUser ->
+    if isNothing mLoggedUser
     then do
       (btnInEl, _) <- myButton "Login"
       let loginClick = domEvent Click btnInEl
