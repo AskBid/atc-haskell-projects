@@ -12,10 +12,13 @@ import Obelisk.Route
 import Obelisk.Route.Frontend
 import Obelisk.Frontend
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
+import qualified Data.ByteString.Lazy as BL
 import Data.Functor.Identity
 import Common.Api (LoginReq(..))
 import Control.Monad.Trans (lift)
 import Control.Monad.IO.Class (liftIO)
+import qualified Data.Aeson as A
 
 
 loginPage :: ObeliskWidget t (R FrontendRoute) m  => AppState t -> RoutedT t () m ()
@@ -45,17 +48,22 @@ loginPage appState = do
     let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Login
     evResp <- performRequestAsync $ (postJson url) <$> loginReqEv
 
-    let evLoginSuccess = ffilter (statusCheck 200 300) evResp
-    let loginTriggerIO = loginTrigger appState True :: IO ()
-    let evLoginTriggerIO = loginTriggerIO <$ evLoginSuccess -- :: Event t (IO ()) 
-    performEvent_ $ liftIO <$> evLoginTriggerIO
-    setRoute $ FrontendRoute_Main :/ () <$ evLoginSuccess
-
     message <- holdDyn "Enter your credentials." $ 
       "Wrong credentials. Try again." <$ ffilter (not . statusCheck 200 300) evResp
     el "h4" $ dynText message
-
-    return ()
-   
+    let evRespLoginSucc = ffilter (statusCheck 200 300) evResp
+        evMTextResp = _xhrResponse_responseText <$> evRespLoginSucc
+    ev<- performEvent $ ffor evMTextResp $ \mTextResp -> case mTextResp of 
+    -- ^ if you have an event with a monad you need to run, usually you need performEvent.
+    --   when the event fires, runs the monad and returns an Event with its result.
+      Nothing -> ()
+      Just textEUser -> do 
+        let mEUser = (A.decode . BL.fromStrict . TE.encodeUtf8) textEUser
+            evIOlogTrigger = loginTrigger appState mEUser
+            -- let evLoginTriggerIO = loginTriggerIO <$ evLoginSuccess -- :: Event t (IO ()) 
+            -- performEvent_ $ liftIO <$> evLoginTriggerIO
+        return ()
+    setRoute $ FrontendRoute_Main :/ () <$ evIOlogTrigger
+    return () 
   return ()
 

@@ -64,11 +64,11 @@ backendHandlers = \case
           Nothing -> do 
             modifyResponse $ setResponseStatus 401 "Unauthorized"
             writeBS $ TE.encodeUtf8 "Invalid credentials."
-          Just user' -> do
-            let jwt = createJWT user'
+          Just eUser -> do
+            let jwt = createJWT $ entityVal eUser
             modifyResponse $ setContentType "application/json"
             modifyResponse $ addResponseCookie $ mkJWTCookie jwt
-            writeBS $ TE.encodeUtf8 $ (userName $ user') <> " logged in."
+            writeLBS $ A.encode eUser --TE.encodeUtf8 $ (userName $ user') <> " logged in."
    
   BackendRoute_Api :/ Api_Logout -> do 
     modifyResponse $ setContentType "application/json"
