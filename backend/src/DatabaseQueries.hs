@@ -13,11 +13,11 @@ import Common.Api
 import Schema
 
 -- | checks if the data in the LoginReq is a valid user in the database.
-loginDB :: MonadIO m => LoginReq -> m (Maybe User)
-loginDB lr = do
+sqlUserPwdExist :: MonadIO m => LoginReq -> m (Maybe (Entity User))
+sqlUserPwdExist lr = do
   liftIO $ runSqlite myDB $ do
-    user <- selectList [UserName ==. (username lr), UserPwd ==. (password lr)] []
-    return $ entityVal <$> headSafe user
+    mEUser <- selectFirst [UserName ==. (username lr), UserPwd ==. (password lr)] []
+    return mEUser
 
 getPosts :: IO TweetUserResp
 getPosts = do 

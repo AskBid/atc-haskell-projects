@@ -59,8 +59,8 @@ backendHandlers = \case
         modifyResponse $ setResponseStatus 401 "Unauthorized"
         writeLBS "{\"error\": \"No LoginReq\"}"
       Just loginReq -> do 
-        user <- loginDB loginReq
-        case user of
+        mEUser <- sqlUserPwdExist loginReq
+        case mEUser of
           Nothing -> do 
             modifyResponse $ setResponseStatus 401 "Unauthorized"
             writeBS $ TE.encodeUtf8 "Invalid credentials."
