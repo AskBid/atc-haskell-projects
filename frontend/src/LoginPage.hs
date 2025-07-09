@@ -19,6 +19,7 @@ import Common.Api (LoginReq(..))
 import Control.Monad.Trans (lift)
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.Aeson as A
+import Data.Maybe (isJust)
 
 
 loginPage :: ObeliskWidget t (R FrontendRoute) m  => AppState t -> RoutedT t () m ()
@@ -53,17 +54,17 @@ loginPage appState = do
     el "h4" $ dynText message
     let evRespLoginSucc = ffilter (statusCheck 200 300) evResp
         evMTextResp = _xhrResponse_responseText <$> evRespLoginSucc
-    ev<- performEvent $ ffor evMTextResp $ \mTextResp -> case mTextResp of 
+    performEvent_ $ ffor evMTextResp $ \mTextResp -> case mTextResp of 
     -- ^ if you have an event with a monad you need to run, usually you need performEvent.
     --   when the event fires, runs the monad and returns an Event with its result.
-      Nothing -> ()
+      Nothing -> pure ()
       Just textEUser -> do 
         let mEUser = (A.decode . BL.fromStrict . TE.encodeUtf8) textEUser
-            evIOlogTrigger = loginTrigger appState mEUser
+        _ <- loginTrigger appState $ mEUser
             -- let evLoginTriggerIO = loginTriggerIO <$ evLoginSuccess -- :: Event t (IO ()) 
             -- performEvent_ $ liftIO <$> evLoginTriggerIO
         return ()
-    setRoute $ FrontendRoute_Main :/ () <$ evIOlogTrigger
+    setRoute $ FrontendRoute_Main :/ () <$ ffilter isJust evMTextResp
     return () 
   return ()
 
