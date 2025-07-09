@@ -21,10 +21,14 @@ import Common.Route -- (FrontendRoute(..), UserID(..), fullRouteEncoder)
 
 import Obelisk.Route.Frontend
 import Language.Javascript.JSaddle (MonadJSM)
+import qualified Data.Text.Encoding as TE
+import qualified Data.Aeson as A
+import qualified Data.ByteString.Lazy as BL
 
 import Common
 import LoginPage
 import MainPage
+import Schema
 
 -- This runs in a monad that can be run on the client or the server.
 -- To run code in a pure client or pure server context, use one of the
@@ -49,15 +53,15 @@ frontend = Frontend
             loginCheck <- meRouteLoginCheck postBuildEv
             return loginCheck
 
-          let dynLoggedInEvStation = leftmost [ True <$ (switchDyn dMeLoggedIn)
+          let dynLoggedInEvStation = leftmost [ (Just $ dummyEntityUser) <$ (switchDyn dMeLoggedIn)
                                               , evLoggedInByTrigger
                                               ]
-          dynLoggedIn <- holdDyn False dynLoggedInEvStation
+          dynLoggedIn <- holdDyn Nothing dynLoggedInEvStation
           -- ^ this way we make the Dynamic that holds the login state to be dependent
           --   on more than just one Event.
           let appState = AppState {
               loginTrigger = loginTrigger
-            , loggedUser = Nothing
+            , loggedUser = dynLoggedIn
             }
 
           subRoute_ $ \case
@@ -94,5 +98,7 @@ meRouteLoginCheck evTrigger = do
     , _xhrRequest_url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Me 
     , _xhrRequest_config = def
   }
-  respEv <- performRequestAsync $ xhrRequest <$ evTrigger
-  return $ ffilter (statusCheck 200 300) respEv
+  evResp <- performRequestAsync $ xhrRequest <$ evTrigger
+  let evRespSucc = ffilter (statusCheck 200 300) evResp
+  return $ A.decode . BL.fromStrict . TE.encodeUtf8 <$> _xhrResponse_responseText evRespSucc :: _wat
+  

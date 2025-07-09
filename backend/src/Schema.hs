@@ -82,3 +82,6 @@ populateDB = do
   where 
     key' (Left _)  = toSqlKey 1
     key' (Right k) = k
+
+dummyEntityUser :: Entity User
+dummyEntityUser = Entity (toSqlKey 1) (User "" "" [])
