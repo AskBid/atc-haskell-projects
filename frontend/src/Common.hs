@@ -27,8 +27,8 @@ myButton txt =
            <> "type" =: "button")
 
 data AppState t = AppState 
-  { loggedUser :: Dynamic t (Maybe User)
-  , loginTrigger :: Bool -> IO ()
+  { loggedUser :: Dynamic t (Maybe (Entity User))
+  , loginTrigger :: Maybe (Entity User) -> IO ()
   }
 
 -- | @fullRouteEncoder@ has an `Either Text` as a first (check) argument
@@ -94,7 +94,7 @@ buttonLogInOut appState route = do
         -- let evLoginTriggerIO = (\_ -> loginTrigger appState False) <$> evLogoutSuccess
         performEvent_ $ ffor evLogoutSuccess $ \_ -> liftIO $ do
           putStrLn "Logout successful, triggering login state False"
-          loginTrigger appState False
+          loginTrigger appState Nothing
         -- performEvent_ $ liftIO <$> evLoginTriggerIO
         return evLogoutSuccess
       -- ^ Dynamic t (Event t XhrResponse) << returned from `prerender`
