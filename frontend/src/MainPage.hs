@@ -38,16 +38,17 @@ mainPage appState = do
   
 
   let dTextArea = _textAreaElement_value textArea
-      evPost = domEvent Click elBtnPost
-      evPostLogged = ffilter (\mEUser -> undefined) $ tagPromtlyDyn (loggedUser appState) evPost 
+      evPost = tagPromptlyDyn (loggedUser appState) $ domEvent Click elBtnPost
+      evPostLogged = ffilter isJust evPost 
+      evPostNotLog = ffilter (not . isJust) evPost
       url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Submit
-      evTextTweet = tagPromptlyDyn dTextArea evPost
+      evTextTweet = tagPromptlyDyn dTextArea evPostLogged
       
       evTweet = ffor evTextTweet $ \text -> do
         let mLoggedUser = (sample . current) $ loggedUser appState
         case mLoggedUser of
-          Nothing -> _
-          Just eUser -> Tweet 
+          Nothing -> Tweet "" Nothing (toSqlKey 1)
+          Just eUser -> Tweet
             { tweetText = text
             , tweetReplyTo = Nothing
             , tweetOwner = entityKey eUser
@@ -61,6 +62,8 @@ mainPage appState = do
             & xhrRequestConfig_headers .~ ("Content-Type" =: "application/json")
             & xhrRequestConfig_sendData .~ BL.toStrict (A.encode tweet)
         }
+
+  setRoute $ FrontendRoute_Login :/ () <$ evPostNotLog
 
   dResp <- prerender (pure never) $ do 
     evResp <- performRequestAsync evTweetReq
