@@ -24,6 +24,7 @@ import Language.Javascript.JSaddle (MonadJSM)
 import qualified Data.Text.Encoding as TE
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BL
+import Database.Persist
 
 import Common
 import LoginPage
@@ -50,8 +51,8 @@ frontend = Frontend
           
           dMeLoggedIn <- prerender (pure never) $ do
             postBuildEv <- getPostBuild
-            loginCheck <- meRouteLoginCheck postBuildEv
-            return loginCheck
+            evLoginCheck <- meRouteLoginCheck postBuildEv
+            return evLoginCheck
 
           let dynLoggedInEvStation = leftmost [ (Just $ dummyEntityUser) <$ (switchDyn dMeLoggedIn)
                                               , evLoggedInByTrigger
@@ -91,14 +92,18 @@ meRouteLoginCheck
      , PerformEvent t m
      , TriggerEvent t m
      ) 
-  => Event t a -> m (Event t XhrResponse)
+  => Event t a -> m (Event t (Maybe (Entity User)))
 meRouteLoginCheck evTrigger = do
   let xhrRequest = XhrRequest { 
       _xhrRequest_method = "GET"
     , _xhrRequest_url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Me 
     , _xhrRequest_config = def
-  }
+    }
   evResp <- performRequestAsync $ xhrRequest <$ evTrigger
   let evRespSucc = ffilter (statusCheck 200 300) evResp
-  return $ A.decode . BL.fromStrict . TE.encodeUtf8 <$> _xhrResponse_responseText evRespSucc :: _wat
-  
+      evMTextResp = _xhrResponse_responseText <$> evRespSucc
+      evMEUser = ffor evMTextResp $ 
+        \mTextResp -> case mTextResp of 
+          Nothing -> Nothing 
+          Just textResp -> Nothing --pure $ A.decode . BL.fromStrict . TE.encodeUtf8 textResp :: _pop
+  return evMEUser

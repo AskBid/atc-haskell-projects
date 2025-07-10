@@ -63,8 +63,6 @@ loginPage appState = do
       Just textEUser -> do 
         let mEUser = (A.decode . BL.fromStrict . TE.encodeUtf8) textEUser
         liftIO $ loginTrigger appState $ mEUser
-            -- let evLoginTriggerIO = loginTriggerIO <$ evLoginSuccess -- :: Event t (IO ()) 
-            -- performEvent_ $ liftIO <$> evLoginTriggerIO
         return ()
 
     setRoute $ FrontendRoute_Main :/ () <$ ffilter isJust evMTextResp
