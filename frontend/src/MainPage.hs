@@ -43,16 +43,17 @@ mainPage appState = do
       evPostNotLog = ffilter (not . isJust) evPost
       url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Submit
       evTextTweet = tagPromptlyDyn dTextArea evPostLogged
-      
-      evTweet = ffor evTextTweet $ \text -> do
-        let mLoggedUser = (sample . current) $ loggedUser appState
-        case mLoggedUser of
-          Nothing -> Tweet "" Nothing (toSqlKey 1)
-          Just eUser -> Tweet
-            { tweetText = text
+  
+      buildPostTweet :: a -> b -> Tweet
+      buildPostTweet user postWlog = undefined
+      -- attachPromptlyDynWith :: Reflex t => (a -> b -> c) -> Dynamic t a -> Event t b -> Event t c
+      evSome = attachPromptlyDynWith buildPostTweet (loggedUser appState) evPostLogged
+
+      ttt = Just $ Tweet { tweetText = "text"
             , tweetReplyTo = Nothing
-            , tweetOwner = entityKey eUser
+            , tweetOwner = toSqlKey 1
             }
+      evTweet = ttt <$ evPostLogged
 
       evTweetReq = ffor evTweet $ \tweet -> XhrRequest
         { _xhrRequest_method = "POST"
