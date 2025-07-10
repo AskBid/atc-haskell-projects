@@ -44,7 +44,7 @@ loginPage appState = do
   -- :: (l -> xhr) -> e l -> e xhr 
   -- (postJson "text") <$> e l :: e xhr 
   -- performRequestAsync       :: e xhr -> m (e xhr) 
-   
+  
   prerender (pure ()) $ do 
     let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Login
     evResp <- performRequestAsync $ (postJson url) <$> loginReqEv
@@ -52,19 +52,23 @@ loginPage appState = do
     message <- holdDyn "Enter your credentials." $ 
       "Wrong credentials. Try again." <$ ffilter (not . statusCheck 200 300) evResp
     el "h4" $ dynText message
+
     let evRespLoginSucc = ffilter (statusCheck 200 300) evResp
         evMTextResp = _xhrResponse_responseText <$> evRespLoginSucc
+
     performEvent_ $ ffor evMTextResp $ \mTextResp -> case mTextResp of 
     -- ^ if you have an event with a monad you need to run, usually you need performEvent.
     --   when the event fires, runs the monad and returns an Event with its result.
       Nothing -> pure ()
       Just textEUser -> do 
         let mEUser = (A.decode . BL.fromStrict . TE.encodeUtf8) textEUser
-        _ <- loginTrigger appState $ mEUser
+        liftIO $ loginTrigger appState $ mEUser
             -- let evLoginTriggerIO = loginTriggerIO <$ evLoginSuccess -- :: Event t (IO ()) 
             -- performEvent_ $ liftIO <$> evLoginTriggerIO
         return ()
+
     setRoute $ FrontendRoute_Main :/ () <$ ffilter isJust evMTextResp
     return () 
+
   return ()
 
