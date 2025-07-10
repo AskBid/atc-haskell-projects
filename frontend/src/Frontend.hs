@@ -105,5 +105,5 @@ meRouteLoginCheck evTrigger = do
       evMEUser = ffor evMTextResp $ 
         \mTextResp -> case mTextResp of 
           Nothing -> Nothing 
-          Just textResp -> Nothing --pure $ A.decode . BL.fromStrict . TE.encodeUtf8 textResp :: _pop
+          Just textResp -> (A.decode . BL.fromStrict . TE.encodeUtf8) textResp 
   return evMEUser
