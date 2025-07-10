@@ -46,15 +46,14 @@ mainPage appState = do
   
       buildPostTweet :: Maybe (Entity User) -> T.Text -> Maybe Tweet
       buildPostTweet Nothing areaText = Nothing
-      buildPostTweet (Just (Entity k _)) areaText = undefined
-      -- attachPromptlyDynWith :: Reflex t => (a -> b -> c) -> Dynamic t a -> Event t b -> Event t c
-      evSome = attachPromptlyDynWithMaybe buildPostTweet (loggedUser appState) evTextTweet
-
-      ttt = Just $ Tweet { tweetText = "text"
-            , tweetReplyTo = Nothing
-            , tweetOwner = toSqlKey 1
-            }
-      evTweet = ttt <$ evPostLogged
+      buildPostTweet (Just (Entity k _)) areaText = Just $ Tweet 
+        { tweetText = areaText
+        , tweetReplyTo = Nothing
+        , tweetOwner = k
+        }
+      -- ^ attachPromptlyDynWith :: (a -> b -> c) -> Dynamic t a -> Event t b -> Event t c
+      --   with Maybe it filters out the firing if is Nothing.
+      evTweet = attachPromptlyDynWithMaybe buildPostTweet (loggedUser appState) evTextTweet
 
       evTweetReq = ffor evTweet $ \tweet -> XhrRequest
         { _xhrRequest_method = "POST"
