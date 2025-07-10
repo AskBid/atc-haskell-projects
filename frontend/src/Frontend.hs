@@ -24,6 +24,7 @@ import Language.Javascript.JSaddle (MonadJSM)
 import qualified Data.Text.Encoding as TE
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BL
+import qualified Data.Text as T
 import Database.Persist
 
 import Common
@@ -49,21 +50,26 @@ frontend = Frontend
            
           (evLoggedInByTrigger, loginTrigger) <- newTriggerEvent
           
-          dMeLoggedIn <- prerender (pure never) $ do
+          dMEUser <- prerender (pure never) $ do
             postBuildEv <- getPostBuild
-            evLoginCheck <- meRouteLoginCheck postBuildEv
-            return evLoginCheck
+            evMEUser <- meRouteLoginCheck postBuildEv
+            return evMEUser
 
-          let dynLoggedInEvStation = leftmost [ (Just $ dummyEntityUser) <$ (switchDyn dMeLoggedIn)
+          let dynLoggedInEvStation = leftmost [ switchDyn dMEUser
                                               , evLoggedInByTrigger
                                               ]
           dynLoggedIn <- holdDyn Nothing dynLoggedInEvStation
           -- ^ this way we make the Dynamic that holds the login state to be dependent
           --   on more than just one Event.
           let appState = AppState {
-              loginTrigger = loginTrigger
-            , loggedUser = dynLoggedIn
+              loggedUser = dynLoggedIn
+            , loginTrigger = loginTrigger
             }
+
+          let eUserName :: Maybe (Entity User) -> T.Text
+              eUserName Nothing      = "No user is logged in."
+              eUserName (Just eUser) = "Hello " <> (userName $ entityVal eUser) <> "!"
+          elClass "h3" "font-bold text-gray-400" $ dynText (eUserName <$> loggedUser appState) 
 
           subRoute_ $ \case
             FrontendRoute_Main -> mainPage appState
