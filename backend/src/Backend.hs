@@ -99,9 +99,7 @@ backendHandlers = \case
   BackendRoute_Api :/ Api_Submit -> do
     mUsername <- verifyJWT
     payload <- readRequestBody 10000
-    liftIO $ putStrLn $ BL.unpack payload
-    let mTweet :: Maybe Tweet
-        mTweet = A.decode payload
+    let mTweet = A.decode payload :: Maybe Tweet
     case mTweet of 
       Nothing -> error "could not decode tweet from JSON."
       Just tweet -> do 

@@ -1,0 +1,1 @@
+- Login page message text at bottom should change when responseText is Nothing?

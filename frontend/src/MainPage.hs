@@ -35,17 +35,23 @@ mainPage appState = do
     ("placeholder" =: "Write your X here ..." 
     <> "class" =: "bg-blue-100 w-full p-2 rounded min-h-40")
   (elBtnPost, _) <- myButton "Post"
+  
 
   let dTextArea = _textAreaElement_value textArea
       evPost = domEvent Click elBtnPost
+      evPostLogged = ffilter (\mEUser -> undefined) $ tagPromtlyDyn (loggedUser appState) evPost 
       url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Submit
       evTextTweet = tagPromptlyDyn dTextArea evPost
-
-      evTweet = ffor evTextTweet $ \text -> Tweet
-        { tweetText = text
-        , tweetReplyTo = Nothing
-        , tweetOwner = toSqlKey 1 
-        }
+      
+      evTweet = ffor evTextTweet $ \text -> do
+        let mLoggedUser = (sample . current) $ loggedUser appState
+        case mLoggedUser of
+          Nothing -> _
+          Just eUser -> Tweet 
+            { tweetText = text
+            , tweetReplyTo = Nothing
+            , tweetOwner = entityKey eUser
+            }
 
       evTweetReq = ffor evTweet $ \tweet -> XhrRequest
         { _xhrRequest_method = "POST"
@@ -82,6 +88,7 @@ mainPage appState = do
       -- ^ dyn_ runs the Dynamic t (m ()), otherwise you'd only have a Dynamic not run.
       return ()
     return ()
+
   return ()
 
 
