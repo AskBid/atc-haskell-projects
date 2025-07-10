@@ -44,10 +44,11 @@ mainPage appState = do
       url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Submit
       evTextTweet = tagPromptlyDyn dTextArea evPostLogged
   
-      buildPostTweet :: a -> b -> Tweet
-      buildPostTweet user postWlog = undefined
+      buildPostTweet :: Maybe (Entity User) -> T.Text -> Maybe Tweet
+      buildPostTweet Nothing areaText = Nothing
+      buildPostTweet (Just (Entity k _)) areaText = undefined
       -- attachPromptlyDynWith :: Reflex t => (a -> b -> c) -> Dynamic t a -> Event t b -> Event t c
-      evSome = attachPromptlyDynWith buildPostTweet (loggedUser appState) evPostLogged
+      evSome = attachPromptlyDynWithMaybe buildPostTweet (loggedUser appState) evTextTweet
 
       ttt = Just $ Tweet { tweetText = "text"
             , tweetReplyTo = Nothing
