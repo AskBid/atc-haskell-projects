@@ -39,44 +39,45 @@ mainPage appState = do
   
   let dTextArea = _textAreaElement_value textArea
       evPostMEUser = tagPromptlyDyn (loggedUser appState) $ domEvent Click elBtnPost
-      evMEUserLogged = ffilter isJust evPostMEUser 
+      evMEUserLogged = ffilter isJust evPostMEUser
       evMEUserNotLog = ffilter (not . isJust) evPostMEUser
       url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Submit
       -- evTextTweet = tagPromptlyDyn dTextArea evPostLogged
   
   --                               Event t (IO UTCTime)
-  evTime <- performEvent (liftIO getCurrentTime) <$ evMEUserLogged
-
-  let mkTweet :: Maybe (Entity User) -> T.Text -> UTCTime -> Maybe Tweet
-      mkTweet Nothing areaText time = Nothing
-      mkTweet (Just (Entity k _)) areaText time = Just $ Tweet 
-        { tweetText = areaText
-        , tweetReplyTo = Nothing
-        , tweetOwner = k
-        , tweetCreatedAt = time
-        }
-
-      -- dMetaMkTweet :: Dynamic t (T.Text -> UTCTime -> Maybe Tweet)
-      dMetaMkTweet = mkTweet <$> (loggedUser appState)
-      evMetaMkTweet = tagPromptlyDyn dMetaMkTweet $ leftmost [evTime, evMEUserLogged]
-      -- evMTweet :: (T.Text -> UTCTime -> Maybe Tweet) -> Event t Tweet
-      evMTweet = ffor evMetaMkTweet $ 
-        \metaMkTweet -> attachPromptlyDynWithMaybe metaMkTweet dTextArea evTime
-      -- ^ attachPromptlyDynWith :: (a -> b -> c) -> Dynamic t a -> Event t b -> Event t c
-      --   with Maybe it filters out the firing if `c` is Nothing.
-
-      evTweetReq = ffor evTweet $ \tweet -> XhrRequest
-        { _xhrRequest_method = "POST"
-        , _xhrRequest_url = url
-        , _xhrRequest_config = def 
-            & xhrRequestConfig_withCredentials .~ True
-            & xhrRequestConfig_headers .~ ("Content-Type" =: "application/json")
-            & xhrRequestConfig_sendData .~ BL.toStrict (A.encode tweet)
-        }
-
-  setRoute $ FrontendRoute_Login :/ () <$ evPostNotLog
-
   dResp <- prerender (pure never) $ do 
+    let evIoUTCTime = getCurrentTime <$ evMEUserLogged
+    evTime <- performEvent $ liftIO evIoUTCTime
+
+    let mkTweet :: Maybe (Entity User) -> T.Text -> UTCTime -> Maybe Tweet
+        mkTweet Nothing areaText time = Nothing
+        mkTweet (Just (Entity k _)) areaText time = Just $ Tweet 
+          { tweetText = areaText
+          , tweetReplyTo = Nothing
+          , tweetOwner = k
+          , tweetCreatedAt = time
+          }
+
+        -- dMetaMkTweet :: Dynamic t (T.Text -> UTCTime -> Maybe Tweet)
+        dMetaMkTweet = mkTweet <$> (loggedUser appState)
+        evMetaMkTweet = tagPromptlyDyn dMetaMkTweet evMEUserLogged
+        -- evMTweet :: (T.Text -> UTCTime -> Maybe Tweet) -> Event t Tweet
+        evMTweet = ffor evMetaMkTweet $ 
+          \metaMkTweet -> attachPromptlyDynWithMaybe metaMkTweet dTextArea evTime
+        -- ^ attachPromptlyDynWith :: (a -> b -> c) -> Dynamic t a -> Event t b -> Event t c
+        --   with Maybe it filters out the firing if `c` is Nothing.
+
+        evTweetReq = ffor evMTweet $ \tweet -> XhrRequest
+          { _xhrRequest_method = "POST"
+          , _xhrRequest_url = url
+          , _xhrRequest_config = def 
+              & xhrRequestConfig_withCredentials .~ True
+              & xhrRequestConfig_headers .~ ("Content-Type" =: "application/json")
+              & xhrRequestConfig_sendData .~ BL.toStrict (A.encode tweet)
+          }
+
+    setRoute $ FrontendRoute_Login :/ () <$ evMEUserNotLog
+
     evResp <- performRequestAsync evTweetReq
     return evResp
 
