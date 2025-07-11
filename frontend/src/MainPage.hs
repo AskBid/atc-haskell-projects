@@ -46,17 +46,19 @@ mainPage appState = do
   
   evTime <- performEvent $ liftIO getCurrentTime <$ evTextTweet 
 
-  let buildPostTweet :: Maybe (Entity User) -> T.Text -> UTCTime -> Maybe Tweet
-      buildPostTweet Nothing areaText now = Nothing
-      buildPostTweet (Just (Entity k _)) areaText = Just $ Tweet 
+  let mkTweet :: Maybe (Entity User) -> T.Text -> UTCTime -> Maybe Tweet
+      mkTweet Nothing areaText time = Nothing
+      mkTweet (Just (Entity k _)) areaText = Just $ Tweet 
         { tweetText = areaText
         , tweetReplyTo = Nothing
         , tweetOwner = k
-        , tweetCreatedAt = now
+        , tweetCreatedAt = time
         }
 
-      metafunc = buildPostTweet mEUser areaText :: UTCTime -> Maybe Tweet
-      evTweet = attachPromptlyDynWithMaybe buildPostTweet (loggedUser appState) evTextTweet
+      metaMkTweet = mkTweet mEUser :: T.Text -> UTCTime -> Maybe Tweet
+      metaMkTweet' = mkTweet dMEUser :: T.Text -> UTCTime -> Maybe Tweet
+      metaMkTweet' = attachPromptlyDynWithMaybe (mkTweet (loggeduser appState) :: T.Text -> UTCTime -> Maybe Tweet) evTextTweet :: Event t (UTCTime -> Maybe Tweet)
+      evTweet = attachPromptlyDynWithMaybe metaMkTweet dAreaText evTime
       -- ^ attachPromptlyDynWith :: (a -> b -> c) -> Dynamic t a -> Event t b -> Event t c
       --   with Maybe it filters out the firing if `c` is Nothing.
 
