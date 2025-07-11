@@ -60,14 +60,17 @@ mainPage appState = do
 
         -- dMetaMkTweet :: Dynamic t (T.Text -> UTCTime -> Maybe Tweet)
         dMetaMkTweet = mkTweet <$> (loggedUser appState)
+        -- \/ :: Event t (T.Text -> UTCTime -> Maybe Tweet)
         evMetaMkTweet = tagPromptlyDyn dMetaMkTweet evMEUserLogged
-        -- evMTweet :: (T.Text -> UTCTime -> Maybe Tweet) -> Event t Tweet
-        evMTweet = ffor evMetaMkTweet $ 
+        -- \/ :: Event t (Event t Tweet)
+        evTweet = coincidence $ ffor evMetaMkTweet $ 
           \metaMkTweet -> attachPromptlyDynWithMaybe metaMkTweet dTextArea evTime
-        -- ^ attachPromptlyDynWith :: (a -> b -> c) -> Dynamic t a -> Event t b -> Event t c
+        -- ^ (T.Text -> UTCTime -> Maybe Tweet) -> Event t Tweet
+        --   attachPromptlyDynWith :: (a -> b -> c) -> Dynamic t a -> Event t b -> Event t c
+        --   with/maybe :: (a -> b -> Maybe c) -> Dynamic t a -> Event t b -> Event t c
         --   with Maybe it filters out the firing if `c` is Nothing.
 
-        evTweetReq = ffor evMTweet $ \tweet -> XhrRequest
+        evTweetReq = ffor evTweet $ \tweet -> XhrRequest
           { _xhrRequest_method = "POST"
           , _xhrRequest_url = url
           , _xhrRequest_config = def 
