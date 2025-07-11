@@ -17,6 +17,7 @@ import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BL
 import Database.Persist.Sql
 import Data.Maybe
+import Data.Time (getCurrentTime)
 -- import Control.Monad.Trans (lift)
 -- import Control.Monad.IO.Class (liftIO)
 import Schema
@@ -36,7 +37,6 @@ mainPage appState = do
     <> "class" =: "bg-blue-100 w-full p-2 rounded min-h-40")
   (elBtnPost, _) <- myButton "Post"
   
-
   let dTextArea = _textAreaElement_value textArea
       evPost = tagPromptlyDyn (loggedUser appState) $ domEvent Click elBtnPost
       evPostLogged = ffilter isJust evPost 
@@ -44,18 +44,19 @@ mainPage appState = do
       url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Submit
       evTextTweet = tagPromptlyDyn dTextArea evPostLogged
   
-      buildPostTweet :: Maybe (Entity User) -> T.Text -> Maybe Tweet
-      buildPostTweet Nothing areaText = Nothing
-      buildPostTweet (Just (Entity k _)) areaText = Just $ Tweet 
+      buildPostTweet :: Maybe (Entity User) -> T.Text -> IO (Maybe Tweet)
+      buildPostTweet Nothing areaText = pure Nothing
+      buildPostTweet (Just (Entity k _)) areaText = pure $ Just $ Tweet 
         { tweetText = areaText
         , tweetReplyTo = Nothing
         , tweetOwner = k
+        , tweetCreatedAt = getCurrentTime
         }
-      -- ^ attachPromptlyDynWith :: (a -> b -> c) -> Dynamic t a -> Event t b -> Event t c
-      --   with Maybe it filters out the firing if is Nothing.
-      evTweet = attachPromptlyDynWithMaybe buildPostTweet (loggedUser appState) evTextTweet
+  evTweet <- attachPromptlyDynWithMaybe buildPostTweet (loggedUser appState) evTextTweet
+  -- ^ attachPromptlyDynWith :: (a -> b -> c) -> Dynamic t a -> Event t b -> Event t c
+  --   with Maybe it filters out the firing if is Nothing.
 
-      evTweetReq = ffor evTweet $ \tweet -> XhrRequest
+  let evTweetReq = ffor evTweet $ \tweet -> XhrRequest
         { _xhrRequest_method = "POST"
         , _xhrRequest_url = url
         , _xhrRequest_config = def 

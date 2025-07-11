@@ -5,4 +5,4 @@
 - [ ] signup page add user to database
 - [ ] ability to follow other users
 - [ ] User page shows their tweets
-
+- [ ] Main page only shows users followed + some random ones
