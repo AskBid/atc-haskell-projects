@@ -31,7 +31,7 @@ share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
     text Text
     replyTo TweetId Maybe
     owner UserId
-    createdAt UTCTime default=now()
+    createdAt UTCTime
     UniqueTweet text owner
     deriving Show Generic FromJSON ToJSON
 

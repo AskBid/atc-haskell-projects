@@ -58,10 +58,10 @@ mainPage appState = do
           , tweetCreatedAt = time
           }
 
-        -- dMetaMkTweet :: Dynamic t (T.Text -> UTCTime -> Maybe Tweet)
+        -- \/ :: Dynamic t (T.Text -> UTCTime -> Maybe Tweet)
         dMetaMkTweet = mkTweet <$> (loggedUser appState)
         -- \/ :: Event t (T.Text -> UTCTime -> Maybe Tweet)
-        evMetaMkTweet = tagPromptlyDyn dMetaMkTweet evMEUserLogged
+        evMetaMkTweet = tagPromptlyDyn dMetaMkTweet evTime
         -- \/ :: Event t (Event t Tweet)
         evTweet = coincidence $ ffor evMetaMkTweet $ 
           \metaMkTweet -> attachPromptlyDynWithMaybe metaMkTweet dTextArea evTime
