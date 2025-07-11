@@ -38,13 +38,14 @@ mainPage appState = do
   (elBtnPost, _) <- myButton "Post"
   
   let dTextArea = _textAreaElement_value textArea
-      evPost = tagPromptlyDyn (loggedUser appState) $ domEvent Click elBtnPost
-      evPostLogged = ffilter isJust evPost 
-      evPostNotLog = ffilter (not . isJust) evPost
+      evPostMEUser = tagPromptlyDyn (loggedUser appState) $ domEvent Click elBtnPost
+      evMEUserLogged = ffilter isJust evPostMEUser 
+      evMEUserNotLog = ffilter (not . isJust) evPostMEUser
       url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Submit
       -- evTextTweet = tagPromptlyDyn dTextArea evPostLogged
   
-  evTime <- performEvent $ liftIO getCurrentTime <$ evPostLogged 
+  --                               Event t (IO UTCTime)
+  evTime <- performEvent (liftIO getCurrentTime) <$ evMEUserLogged
 
   let mkTweet :: Maybe (Entity User) -> T.Text -> UTCTime -> Maybe Tweet
       mkTweet Nothing areaText time = Nothing
@@ -57,8 +58,10 @@ mainPage appState = do
 
       -- dMetaMkTweet :: Dynamic t (T.Text -> UTCTime -> Maybe Tweet)
       dMetaMkTweet = mkTweet <$> (loggedUser appState)
-      -- evTweet :: (T.Text -> UTCTime -> Maybe Tweet) -> Event t Tweet
-      evTweet = \metaMkTweet -> attachPromptlyDynWithMaybe metaMkTweet dTextArea evTime
+      evMetaMkTweet = tagPromptlyDyn dMetaMkTweet $ leftmost [evTime, evMEUserLogged]
+      -- evMTweet :: (T.Text -> UTCTime -> Maybe Tweet) -> Event t Tweet
+      evMTweet = ffor evMetaMkTweet $ 
+        \metaMkTweet -> attachPromptlyDynWithMaybe metaMkTweet dTextArea evTime
       -- ^ attachPromptlyDynWith :: (a -> b -> c) -> Dynamic t a -> Event t b -> Event t c
       --   with Maybe it filters out the firing if `c` is Nothing.
 
