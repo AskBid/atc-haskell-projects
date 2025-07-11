@@ -55,10 +55,12 @@ mainPage appState = do
         , tweetCreatedAt = time
         }
 
-      metaMkTweet = mkTweet mEUser :: T.Text -> UTCTime -> Maybe Tweet
+      dMetaMkTweet :: Dynamic t (T.Text -> UTCTime -> Maybe Tweet)
+      dMetaMkTweet = mkTweet <$> (loggeduser appState)
       metaMkTweet' = mkTweet dMEUser :: T.Text -> UTCTime -> Maybe Tweet
-      metaMkTweet' = attachPromptlyDynWithMaybe (mkTweet (loggeduser appState) :: T.Text -> UTCTime -> Maybe Tweet) evTextTweet :: Event t (UTCTime -> Maybe Tweet)
-      evTweet = attachPromptlyDynWithMaybe metaMkTweet dAreaText evTime
+      evUTCTimeMTweet :: Event t (UTCTime -> Maybe Tweet)
+      evUTCTimeMTweet = attachPromptlyDynWithMaybe (mkTweet (loggeduser appState)) evTextTweet 
+      evTweet = attachPromptlyDynWithMaybe evUTCTimeMTweet dAreaText evTime
       -- ^ attachPromptlyDynWith :: (a -> b -> c) -> Dynamic t a -> Event t b -> Event t c
       --   with Maybe it filters out the firing if `c` is Nothing.
 
