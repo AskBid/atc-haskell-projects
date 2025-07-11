@@ -17,7 +17,7 @@ import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BL
 import Database.Persist.Sql
 import Data.Maybe
-import Data.Time (getCurrentTime)
+import Data.Time (getCurrentTime, UTCTime)
 import Control.Monad.IO.Class (liftIO, MonadIO)
 -- import Control.Monad.Trans (lift)
 import Schema
@@ -26,7 +26,7 @@ import Common.MyFunctions (headSafe)
 import Common
 
 mainPage 
-  :: ( ObeliskWidget t (R FrontendRoute) m, MonadIO m)  
+  :: ( ObeliskWidget t (R FrontendRoute) m)  
   => AppState t -> RoutedT t () m ()
 mainPage appState = do
   buttonLogInOut appState $ FrontendRoute_Main :/ ()
@@ -44,10 +44,10 @@ mainPage appState = do
       url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Submit
       evTextTweet = tagPromptlyDyn dTextArea evPostLogged
   
-  now <- liftIO $ getCurrentTime
+  evTime <- performEvent $ liftIO getCurrentTime <$ evTextTweet 
 
-  let buildPostTweet :: Maybe (Entity User) -> T.Text -> Maybe Tweet
-      buildPostTweet Nothing areaText = Nothing
+  let buildPostTweet :: Maybe (Entity User) -> T.Text -> UTCTime -> Maybe Tweet
+      buildPostTweet Nothing areaText now = Nothing
       buildPostTweet (Just (Entity k _)) areaText = Just $ Tweet 
         { tweetText = areaText
         , tweetReplyTo = Nothing
@@ -55,9 +55,10 @@ mainPage appState = do
         , tweetCreatedAt = now
         }
 
+      metafunc = buildPostTweet mEUser areaText :: UTCTime -> Maybe Tweet
       evTweet = attachPromptlyDynWithMaybe buildPostTweet (loggedUser appState) evTextTweet
       -- ^ attachPromptlyDynWith :: (a -> b -> c) -> Dynamic t a -> Event t b -> Event t c
-      --   with Maybe it filters out the firing if is Nothing.
+      --   with Maybe it filters out the firing if `c` is Nothing.
 
       evTweetReq = ffor evTweet $ \tweet -> XhrRequest
         { _xhrRequest_method = "POST"
