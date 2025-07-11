@@ -47,7 +47,7 @@ mainPage appState = do
   --                               Event t (IO UTCTime)
   dResp <- prerender (pure never) $ do 
     let evIoUTCTime = getCurrentTime <$ evMEUserLogged
-    evTime <- performEvent $ liftIO evIoUTCTime
+    evTime <- performEvent $ liftIO <$> evIoUTCTime
 
     let mkTweet :: Maybe (Entity User) -> T.Text -> UTCTime -> Maybe Tweet
         mkTweet Nothing areaText time = Nothing
