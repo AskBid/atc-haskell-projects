@@ -17,7 +17,7 @@ import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BL
 import Database.Persist.Sql
 import Data.Maybe
-import Data.Time (getCurrentTime, UTCTime)
+import Data.Time (getCurrentTime, UTCTime(..), fromGregorian, secondsToDiffTime)
 import Control.Monad.IO.Class (liftIO, MonadIO)
 -- import Control.Monad.Trans (lift)
 import Schema
@@ -44,10 +44,11 @@ mainPage appState = do
       url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Submit
       -- evTextTweet = tagPromptlyDyn dTextArea evPostLogged
   
-  --                               Event t (IO UTCTime)
   dResp <- prerender (pure never) $ do 
     let evIoUTCTime = getCurrentTime <$ evMEUserLogged
+    -- ^              Event t (IO UTCTime)
     evTime <- performEvent $ liftIO <$> evIoUTCTime
+    dTime <- holdDyn (UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 0)) evTime 
 
     let mkTweet :: Maybe (Entity User) -> T.Text -> UTCTime -> Maybe Tweet
         mkTweet Nothing areaText time = Nothing
@@ -58,17 +59,7 @@ mainPage appState = do
           , tweetCreatedAt = time
           }
 
-        -- \/ :: Dynamic t (T.Text -> UTCTime -> Maybe Tweet)
-        dMetaMkTweet = mkTweet <$> (loggedUser appState)
-        -- \/ :: Event t (T.Text -> UTCTime -> Maybe Tweet)
-        evMetaMkTweet = tagPromptlyDyn dMetaMkTweet evTime
-        -- \/ :: Event t (Event t Tweet)
-        evTweet = coincidence $ ffor evMetaMkTweet $ 
-          \metaMkTweet -> attachPromptlyDynWithMaybe metaMkTweet dTextArea evTime
-        -- ^ (T.Text -> UTCTime -> Maybe Tweet) -> Event t Tweet
-        --   attachPromptlyDynWith :: (a -> b -> c) -> Dynamic t a -> Event t b -> Event t c
-        --   with/maybe :: (a -> b -> Maybe c) -> Dynamic t a -> Event t b -> Event t c
-        --   with Maybe it filters out the firing if `c` is Nothing.
+        evTweet = updated $ ffor3 (loggedUser appState) dTextArea dTime mkTweet
 
         evTweetReq = ffor evTweet $ \tweet -> XhrRequest
           { _xhrRequest_method = "POST"
