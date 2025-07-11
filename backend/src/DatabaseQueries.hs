@@ -21,7 +21,7 @@ sqlUserPwdExist lr = do
 
 getPosts :: IO TweetUserResp
 getPosts = do 
-  posts <- runSqlite myDB $ selectList [TweetReplyTo ==. Nothing] []
+  posts <- runSqlite myDB $ selectList [TweetReplyTo ==. Nothing] [Desc TweetCreatedAt]
   users <- catMaybes <$> mapM findUsers posts
   return $ TweetUserResp posts users
 
@@ -39,5 +39,5 @@ insertTweet eTweet = do
 
 getPostReplies :: Entity Tweet -> IO [Entity Tweet]
 getPostReplies tweet = do 
-  replies <- runSqlite myDB $ selectList [TweetReplyTo ==. Just (entityKey tweet)] []
+  replies <- runSqlite myDB $ selectList [TweetReplyTo ==. Just (entityKey tweet)] [Desc TweetCreatedAt]
   return replies
