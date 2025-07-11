@@ -18,15 +18,15 @@ import qualified Data.ByteString.Lazy as BL
 import Database.Persist.Sql
 import Data.Maybe
 import Data.Time (getCurrentTime)
+import Control.Monad.IO.Class (liftIO, MonadIO)
 -- import Control.Monad.Trans (lift)
--- import Control.Monad.IO.Class (liftIO)
 import Schema
 import Common.Api (TweetUserResp(..))
 import Common.MyFunctions (headSafe)
 import Common
 
 mainPage 
-  :: ( ObeliskWidget t (R FrontendRoute) m)  
+  :: ( ObeliskWidget t (R FrontendRoute) m, MonadIO m)  
   => AppState t -> RoutedT t () m ()
 mainPage appState = do
   buttonLogInOut appState $ FrontendRoute_Main :/ ()
@@ -44,19 +44,22 @@ mainPage appState = do
       url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Submit
       evTextTweet = tagPromptlyDyn dTextArea evPostLogged
   
-      buildPostTweet :: Maybe (Entity User) -> T.Text -> IO (Maybe Tweet)
-      buildPostTweet Nothing areaText = pure Nothing
-      buildPostTweet (Just (Entity k _)) areaText = pure $ Just $ Tweet 
+  now <- liftIO $ getCurrentTime
+
+  let buildPostTweet :: Maybe (Entity User) -> T.Text -> Maybe Tweet
+      buildPostTweet Nothing areaText = Nothing
+      buildPostTweet (Just (Entity k _)) areaText = Just $ Tweet 
         { tweetText = areaText
         , tweetReplyTo = Nothing
         , tweetOwner = k
-        , tweetCreatedAt = getCurrentTime
+        , tweetCreatedAt = now
         }
-  evTweet <- attachPromptlyDynWithMaybe buildPostTweet (loggedUser appState) evTextTweet
-  -- ^ attachPromptlyDynWith :: (a -> b -> c) -> Dynamic t a -> Event t b -> Event t c
-  --   with Maybe it filters out the firing if is Nothing.
 
-  let evTweetReq = ffor evTweet $ \tweet -> XhrRequest
+      evTweet = attachPromptlyDynWithMaybe buildPostTweet (loggedUser appState) evTextTweet
+      -- ^ attachPromptlyDynWith :: (a -> b -> c) -> Dynamic t a -> Event t b -> Event t c
+      --   with Maybe it filters out the firing if is Nothing.
+
+      evTweetReq = ffor evTweet $ \tweet -> XhrRequest
         { _xhrRequest_method = "POST"
         , _xhrRequest_url = url
         , _xhrRequest_config = def 
