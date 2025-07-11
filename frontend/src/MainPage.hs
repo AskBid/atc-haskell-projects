@@ -42,9 +42,9 @@ mainPage appState = do
       evPostLogged = ffilter isJust evPost 
       evPostNotLog = ffilter (not . isJust) evPost
       url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Submit
-      evTextTweet = tagPromptlyDyn dTextArea evPostLogged
+      -- evTextTweet = tagPromptlyDyn dTextArea evPostLogged
   
-  evTime <- performEvent $ liftIO getCurrentTime <$ evTextTweet 
+  evTime <- performEvent $ liftIO getCurrentTime <$ evPostLogged 
 
   let mkTweet :: Maybe (Entity User) -> T.Text -> UTCTime -> Maybe Tweet
       mkTweet Nothing areaText time = Nothing
@@ -57,10 +57,8 @@ mainPage appState = do
 
       -- dMetaMkTweet :: Dynamic t (T.Text -> UTCTime -> Maybe Tweet)
       dMetaMkTweet = mkTweet <$> (loggedUser appState)
-      -- evUTCTimeMTweet :: Event t (UTCTime -> Maybe Tweet)
-      -- evUTCTimeMTweet = \abcFunc dynTa evTb -> attachPromptlyDynWithMaybe abcFunc 
-      evTweet :: (T.Text -> UTCTime -> Maybe Tweet) -> Event t Tweet
-      evTweet = \metaMkTweet -> attachPromptlyDynWithMaybe metaMkTweet dAreaText evTime
+      -- evTweet :: (T.Text -> UTCTime -> Maybe Tweet) -> Event t Tweet
+      evTweet = \metaMkTweet -> attachPromptlyDynWithMaybe metaMkTweet dTextArea evTime
       -- ^ attachPromptlyDynWith :: (a -> b -> c) -> Dynamic t a -> Event t b -> Event t c
       --   with Maybe it filters out the firing if `c` is Nothing.
 
