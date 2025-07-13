@@ -8,6 +8,9 @@ import Common.Route
 import Obelisk.Backend
 import Obelisk.Route
 import Snap
+import qualified Network.WebSockets as WS
+import qualified Network.WebSockets.Snap as WSSnap
+import Data.Text 
 
 backend :: Backend BackendRoute FrontendRoute
 backend = Backend
@@ -18,4 +21,9 @@ backend = Backend
 backendHandlers :: R BackendRoute -> Snap ()
 backendHandlers = \case
   BackendRoute_Missing :/ () -> writeBS "404"
-  BackendRoute_Websocket :/ () -> writeBS "ciao"
+  BackendRoute_Websocket :/ () -> WSSnap.runWebSocketsSnap wsHandler
+
+wsHandler :: WS.ServerApp
+wsHandler pending = do
+  conn <- WS.acceptRequest pending
+  WS.sendTextData conn ("WebSocket connected!" :: Text)

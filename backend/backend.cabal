@@ -13,6 +13,7 @@ library
                , obelisk-backend
                , obelisk-route
                , snap
+               , websockets
                , websockets-snap
   exposed-modules:
     Backend
