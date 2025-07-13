@@ -12,6 +12,8 @@ library
                , frontend
                , obelisk-backend
                , obelisk-route
+               , snap
+               , websockets-snap
   exposed-modules:
     Backend
   ghc-options: -Wall -O -fno-show-valid-hole-fits
