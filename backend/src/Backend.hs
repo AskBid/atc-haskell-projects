@@ -23,6 +23,8 @@ backendHandlers = \case
   BackendRoute_Missing :/ () -> writeBS "404"
   BackendRoute_Websocket :/ () -> WSSnap.runWebSocketsSnap wsHandler
 
+-- | @type ServerApp = PendingConnection -> IO ()@ is a fucntion type, hence why `pending`
+--   appears down here.
 wsHandler :: WS.ServerApp
 wsHandler pending = do
   conn <- WS.acceptRequest pending
