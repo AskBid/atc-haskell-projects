@@ -15,7 +15,24 @@
   }
 }:
 with obelisk;
+#
+# let
+#   nixpkgsOverlay = final: prev: {
+#     haskellPackages = prev.haskellPackages.override {
+#       overrides = hfinal: hprev: {
+#         haskell-language-server = hfinal.callCabal2nix "haskell-language-server" (final.fetchFromGitHub {
+#           owner = "haskell";
+#           repo = "haskell-language-server";
+#           rev = "2.9.0.0"; # Use the desired version of HLS
+#           sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # Replace with the correct hash
+#         }) {};
+#       };
+#     };
+#   };
+# in
+
 project ./. ({ ... }: {
+  # overrides = nixpkgsOverlay;
   android.applicationId = "systems.obsidian.obelisk.examples.minimal";
   android.displayName = "Obelisk Minimal Example";
   ios.bundleIdentifier = "systems.obsidian.obelisk.examples.minimal";
