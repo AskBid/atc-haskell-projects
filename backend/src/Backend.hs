@@ -17,15 +17,17 @@ import Control.Concurrent (threadDelay)
 import Control.Concurrent.STM 
 import Control.Monad.IO.Class (liftIO)
 
+type NamedConn = (Text, WS.Connection)
+
 backend :: Backend BackendRoute FrontendRoute
 backend = Backend
   { _backend_run = \serve -> do 
-      conns <- liftIO $ atomically $ newTVar []
+      conns <- liftIO $ atomically $ newTVar ([] :: [NamedConn])
       serve $ backendHandlers conns
   , _backend_routeEncoder = fullRouteEncoder
   }
 
-backendHandlers :: TVar [WS.Connection] -> R BackendRoute -> Snap ()
+backendHandlers :: TVar [NamedConn] -> R BackendRoute -> Snap ()
 backendHandlers conns = \case
   BackendRoute_Missing :/ () -> writeBS "404"
   BackendRoute_Websocket :/ () -> WSSnap.runWebSocketsSnap $ wsHandler conns
@@ -35,11 +37,13 @@ backendHandlers conns = \case
 
 -- | @type ServerApp = PendingConnection -> IO ()@ is a fucntion type, hence why `pending`
 --   appears down here.
-wsHandler :: TVar [WS.Connection] -> WS.ServerApp
-wsHandler conns pending = do
+wsHandler :: TVar [NamedConn] -> WS.ServerApp
+wsHandler tvConns pending = do
   conn <- WS.acceptRequest pending
   forever $ do
     time <- getCurrentTime
     let strTime = pack $ show time
+    conns <- liftIO $ atomically $ readTVar tvConns
+    sequence_ $ WS.sendTextData conn <$> fst <$> conns -- [IO ()} 
     WS.sendTextData conn ( strTime :: Text)
     threadDelay 1000000
