@@ -34,13 +34,23 @@ frontend = Frontend
       elAttr "script" ("type" =: "application/javascript" <> "src" =: $(static "lib.js")) blank
       elAttr "link" ("href" =: $(static "main.css") <> "type" =: "text/css" <> "rel" =: "stylesheet") blank
   , _frontend_body = do
+      el "div" $ text "Welcome to Chat! (from frontend)"
+
       prerender_ blank $ do
-        ws <- webSocket "ws://localhost:8000/ws" (def :: Reflex t => WebSocketConfig t T.Text)
+
+        -- TODO create element to enter text that when submitted through button, sends 
+        -- the word to the backend
+        (elInp, a) <- el' "input" $ text "mah"
+        (elBtn, _) <- el' "button" $ text "click"
+        let eClick = domEvent Click elBtn
+        dyndyn <- holdDyn (T.pack "--") $ (T.pack "name") <$ eClick
+        el "div" $ dynText dyndyn
+
+        ws <- webSocket "http://localhost:8000/ws?name=" (def :: Reflex t => WebSocketConfig t T.Text)
         let evText = ET.decodeUtf8 <$> _webSocket_recv ws
         dText <- holdDyn "" evText
-        el "h1" $ dynText dText
+        el "div" $ dynText dText
         return ()
 
-      el "h1" $ text "Welcome to Chat! (from frontend)"
       return ()
   }
