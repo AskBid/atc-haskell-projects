@@ -16,6 +16,7 @@ library
                , websockets
                , websockets-snap
                , time
+               , stm
   exposed-modules:
     Backend
   ghc-options: -Wall -O -fno-show-valid-hole-fits
