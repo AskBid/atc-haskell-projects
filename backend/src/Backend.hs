@@ -11,6 +11,8 @@ import Snap
 import qualified Network.WebSockets as WS
 import qualified Network.WebSockets.Snap as WSSnap
 import Data.Text 
+import Control.Monad 
+import Data.Time
 
 backend :: Backend BackendRoute FrontendRoute
 backend = Backend
@@ -22,10 +24,17 @@ backendHandlers :: R BackendRoute -> Snap ()
 backendHandlers = \case
   BackendRoute_Missing :/ () -> writeBS "404"
   BackendRoute_Websocket :/ () -> WSSnap.runWebSocketsSnap wsHandler
+  -- ^ runWebSocketsSnap is just a bridge — it hands off the PendingConnection to your wsHandler. 
+  -- Everything else is up to you. Broadcast messages to all clients, Count or log active connections,
+  -- Assign client IDs or session tokens, Or keep chat history...
 
 -- | @type ServerApp = PendingConnection -> IO ()@ is a fucntion type, hence why `pending`
 --   appears down here.
 wsHandler :: WS.ServerApp
 wsHandler pending = do
   conn <- WS.acceptRequest pending
-  WS.sendTextData conn ("WebSocket connected!" :: Text)
+  forever $ do
+    time <- getCurrentTime
+    let strTime = pack $ show time
+    putStrLn $ show time
+    WS.sendTextData conn ( strTime :: Text)

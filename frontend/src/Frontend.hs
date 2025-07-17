@@ -30,7 +30,7 @@ import Common.Route
 frontend :: Frontend (R FrontendRoute)
 frontend = Frontend
   { _frontend_head = do
-      el "title" $ text "Obelisk Minimal Example"
+      el "title" $ text "Reflex Chat"
       elAttr "script" ("type" =: "application/javascript" <> "src" =: $(static "lib.js")) blank
       elAttr "link" ("href" =: $(static "main.css") <> "type" =: "text/css" <> "rel" =: "stylesheet") blank
   , _frontend_body = do
@@ -41,6 +41,6 @@ frontend = Frontend
         el "h1" $ dynText dText
         return ()
 
-      el "h1" $ text "Welcome to Chat!"
+      el "h1" $ text "Welcome to Chat! (from frontend)"
       return ()
   }
