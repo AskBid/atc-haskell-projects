@@ -13,6 +13,7 @@ import qualified Network.WebSockets.Snap as WSSnap
 import Data.Text 
 import Control.Monad 
 import Data.Time
+import Control.Concurrent
 
 backend :: Backend BackendRoute FrontendRoute
 backend = Backend
@@ -36,5 +37,5 @@ wsHandler pending = do
   forever $ do
     time <- getCurrentTime
     let strTime = pack $ show time
-    putStrLn $ show time
     WS.sendTextData conn ( strTime :: Text)
+    threadDelay 1000000
