@@ -19,16 +19,16 @@ import Control.Monad.IO.Class (liftIO)
 
 backend :: Backend BackendRoute FrontendRoute
 backend = Backend
-  { _backend_run = \serve -> serve backendHandlers
+  { _backend_run = \serve -> do 
+      conns <- liftIO $ atomically $ newTVar []
+      serve $ backendHandlers conns
   , _backend_routeEncoder = fullRouteEncoder
   }
 
-backendHandlers :: R BackendRoute -> Snap ()
-backendHandlers = \case
+backendHandlers :: TVar [WS.Connection] -> R BackendRoute -> Snap ()
+backendHandlers conns = \case
   BackendRoute_Missing :/ () -> writeBS "404"
-  BackendRoute_Websocket :/ () -> do 
-    conns <- liftIO $ atomically $ newTVar []
-    WSSnap.runWebSocketsSnap $ wsHandler conns
+  BackendRoute_Websocket :/ () -> WSSnap.runWebSocketsSnap $ wsHandler conns
   -- ^ runWebSocketsSnap is just a bridge — it hands off the PendingConnection to your wsHandler. 
   -- Everything else is up to you. Broadcast messages to all clients, Count or log active connections,
   -- Assign client IDs or session tokens, Or keep chat history...
