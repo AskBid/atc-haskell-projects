@@ -30,7 +30,7 @@ import Common.Route
 frontend :: Frontend (R FrontendRoute)
 frontend = Frontend
   { _frontend_head = do
-      el "title" $ text "Reflex Chat"
+      el "title" $ text "Chat websocket Reflex"
       elAttr "script" ("type" =: "application/javascript" <> "src" =: $(static "lib.js")) blank
       elAttr "link" ("href" =: $(static "main.css") <> "type" =: "text/css" <> "rel" =: "stylesheet") blank
   , _frontend_body = do
@@ -40,16 +40,24 @@ frontend = Frontend
 
         -- TODO create element to enter text that when submitted through button, sends 
         -- the word to the backend
-        (elInp, a) <- el' "input" $ text "mah"
+        elInp <- inputElement def
         (elBtn, _) <- el' "button" $ text "click"
         let eClick = domEvent Click elBtn
-        dyndyn <- holdDyn (T.pack "--") $ (T.pack "name") <$ eClick
-        el "div" $ dynText dyndyn
+            dInp = _inputElement_value elInp
+            eName = tagPromptlyDyn dInp eClick
+            eUrl = ("ws://localhost:8000/ws?name=" <>) <$> eName
+        dName <- holdDyn "--" eName
+        el "div" $ dynText dName
+        
+        let eSocket = ffor eUrl $ \url -> do 
+            ws <- webSocket url (def :: Reflex t => WebSocketConfig t T.Text)
+            let evText = ET.decodeUtf8 <$> _webSocket_recv ws
+            dText <- holdDyn "" evText
+            el "div" $ dynText dText
 
-        ws <- webSocket "http://localhost:8000/ws?name=" (def :: Reflex t => WebSocketConfig t T.Text)
-        let evText = ET.decodeUtf8 <$> _webSocket_recv ws
-        dText <- holdDyn "" evText
-        el "div" $ dynText dText
+        widgetHold blank eSocket
+
+
         return ()
 
       return ()

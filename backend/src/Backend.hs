@@ -16,6 +16,7 @@ import Data.Time (getCurrentTime)
 import Control.Concurrent (threadDelay)
 import Control.Concurrent.STM 
 import Control.Monad.IO.Class (liftIO)
+import Data.ByteString.UTF8 (toString)
 
 type NamedConn = (Text, WS.Connection)
 
@@ -39,6 +40,8 @@ backendHandlers conns = \case
 --   appears down here.
 wsHandler :: TVar [NamedConn] -> WS.ServerApp
 wsHandler tvConns pending = do
+  let path = toString $ WS.requestPath $ WS.pendingRequest pending
+  -- putStrLn $ "-------------->>>>>>>>>>>> " <> path
   conn <- WS.acceptRequest pending
   forever $ do
     time <- getCurrentTime

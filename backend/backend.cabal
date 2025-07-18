@@ -17,6 +17,8 @@ library
                , websockets-snap
                , time
                , stm
+               , bytestring
+               , utf8-string
   exposed-modules:
     Backend
   ghc-options: -Wall -O -fno-show-valid-hole-fits
