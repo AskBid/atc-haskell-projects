@@ -11,9 +11,6 @@ import Data.Time (addDays, fromGregorian, Day)
 
 import Task (Task(..), Priority)
 
--- probably no need for a parser here as a @split ','@ would be enough..
--- but I was willing to put to practice the Parsec library I just read on.
---
 -- | parserCheck given a string.row from the todo.txt file converts it into Task type.
 -- example:
 -- >>> parse parserTask "" "task-name,False,description of the task\n"
@@ -73,11 +70,8 @@ parserPriority = do
 
 -- | Parses a due date from either a date string in @YYYY-MM-DD@ format or an integer string 
 -- representing days to add to the current date. Returns the resulting 'Day'.
---
 -- The first argument, of type 'Day', is the current date, typically obtained via 'Interface.processCurrentDay'.
--- 
 -- Example:
--- 
 -- >>> parse (parserDueDate (fromGregorian 2023 10 1)) "" "2023-10-15"
 -- Right 2023-10-15
 -- >>> parse (parserDueDate (fromGregorian 2023 10 1)) "" "7"
