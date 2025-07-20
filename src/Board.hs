@@ -11,8 +11,8 @@ module Board
   , removePawn
   ) where
 
-import Data.List (transpose)
-import Data.Maybe (isNothing)
+import Data.List       (transpose)
+import Data.Maybe      (isNothing)
 import Data.List.Index (setAt)
 
 data Player = O | X 

@@ -11,19 +11,19 @@ import Control.Monad.State
   , StateT
   , modify
   )
-import Control.Monad (when)
-import Data.Maybe (isNothing, fromMaybe)
-import Text.Parsec (parse)
+import Control.Monad       (when)
+import Data.Maybe          (isNothing, fromMaybe)
+import Text.Parsec         (parse)
 import Control.Monad.State (liftIO)
 
-import Board (Coordinate(..), Player(..), mkBoard) 
-import Game (Game(..), move, end, win, otherPlayer)
-import Parser (coordinateParser)
-import Graphics (charsIxs, charIndexes8)
-import Ai (findAiMove)
-import Interface.Helpers (displayGame, printLn, getLn)
-import Interface.Settings (switchStartingPlayer)
-import Interface.AppState
+import Board               (Coordinate(..), Player(..), mkBoard) 
+import Game                (Game(..), move, end, win, otherPlayer)
+import Parser              (coordinateParser)
+import Graphics            (charsIxs, charIndexes8)
+import Ai                  (findAiMove)
+import Interface.Helpers   (displayGame, printLn, getLn)
+import Interface.Settings  (switchStartingPlayer)
+import Interface.AppState  (AppState(..))
 
 
 -- | the part of CLI where a recursive function get one move after the other,

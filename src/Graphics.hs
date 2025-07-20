@@ -8,11 +8,12 @@ module Graphics
   ) where
 
 import Data.String (fromString)
-import Data.Char (toUpper)
+import Data.Char   (toUpper)
 
-import Board (Board, Player(..))
+import Board       (Board, Player(..))
 import Helpers as H
 
+-- a CLI graphic example:
 --       A   B   C
 --     -------------
 --   1 |   |   |   | 1

@@ -11,12 +11,12 @@ import Control.Monad.State
   , StateT
   , modify
   )
-import Text.Parsec (parse)
+import Text.Parsec        (parse)
 
-import Interface.Helpers (printLn)
-import Parser (acceptedNumber)
-import Game (Game(evaporCount), mkGame, otherPlayer)
-import Interface.AppState
+import Interface.Helpers  (printLn)
+import Parser             (acceptedNumber)
+import Game               (Game(evaporCount), mkGame, otherPlayer)
+import Interface.AppState (AppState(startingPawn, game))
 
 -- | CLI dialogues to take user's input on creating differnet board size and 
 --   game parameters.

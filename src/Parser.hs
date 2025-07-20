@@ -5,13 +5,13 @@ module Parser
   , acceptedNumber
   ) where
 
-import Text.Parsec
+import Text.Parsec        (digit, many1, spaces, letter, (<|>))
 import Text.Parsec.String (Parser)
-import Data.List (elemIndex)
-import Text.Read (readMaybe)
-import Data.Char
+import Data.List          (elemIndex)
+import Text.Read          (readMaybe)
+import Data.Char          (toUpper)
 
-import Board
+import Board              (Coordinate(..))
 
 -- | parse coordinates from user input, forces to have the horizontal coordinate first,
 --   but accepts both coordinates as numbers.

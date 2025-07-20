@@ -8,8 +8,20 @@ import Data.List (find)
 import Data.Maybe (fromMaybe, isNothing)
 import System.Random
 
-import Game
-import Board
+import Game 
+  ( Game
+  , winStreak
+  , lastPlayer
+  , otherPlayer
+  , board
+  , countToWin
+  )
+import Board 
+  ( Coordinate(..)
+  , Player
+  , Board
+  , boardlines
+  )
 import Helpers ((><))
 
 findAiMove :: Game -> IO Coordinate

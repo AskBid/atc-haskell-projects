@@ -9,15 +9,15 @@ import Control.Monad.State
   , modify
   )
 
-import Game (Game(lastPlayer, board), otherPlayer)
-import Graphics (printBoard)
-import Interface.AppState
+import Game               (Game(lastPlayer, board), otherPlayer)
+import Graphics           (printBoard)
+import Interface.AppState (AppState(game, startingPawn))
 
 -- | @gameLoop@ always set the current player as the opposite to the last move (@lastPlayer@).
 --   this function makes sure that at the beginning of each game the initial player (in 
 --   AppState) has effect, changing the @lastPlayer@ state value accordingly.
-setStartintPawn :: StateT AppState IO ()
-setStartintPawn = do
+setStartingPawn :: StateT AppState IO ()
+setStartingPawn = do
   state <- get
   let gm = game state
   let lastP = otherPlayer $ startingPawn state

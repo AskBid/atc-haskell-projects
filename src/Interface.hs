@@ -2,18 +2,17 @@
 
 module Interface (multiplayer, loop) where
 
--- import System.IO (hFlush, stdout)
-import Control.Monad.State
-import Control.Monad (when)
-import Data.Maybe (isNothing, fromMaybe)
-import Text.Parsec (parse)
+import Control.Monad.State (StateT, modify, get, liftIO)
+import Control.Monad       (when)
+import Data.Maybe          (isNothing, fromMaybe)
+import Text.Parsec         (parse)
 
-import Game (Game(..), mkGame)
-import Board (Player(O,X), mkBoard)
-import Interface.Game (gameLoop, endGame)
-import Interface.Helpers (setStartintPawn, printLn, getLn)
-import Interface.Settings (switchStartingPlayer, buildCustomGame)
-import Interface.AppState
+import Game                (Game(..), mkGame)
+import Board               (Player(O,X), mkBoard)
+import Interface.Game      (gameLoop, endGame)
+import Interface.Helpers   (setStartingPawn, printLn, getLn)
+import Interface.Settings  (switchStartingPlayer, buildCustomGame)
+import Interface.AppState  (AppState(..))
 
 -- | dialogue to set players as human or AI, used at the very beginning of the CLI.
 multiplayer :: AppState -> IO AppState
@@ -72,21 +71,21 @@ handleInput "exit" = do
 handleInput "0" = do
   printLn "Quick Standard Game Started!"
   modify (\s -> s{game=(game s){board= mkBoard 3, evaporCount= Nothing, countToWin= 3}}) 
-  setStartintPawn
+  setStartingPawn
   gameLoop
   endGame 
 -- 
 handleInput "1" = do
   printLn "Quick Evaporating Game Started!"
   modify (\s -> s{game=(game s){board= mkBoard 3, evaporCount= Just 3, countToWin= 3}})
-  setStartintPawn
+  setStartingPawn
   gameLoop
   endGame 
 -- 
 handleInput "2" = do
   printLn ""
   buildCustomGame
-  setStartintPawn
+  setStartingPawn
   gameLoop
   endGame
 --
@@ -96,7 +95,7 @@ handleInput "3" = do
   printLn "Replaying game with:"
   printLn $ "Evaporating value: " ++ (show $ evaporCount $ game state)
   printLn $ "Winning strake value: " ++ (show $ countToWin $ game state)
-  setStartintPawn
+  setStartingPawn
   gameLoop
   endGame
 --

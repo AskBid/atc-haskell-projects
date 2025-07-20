@@ -1,4 +1,4 @@
--- | module to gather functions that need customisation and are used around
+-- | module to gather functions that need customisation and are used all around
 --   the code base. e.g. @head@ neads edge case considerd not to raise warnings
 module Helpers where
 
