@@ -19,6 +19,7 @@ library
                , stm
                , bytestring
                , utf8-string
+               , containers
   exposed-modules:
     Backend
   ghc-options: -Wall -O -fno-show-valid-hole-fits
