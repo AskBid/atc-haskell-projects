@@ -2,12 +2,10 @@
 
 module File (saveTasks, readTasks) where
 
-import System.IO
-import Text.Parsec
-import Text.Parsec.String
+import Text.Parsec (parse, many)
 
-import Parser
-import Task
+import Parser (parserTask)
+import Task (Task(..))
 
 saveTasks :: [Task] -> IO ()
 saveTasks ts = writeFile "todo.txt" $ concatMap writeTask ts
@@ -29,6 +27,6 @@ readTasks = do
       putStrLn "Something went wrong while reading todo list from file."
       return []
     Right ts -> do
-      putStrLn "Todo list read from file."
+      putStrLn "-- Todo list read from file."
       return ts
 
