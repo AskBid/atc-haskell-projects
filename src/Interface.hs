@@ -8,13 +8,25 @@ import Text.Parsec.String (Parser)
 import Data.Time (getCurrentTime, utctDay, Day, diffDays)
 import Data.Maybe (fromMaybe)
 
-import Task
-import File
-import Parser
+import Task   ( Task(..)
+              , filterCompletes
+              , sortTasks
+              , replaceTask
+              , getTask
+              , deleteTask
+              , mkTask
+              )
+import Parser ( parserDueDate
+              , parserDescription
+              , parserPriority
+              , nameParserError
+              , parserTaskName
+              )
+import File   ( saveTasks )
 
 loop :: [Task] -> IO ()
 loop ts = do
-  putStr "Enter command:      (`help` to list all commands)"
+  putStrLn "Enter command:      (`help` to list all commands)"
   hFlush stdout -- insures output is printed immediately rather than wait in buffer
   input <- getLine
   (isLooping, tsNew) <- handleInput ts input
