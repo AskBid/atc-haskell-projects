@@ -1,6 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Interface where
+module Interface 
+  ( loop
+  , interfaceHelp
+  , handleInput
+  , showCompletedTasks
+  ) where
 
 import System.IO (hFlush, stdout)
 import Text.Parsec (parse)
@@ -8,21 +13,23 @@ import Text.Parsec.String (Parser)
 import Data.Time (getCurrentTime, utctDay, Day, diffDays)
 import Data.Maybe (fromMaybe)
 
-import Task   ( Task(..)
-              , filterCompletes
-              , sortTasks
-              , replaceTask
-              , getTask
-              , deleteTask
-              , mkTask
-              )
-import Parser ( parserDueDate
-              , parserDescription
-              , parserPriority
-              , nameParserError
-              , parserTaskName
-              )
-import File   ( saveTasks )
+import Task 
+  ( Task(..)
+  , filterCompletes
+  , sortTasks
+  , replaceTask
+  , getTask
+  , deleteTask
+  , mkTask
+  )
+import Parser 
+  ( parserDueDate
+  , parserDescription
+  , parserPriority
+  , nameParserError
+  , parserTaskName
+  )
+import File ( saveTasks )
 
 loop :: [Task] -> IO ()
 loop ts = do

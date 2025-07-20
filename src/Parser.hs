@@ -2,7 +2,10 @@
 -- | Module with all the parsers used to read Tasks from file and validate CLI inputs.
 module Parser where
 
-import Text.Parsec
+import Text.Parsec 
+  ( digit, many1, (<|>), try, eof
+  , noneOf, notFollowedBy, string
+  , count, oneOf, many, letter, char)
 import Text.Parsec.String (Parser)
 import Data.Time (addDays, fromGregorian, Day)
 
