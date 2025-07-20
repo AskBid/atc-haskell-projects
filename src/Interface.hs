@@ -14,7 +14,7 @@ import Parser
 
 loop :: [Task] -> IO ()
 loop ts = do
-  putStr "Enter command: "
+  putStr "Enter command:      (`help` to list all commands)"
   hFlush stdout -- insures output is printed immediately rather than wait in buffer
   input <- getLine
   (isLooping, tsNew) <- handleInput ts input
@@ -95,8 +95,8 @@ handleInput ts input = do
 
 -- | enterTaskAttributes is the part of the CLI interface used to deal with 
 --   @Task@ attributes insertion or edits. It goes through every attribute one
---   by one with the interface. Only completed is left out as that is dealt with
---   the `mark` interface action.
+--   by one with the interface. Only `completed` attribute is left out as that
+--   is dealt with the `mark` interface action.
 --   It always takes a Task even when newly created.
 enterTaskAttributes :: Task -> IO Task
 enterTaskAttributes task = do 
@@ -174,7 +174,7 @@ processCurrentDay = do
   return $ utctDay currentTime
 
 showCompletedTasks :: Bool -> [Task] -> IO [()]
-showCompletedTasks b ts = sequenceA $ (putStrLn.show) <$> (filterCompletes b ts)
+showCompletedTasks b ts = sequenceA $ (putStrLn.show) <$> (filterCompletes (not b) ts)
 
 interfaceHelp :: IO ()
 interfaceHelp = do
