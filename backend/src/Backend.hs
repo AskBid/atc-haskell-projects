@@ -17,6 +17,7 @@ import Control.Concurrent (threadDelay)
 import Control.Concurrent.STM 
 import Control.Monad.IO.Class (liftIO)
 import Data.ByteString.UTF8 (toString)
+import qualified Data.Map.Strict as M (Map, lookup)
 
 type NamedConn = (Text, WS.Connection)
 
@@ -32,24 +33,33 @@ backendHandlers :: TVar [NamedConn] -> R BackendRoute -> Snap ()
 backendHandlers conns = \case
   BackendRoute_Missing :/ () -> writeBS "404"
   BackendRoute_Websocket :/ params -> do 
-    WSSnap.runWebSocketsSnap $ wsHandler conns
+    WSSnap.runWebSocketsSnap $ wsHandler conns params
   -- ^ runWebSocketsSnap is just a bridge — it hands off the PendingConnection to your wsHandler. 
   -- Everything else is up to you. Broadcast messages to all clients, Count or log active connections,
   -- Assign client IDs or session tokens, Or keep chat history...
 
 -- | @type ServerApp = PendingConnection -> IO ()@ is a fucntion type, hence why `pending`
 --   appears down here.
-wsHandler :: TVar [NamedConn] -> WS.ServerApp
-wsHandler tvConns pending = do
+wsHandler :: TVar [NamedConn] -> M.Map Text (Maybe Text) -> WS.ServerApp
+wsHandler tvarConns params pending = do 
+
   let path = toString $ WS.requestPath $ WS.pendingRequest pending
   let req = WS.pendingRequest pending
       path = WS.requestPath req
   putStrLn $ "Request path: " <> show path
   conn <- WS.acceptRequest pending
-  forever $ do
-    time <- getCurrentTime
-    let strTime = pack $ show time
-    conns <- liftIO $ atomically $ readTVar tvConns
-    sequence_ $ WS.sendTextData conn <$> fst <$> conns -- [IO ()] 
-    WS.sendTextData conn ( strTime :: Text)
-    threadDelay 1000000
+
+  let nameParams = M.lookup "name" params
+  case nameParams of
+    Nothing -> WS.sendTextData conn ("Name of connection parameter went wrong." :: Text)
+    Just n -> case n of
+      Nothing -> WS.sendTextData conn ("Name of connection parameter went wrong." :: Text)
+      Just n' -> do
+        atomically $ modifyTVar tvarConns $ \tvarList -> ((n', conn):tvarList)
+        forever $ do
+          time <- getCurrentTime
+          let strTime = pack $ show time
+          conns <- liftIO $ atomically $ readTVar tvarConns
+          sequence_ $ WS.sendTextData conn <$> fst <$> conns -- [IO ()] 
+          -- WS.sendTextData conn ( strTime :: Text)
+          threadDelay 1000000
