@@ -53,7 +53,7 @@ frontend = Frontend
               let evText = ET.decodeUtf8 <$> _webSocket_recv ws
               -- ^ Event keep on triggering when new message comes from WS backend
               performEvent_ $ liftIO . putStrLn . T.unpack <$> evText
-              dText <- holdDyn "" evText
+              dText <- foldDyn foldyn "..." evText  
               el "div" $ dynText dText
 
         widgetHold blank eSocket
@@ -62,3 +62,7 @@ frontend = Frontend
 
       return ()
   }
+
+
+foldyn :: T.Text -> T.Text -> T.Text
+foldyn a b = a <> " " <> b
