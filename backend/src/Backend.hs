@@ -56,11 +56,11 @@ wsHandler tvarConns params pending = do
       Nothing -> WS.sendTextData conn ("Name of connection parameter went wrong." :: Text)
       Just n' -> do
         atomically $ modifyTVar tvarConns $ \tvarList -> ((n', conn):tvarList)
+        conns <- liftIO $ atomically $ readTVar tvarConns
+        let (names, conns') = unzip conns
+        forM_ conns' $ \conn -> forM_ names (WS.sendTextData conn) 
         forever $ do
           time <- getCurrentTime
           let strTime = pack $ show time
-          conns <- liftIO $ atomically $ readTVar tvarConns
-          let (names, conns') = unzip conns
-          forM_ conns' $ \conn -> forM_ names (WS.sendTextData conn) 
-          -- WS.sendTextData conn ( strTime :: Text)
+          WS.sendTextData conn ( strTime :: Text)
           threadDelay 1000000
