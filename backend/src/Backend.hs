@@ -60,6 +60,6 @@ wsHandler tvarConns params pending = do
           time <- getCurrentTime
           let strTime = pack $ show time
           conns <- liftIO $ atomically $ readTVar tvarConns
-          sequence_ $ WS.sendTextData conn <$> fst <$> conns -- [IO ()] 
+          forM_ conns $ \(name, cn) -> WS.sendTextData cn name
           -- WS.sendTextData conn ( strTime :: Text)
           threadDelay 1000000
