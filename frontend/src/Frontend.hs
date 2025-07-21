@@ -48,11 +48,13 @@ frontend = Frontend
         el "div" $ dynText dName
         
         let eSocket = ffor eUrl $ \url -> do 
-            liftIO $ putStrLn $ "Opening WebSocket at: " ++ T.unpack url
-            ws <- webSocket url (def :: Reflex t => WebSocketConfig t T.Text)
-            let evText = ET.decodeUtf8 <$> _webSocket_recv ws
-            dText <- holdDyn "" evText
-            el "div" $ dynText dText
+              liftIO $ putStrLn $ "Opening WebSocket at: " ++ T.unpack url
+              ws <- webSocket url (def :: Reflex t => WebSocketConfig t T.Text)
+              let evText = ET.decodeUtf8 <$> _webSocket_recv ws
+              -- ^ Event keep on triggering when new message comes from WS backend
+              performEvent_ $ liftIO . putStrLn . T.unpack <$> evText
+              dText <- holdDyn "" evText
+              el "div" $ dynText dText
 
         widgetHold blank eSocket
 
