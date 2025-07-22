@@ -4,10 +4,10 @@ import Data.Text
 import Data.Time
 import Data.Aeson
 
-type UserName = Text
+import Schema
 
 data ChatMessage = ChatMessage 
   { message :: Text
-  , user :: UserName
+  , user :: User
   , timestamp :: UTCTime
   }

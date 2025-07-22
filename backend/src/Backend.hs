@@ -18,6 +18,10 @@ import Control.Concurrent.STM
 import Control.Monad.IO.Class (liftIO)
 import Data.ByteString.UTF8 (toString)
 import qualified Data.Map.Strict as M (Map, lookup)
+import Database.Persist
+import Database.Persist.Sqlite
+
+import Schema
 
 type NamedConn = (Text, WS.Connection)
 
@@ -25,6 +29,9 @@ backend :: Backend BackendRoute FrontendRoute
 backend = Backend
   { _backend_run = \serve -> do 
       conns <- liftIO $ atomically $ newTVar ([] :: [NamedConn])
+      runSqlite myDB $ do 
+        populateDB
+        return ()
       serve $ backendHandlers conns
   , _backend_routeEncoder = fullRouteEncoder
   }
