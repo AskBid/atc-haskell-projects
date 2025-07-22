@@ -1,4 +1,13 @@
 module Common.Api where
 
-commonStuff :: String
-commonStuff = "Here is a string defined in Common.Api"
+import Data.Text
+import Data.Time
+import Data.Aeson
+
+type UserName = Text
+
+data ChatMessage = ChatMessage 
+  { message :: Text
+  , user :: UserName
+  , timestamp :: UTCTime
+  }

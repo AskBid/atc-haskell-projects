@@ -20,6 +20,9 @@ library
                , bytestring
                , utf8-string
                , containers
+               , persistent
+               , persistent-sqlite
+               , persistent-template
   exposed-modules:
     Backend
   ghc-options: -Wall -O -fno-show-valid-hole-fits

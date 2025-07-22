@@ -31,8 +31,11 @@ with obelisk;
 #   };
 # in
 
-project ./. ({ ... }: {
+project ./. ({ pkgs, ... }: {
   # overrides = nixpkgsOverlay;
+  overrides = self: super: {                                     
+    persistent = pkgs.haskell.lib.doJailbreak super.persistent; 
+  };
   android.applicationId = "systems.obsidian.obelisk.examples.minimal";
   android.displayName = "Obelisk Minimal Example";
   ios.bundleIdentifier = "systems.obsidian.obelisk.examples.minimal";

@@ -9,6 +9,7 @@ library
                , obelisk-route
                , text
                , containers
+               , aeson
   exposed-modules:
     Common.Api
     Common.Route
