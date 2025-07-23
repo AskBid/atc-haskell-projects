@@ -3,7 +3,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -30,7 +29,7 @@ data BackendRoute :: * -> * where
   -- | Used to handle unparseable routes.
   BackendRoute_Missing :: BackendRoute ()
   BackendRoute_Websocket_Query :: BackendRoute (Map Text (Maybe Text))
-  BackendRoute_Websocket :: BackendRoute ()
+  BackendRoute_Websocket :: BackendRoute Text
   -- You can define any routes that will be handled specially by the backend here.
   -- i.e. These do not serve the frontend, but do something different, such as serving static files.
 
@@ -46,7 +45,7 @@ fullRouteEncoder = mkFullRouteEncoder
   (\case
       BackendRoute_Missing -> PathSegment "missing" $ unitEncoder mempty
       BackendRoute_Websocket_Query -> PathSegment "ws-query" $ queryOnlyEncoder
-      BackendRoute_Websocket -> PathSegment "ws" $ unitEncoder mempty
+      BackendRoute_Websocket -> PathSegment "ws" $ singlePathSegmentEncoder
   )
   (\case
       FrontendRoute_Main -> PathEnd $ unitEncoder mempty

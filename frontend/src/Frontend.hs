@@ -39,6 +39,11 @@ frontend = Frontend
       el "div" $ text "Welcome to Chat! (from frontend)"
       subRoute_ $ \r -> case r of
         FrontendRoute_Main -> do
+          el "h1" $ text "Main"
+          
+        FrontendRoute_User -> do
+          dRoute <- askRoute
+          el "h1" $ dynText dRoute
           prerender_ blank $ do
 
             elInp <- inputElement def
@@ -46,7 +51,7 @@ frontend = Frontend
             let eClick = domEvent Click elBtn
                 dInp = _inputElement_value elInp
                 eName = tagPromptlyDyn dInp eClick
-                eUrl = ("ws://localhost:8000/ws?name=" <>) <$> eName
+                eUrl = ("ws://localhost:8000/ws/" <>) <$> eName
             dName <- holdDyn "--" eName
             el "div" $ dynText dName
             
@@ -62,9 +67,6 @@ frontend = Frontend
             widgetHold blank eSocket
 
             return ()
-        FrontendRoute_User -> do
-          dRoute <- askRoute
-          el "h1" $ dynText dRoute
 
       return ()
   }

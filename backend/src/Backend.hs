@@ -45,7 +45,7 @@ backendHandlers conns = \case
     writeBS $ TE.encodeUtf8 $ Prelude.foldl (\b a -> b <> ((<> " ") a)) "" keys
   BackendRoute_Websocket :/ user -> do 
     -- is user authenticated or visiting?
-    WSSnap.runWebSocketsSnap $ wsHandler conns "placeholder_name"
+    WSSnap.runWebSocketsSnap $ wsHandler conns user
 
   -- ^ runWebSocketsSnap is just a bridge — it hands off the PendingConnection to your wsHandler. 
   -- Everything else is up to you. Broadcast messages to all clients, Count or log active connections,
