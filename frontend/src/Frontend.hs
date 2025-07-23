@@ -3,6 +3,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE RecursiveDo #-}
+{-# LANGUAGE GADTs #-}
 
 module Frontend where
 
@@ -16,6 +17,7 @@ import Control.Monad.IO.Class (liftIO)
 import Obelisk.Frontend
 import Obelisk.Configs
 import Obelisk.Route
+import Obelisk.Route.Frontend
 import Obelisk.Generated.Static
 
 import Reflex.Dom.Core
@@ -35,30 +37,34 @@ frontend = Frontend
       elAttr "link" ("href" =: $(static "main.css") <> "type" =: "text/css" <> "rel" =: "stylesheet") blank
   , _frontend_body = do
       el "div" $ text "Welcome to Chat! (from frontend)"
+      subRoute_ $ \r -> case r of
+        FrontendRoute_Main -> do
+          prerender_ blank $ do
 
-      prerender_ blank $ do
+            elInp <- inputElement def
+            (elBtn, _) <- el' "button" $ text "click"
+            let eClick = domEvent Click elBtn
+                dInp = _inputElement_value elInp
+                eName = tagPromptlyDyn dInp eClick
+                eUrl = ("ws://localhost:8000/ws?name=" <>) <$> eName
+            dName <- holdDyn "--" eName
+            el "div" $ dynText dName
+            
+            let eSocket = ffor eUrl $ \url -> do 
+                  liftIO $ putStrLn $ "Opening WebSocket at: " ++ T.unpack url
+                  ws <- webSocket url (def :: Reflex t => WebSocketConfig t T.Text)
+                  let evText = ET.decodeUtf8 <$> _webSocket_recv ws
+                  -- ^ Event keep on triggering when new message comes from WS backend
+                  performEvent_ $ liftIO . putStrLn . T.unpack <$> evText
+                  dText <- foldDyn foldyn "..." evText  
+                  el "div" $ dynText dText
 
-        elInp <- inputElement def
-        (elBtn, _) <- el' "button" $ text "click"
-        let eClick = domEvent Click elBtn
-            dInp = _inputElement_value elInp
-            eName = tagPromptlyDyn dInp eClick
-            eUrl = ("ws://localhost:8000/ws?name=" <>) <$> eName
-        dName <- holdDyn "--" eName
-        el "div" $ dynText dName
-        
-        let eSocket = ffor eUrl $ \url -> do 
-              liftIO $ putStrLn $ "Opening WebSocket at: " ++ T.unpack url
-              ws <- webSocket url (def :: Reflex t => WebSocketConfig t T.Text)
-              let evText = ET.decodeUtf8 <$> _webSocket_recv ws
-              -- ^ Event keep on triggering when new message comes from WS backend
-              performEvent_ $ liftIO . putStrLn . T.unpack <$> evText
-              dText <- foldDyn foldyn "..." evText  
-              el "div" $ dynText dText
+            widgetHold blank eSocket
 
-        widgetHold blank eSocket
-
-        return ()
+            return ()
+        FrontendRoute_User -> do
+          dRoute <- askRoute
+          el "h1" $ dynText dRoute
 
       return ()
   }

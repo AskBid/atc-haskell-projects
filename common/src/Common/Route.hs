@@ -50,6 +50,7 @@ fullRouteEncoder = mkFullRouteEncoder
   )
   (\case
       FrontendRoute_Main -> PathEnd $ unitEncoder mempty
+      FrontendRoute_User -> PathSegment "user" $ singlePathSegmentEncoder
   )
 
 concat <$> mapM deriveRouteComponent
