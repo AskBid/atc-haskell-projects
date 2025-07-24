@@ -64,7 +64,7 @@ frontend = Frontend
                   dText <- foldDyn foldyn "..." evText  
                   el "div" $ dynText dText
 
-            widgetHold blank eSocket
+            widgetHold (el "div" $ text "nothing to see") eSocket
 
             return ()
 

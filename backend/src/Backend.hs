@@ -15,7 +15,7 @@ import Control.Monad
 import Data.Time (getCurrentTime)
 import Control.Concurrent (threadDelay)
 import Control.Concurrent.STM 
-import Control.Monad.IO.Class (liftIO)
+import Control.Monad.IO.Class (liftIO, MonadIO)
 import Data.ByteString.UTF8 (toString)
 import qualified Data.Map.Strict as M (Map, lookup, toList)
 import Database.Persist
@@ -45,7 +45,15 @@ backendHandlers conns = \case
     writeBS $ TE.encodeUtf8 $ Prelude.foldl (\b a -> b <> ((<> " ") a)) "" keys
   BackendRoute_Websocket :/ user -> do 
     -- is user authenticated or visiting?
-    WSSnap.runWebSocketsSnap $ wsHandler conns user
+    mEUser <- sqlUserPwdExist user 
+    case mEUser of
+      Nothing -> do 
+        modifyResponse $ setResponseStatus 401 "Unauthorized"
+        liftIO $ putStrLn "nothing happenninng user not found..../////////"
+        writeBS "401 - Unauthorized"
+      Just eUser -> do 
+        liftIO $ putStrLn "User found... going to open socket..."
+        WSSnap.runWebSocketsSnap $ wsHandler conns user
 
   -- ^ runWebSocketsSnap is just a bridge — it hands off the PendingConnection to your wsHandler. 
   -- Everything else is up to you. Broadcast messages to all clients, Count or log active connections,
@@ -78,3 +86,10 @@ wsHandler tvarConns params pending = do
   --       conns <- liftIO $ atomically $ readTVar tvarConns
   --       let (names, conns') = unzip conns
   --       forM_ conns' $ \conn -> forM_ names (WS.sendTextData conn) 
+
+-- | checks if the data in the LoginReq is a valid user in the database.
+sqlUserPwdExist :: MonadIO m => Text -> m (Maybe (Entity User))
+sqlUserPwdExist name = do
+  liftIO $ runSqlite myDB $ do
+    mEUser <- selectFirst [UserName ==. name] [] -- , UserPwd ==. (password lr)] []
+    return mEUser
