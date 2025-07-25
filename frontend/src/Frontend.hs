@@ -52,12 +52,16 @@ frontend = Frontend
             setRoute $ (FrontendRoute_User :/ ) <$> eName
           
         FrontendRoute_User -> do
-          dName <- askRoute
-          el "h1" $ dynText dName
-          let eName = updated dName
 
           prerender_ blank $ do  
+            dName <- askRoute
+            el "h1" $ dynText dName
             elClass "div" divVerticalStyle $ do
+
+              ePostBuild <- getPostBuild
+              let eName = tagPromptlyDyn dName ePostBuild
+                  eUrl = ("ws://localhost:8000/ws/" <>) <$> eName
+
               elClass "label" labelStyle $ text "Message:"
               elInpMex <- inputElement $ def & initialAttributes .~ ("class" =: inputStyle)
               (elBtnMex, _) <- elClass' "button" buttonStyle $ text "Send >"
@@ -65,14 +69,11 @@ frontend = Frontend
               let eSend = domEvent Click elBtnMex
                   dMex = _inputElement_value elInpMex
                   eMex = tagPromptlyDyn dMex eSend
-                  eUrl = ("ws://localhost:8000/ws/" <>) <$> eName
-              dName <- holdDyn "--" eName
-              el "div" $ dynText dName
               
               let eSocket = ffor eUrl $ \url -> do 
-                    liftIO $ putStrLn $ "Opening WebSocket at: " ++ T.unpack url
-                    let wsConfig = def & webSocketConfig_reconnect .~ False
+                    let wsConfig = def & webSocketConfig_reconnect .~ True
                                        & webSocketConfig_send .~ ((:[]) <$> eMex)
+                    -- liftIO $ putStrLn $ "Opening WebSocket at: " ++ T.unpack url
                     ws <- webSocket url wsConfig
                     let evText = ET.decodeUtf8 <$> _webSocket_recv ws
                     -- ^ Event keep on triggering when new message comes from WS backend
