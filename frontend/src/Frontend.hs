@@ -24,6 +24,7 @@ import Reflex.Dom.Core
 
 import Common.Api
 import Common.Route
+import Common
 
 
 -- This runs in a monad that can be run on the client or the server.
@@ -39,12 +40,12 @@ frontend = Frontend
       el "div" $ text "Welcome to Chat!"
       subRoute_ $ \r -> case r of
         FrontendRoute_Main -> do
-          elClass "div" "flex flex-col gap-4 p-4" $ do
+          elClass "div" divVerticalStyle $ do
             el "h1" $ text "MainPage"
-            elClass "label" "text-sm font-medium" $ text "Connect w/ username:"
+            elClass "label" labelStyle $ text "Connect w/ username:"
             elInp <- inputElement $ def 
-              & initialAttributes .~ ("class" =: "border border-gray-300 rounded px-3 py-2")
-            (elBtn, _) <- elClass' "button" "mt-4 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700" $ text "click"
+              & initialAttributes .~ ("class" =: inputStyle)
+            (elBtn, _) <- elClass' "button" buttonStyle $ text "click"
             let eClick = domEvent Click elBtn
                 dInp = _inputElement_value elInp
                 eName = tagPromptlyDyn dInp eClick
@@ -56,29 +57,30 @@ frontend = Frontend
           let eName = updated dName
 
           prerender_ blank $ do  
-            el "label" $ text "Message:"
-            elInpMex <- inputElement def
-            (elBtnMex, _) <- el' "button" $ text "click"
+            elClass "div" divVerticalStyle $ do
+              elClass "label" labelStyle $ text "Message:"
+              elInpMex <- inputElement $ def & initialAttributes .~ ("class" =: inputStyle)
+              (elBtnMex, _) <- elClass' "button" buttonStyle $ text "Send >"
 
-            let eSend = domEvent Click elBtnMex
-                dMex = _inputElement_value elInpMex
-                eMex = tagPromptlyDyn dMex eSend
-                eUrl = ("ws://localhost:8000/ws/" <>) <$> eName
-            dName <- holdDyn "--" eName
-            el "div" $ dynText dName
-            
-            let eSocket = ffor eUrl $ \url -> do 
-                  liftIO $ putStrLn $ "Opening WebSocket at: " ++ T.unpack url
-                  let wsConfig = def & webSocketConfig_reconnect .~ False
-                                     & webSocketConfig_send .~ ((:[]) <$> eMex)
-                  ws <- webSocket url wsConfig
-                  let evText = ET.decodeUtf8 <$> _webSocket_recv ws
-                  -- ^ Event keep on triggering when new message comes from WS backend
-                  performEvent_ $ liftIO . putStrLn . T.unpack <$> evText
-                  dText <- foldDyn foldyn "..." evText  
-                  el "div" $ dynText dText
+              let eSend = domEvent Click elBtnMex
+                  dMex = _inputElement_value elInpMex
+                  eMex = tagPromptlyDyn dMex eSend
+                  eUrl = ("ws://localhost:8000/ws/" <>) <$> eName
+              dName <- holdDyn "--" eName
+              el "div" $ dynText dName
+              
+              let eSocket = ffor eUrl $ \url -> do 
+                    liftIO $ putStrLn $ "Opening WebSocket at: " ++ T.unpack url
+                    let wsConfig = def & webSocketConfig_reconnect .~ False
+                                       & webSocketConfig_send .~ ((:[]) <$> eMex)
+                    ws <- webSocket url wsConfig
+                    let evText = ET.decodeUtf8 <$> _webSocket_recv ws
+                    -- ^ Event keep on triggering when new message comes from WS backend
+                    performEvent_ $ liftIO . putStrLn . T.unpack <$> evText
+                    dText <- foldDyn foldyn "..." evText  
+                    el "div" $ dynText dText
 
-            widgetHold (el "div" $ text "nothing to see") eSocket
+              widgetHold (el "div" $ text "nothing to see") eSocket
 
             return ()
 
