@@ -46,7 +46,7 @@ frontend = Frontend
           el "h1" $ dynText dRoute
           prerender_ blank $ do
             
-            el "lable" $ text "Connect w/ username:"
+            el "label" $ text "Connect w/ username:"
             elInp <- inputElement def
             (elBtn, _) <- el' "button" $ text "click"
             el "br" blank
@@ -59,7 +59,7 @@ frontend = Frontend
                 dInp = _inputElement_value elInp
                 dMex = _inputElement_value elInpMex
                 eName = tagPromptlyDyn dInp eClick
-                eMex = tagPromptlyDyn dMex eClick
+                eMex = tagPromptlyDyn dMex eSend
                 eUrl = ("ws://localhost:8000/ws/" <>) <$> eName
             dName <- holdDyn "--" eName
             el "div" $ dynText dName

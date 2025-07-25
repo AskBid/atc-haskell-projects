@@ -9,6 +9,7 @@ import Obelisk.Backend
 import Obelisk.Route
 import Snap
 import qualified Network.WebSockets as WS
+import qualified Network.WebSockets.Connection as WSC
 import qualified Network.WebSockets.Snap as WSSnap
 import Data.Text 
 import Control.Monad 
@@ -71,21 +72,11 @@ wsHandler tvarConns params pending = do
   putStrLn $ "Request path: " <> show path
   conn <- WS.acceptRequest pending
   forever $ do
+    putStrLn $ "--------------------"
+    msg <- WSC.receiveData conn :: IO Text
     time <- getCurrentTime
-    let strTime = pack $ show time
-    WS.sendTextData conn ( strTime :: Text)
-    threadDelay 1000000
-
-  -- let nameParams = M.lookup "name" params
-  -- case nameParams of
-  --   Nothing -> WS.sendTextData conn ("Name of connection parameter went wrong." :: Text)
-  --   Just n -> case n of
-  --     Nothing -> WS.sendTextData conn ("Name of connection parameter went wrong." :: Text)
-  --     Just n' -> do
-  --       atomically $ modifyTVar tvarConns $ \tvarList -> ((n', conn):tvarList)
-  --       conns <- liftIO $ atomically $ readTVar tvarConns
-  --       let (names, conns') = unzip conns
-  --       forM_ conns' $ \conn -> forM_ names (WS.sendTextData conn) 
+    let strTimedMsg = (pack $ show time) <> ": " <> msg
+    WS.sendTextData conn ( strTimedMsg :: Text)
 
 -- | checks if the data in the LoginReq is a valid user in the database.
 sqlUserPwdExist :: MonadIO m => Text -> m (Maybe (Entity User))
