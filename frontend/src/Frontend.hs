@@ -34,31 +34,34 @@ frontend = Frontend
   { _frontend_head = do
       el "title" $ text "Chat websocket Reflex"
       elAttr "script" ("type" =: "application/javascript" <> "src" =: $(static "lib.js")) blank
-      elAttr "link" ("href" =: $(static "main.css") <> "type" =: "text/css" <> "rel" =: "stylesheet") blank
+      elAttr "script" ("src" =: "https://cdn.tailwindcss.com") blank
   , _frontend_body = do
-      el "div" $ text "Welcome to Chat! (from frontend)"
+      el "div" $ text "Welcome to Chat!"
       subRoute_ $ \r -> case r of
         FrontendRoute_Main -> do
-          el "h1" $ text "Main"
+          elClass "div" "flex flex-col gap-4 p-4" $ do
+            el "h1" $ text "MainPage"
+            elClass "label" "text-sm font-medium" $ text "Connect w/ username:"
+            elInp <- inputElement $ def 
+              & initialAttributes .~ ("class" =: "border border-gray-300 rounded px-3 py-2")
+            (elBtn, _) <- elClass' "button" "mt-4 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700" $ text "click"
+            let eClick = domEvent Click elBtn
+                dInp = _inputElement_value elInp
+                eName = tagPromptlyDyn dInp eClick
+            setRoute $ (FrontendRoute_User :/ ) <$> eName
           
         FrontendRoute_User -> do
-          dRoute <- askRoute
-          el "h1" $ dynText dRoute
-          prerender_ blank $ do
-            
-            el "label" $ text "Connect w/ username:"
-            elInp <- inputElement def
-            (elBtn, _) <- el' "button" $ text "click"
-            el "br" blank
+          dName <- askRoute
+          el "h1" $ dynText dName
+          let eName = updated dName
+
+          prerender_ blank $ do  
             el "label" $ text "Message:"
             elInpMex <- inputElement def
             (elBtnMex, _) <- el' "button" $ text "click"
 
-            let eClick = domEvent Click elBtn
-                eSend = domEvent Click elBtnMex
-                dInp = _inputElement_value elInp
+            let eSend = domEvent Click elBtnMex
                 dMex = _inputElement_value elInpMex
-                eName = tagPromptlyDyn dInp eClick
                 eMex = tagPromptlyDyn dMex eSend
                 eUrl = ("ws://localhost:8000/ws/" <>) <$> eName
             dName <- holdDyn "--" eName
