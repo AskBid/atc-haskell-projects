@@ -32,6 +32,13 @@ share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
     pwd Text
     UniqueName name
     deriving Show Generic FromJSON ToJSON
+  
+  Message
+    timestamp UTCTime
+    message Text
+    owner UserId
+    private [UserId]
+    deriving Show Generic FromJSON ToJSON
 |]
 
 -- | this makes it eprsistent, use :memory: instead of Xs.db otherwise 
