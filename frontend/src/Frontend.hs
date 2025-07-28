@@ -13,18 +13,20 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as ET
 import Language.Javascript.JSaddle (liftJSM, js, js1, jsg)
 import Control.Monad.IO.Class (liftIO)
+import qualified Data.Aeson as A
+import qualified Data.ByteString.Lazy as BSL 
 
 import Obelisk.Frontend
 import Obelisk.Configs
 import Obelisk.Route
 import Obelisk.Route.Frontend
 import Obelisk.Generated.Static
-
 import Reflex.Dom.Core
 
 import Common.Api
 import Common.Route
 import Common
+import Schema
 
 
 -- This runs in a monad that can be run on the client or the server.
@@ -52,7 +54,6 @@ frontend = Frontend
             setRoute $ (FrontendRoute_User :/ ) <$> eName
           
         FrontendRoute_User -> do
-
           prerender_ blank $ do  
             dName <- askRoute
             el "h1" $ dynText dName
@@ -73,13 +74,16 @@ frontend = Frontend
               let eSocket = ffor eUrl $ \url -> do 
                     let wsConfig = def & webSocketConfig_reconnect .~ True
                                        & webSocketConfig_send .~ ((:[]) <$> eMex)
-                    -- liftIO $ putStrLn $ "Opening WebSocket at: " ++ T.unpack url
+                    liftIO $ putStrLn $ "Opening WebSocket at: " ++ T.unpack url
                     ws <- webSocket url wsConfig
-                    let evText = ET.decodeUtf8 <$> _webSocket_recv ws
                     -- ^ Event keep on triggering when new message comes from WS backend
-                    performEvent_ $ liftIO . putStrLn . T.unpack <$> evText
-                    dText <- foldDyn foldyn "..." evText  
-                    el "div" $ dynText dText
+                    let evmMessage = A.decode . BSL.fromStrict <$> _webSocket_recv ws
+                    performEvent_ $ liftIO . putStrLn . (\m -> case m of 
+                        Nothing -> "JSON invalid."
+                        Just message -> (T.unpack . messageText) message ) <$> evmMessage
+                    dChatMessages <- foldDyn (:) [] evmMessage 
+                    elClass "div" divVerticalStyle $ text "todo" -- $ do 
+                    --   dynText dText
 
               widgetHold (el "div" $ text "nothing to see") eSocket
 
@@ -87,7 +91,3 @@ frontend = Frontend
 
       return ()
   }
-
-
-foldyn :: T.Text -> T.Text -> T.Text
-foldyn a b = a <> " " <> b

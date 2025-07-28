@@ -22,6 +22,7 @@ import qualified Data.Map.Strict as M (Map, lookup, toList)
 import Database.Persist
 import Database.Persist.Sqlite
 import qualified Data.Text.Encoding as TE
+import qualified Data.Aeson as A
 
 import Schema
 
@@ -73,10 +74,10 @@ wsHandler tvarConns params pending = do
   conn <- WS.acceptRequest pending
   forever $ do
     putStrLn $ "--------------------"
-    msg <- WSC.receiveData conn :: IO Text
+    msgT <- WSC.receiveData conn :: IO Text
     time <- getCurrentTime
-    let strTimedMsg = (pack $ show time) <> ": " <> msg
-    WS.sendTextData conn ( strTimedMsg :: Text)
+    let msg = Message time msgT (toSqlKey 1) []   
+    WS.sendTextData conn (A.encode msg)
 
 -- | checks if the data in the LoginReq is a valid user in the database.
 sqlUserPwdExist :: MonadIO m => Text -> m (Maybe (Entity User))

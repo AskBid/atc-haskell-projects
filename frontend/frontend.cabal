@@ -15,6 +15,7 @@ library
                , obelisk-route
                , reflex-dom-core
                , text
+               , aeson
   exposed-modules:
     Frontend, Common
   ghc-options: -Wall -O -fno-show-valid-hole-fits

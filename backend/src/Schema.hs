@@ -35,7 +35,7 @@ share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
   
   Message
     timestamp UTCTime
-    message Text
+    text Text
     owner UserId
     private [UserId]
     deriving Show Generic FromJSON ToJSON

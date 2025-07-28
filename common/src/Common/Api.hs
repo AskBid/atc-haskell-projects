@@ -7,9 +7,5 @@ import Data.Aeson
 import Schema
 
 data WSMessage 
-  = ChatMessage
-      { message :: Text
-      , user :: User
-      , timestamp :: UTCTime
-      }
+  = Message
   | ConnectedClients [User]
