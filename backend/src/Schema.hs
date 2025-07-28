@@ -34,10 +34,10 @@ share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
     deriving Show Generic FromJSON ToJSON
   
   Message
-    timestamp UTCTime
+    timestamp UTCTime Maybe
     text Text
-    owner UserId
-    private [UserId]
+    owner UserId Maybe
+    private [UserId] Maybe
     deriving Show Generic FromJSON ToJSON
 |]
 

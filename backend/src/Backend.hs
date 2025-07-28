@@ -25,6 +25,7 @@ import qualified Data.Text.Encoding as TE
 import qualified Data.Aeson as A
 
 import Schema
+import Common.Api
 
 type NamedConn = (Text, WS.Connection)
 
@@ -74,10 +75,12 @@ wsHandler tvarConns params pending = do
   conn <- WS.acceptRequest pending
   forever $ do
     putStrLn $ "--------------------"
-    msgT <- WSC.receiveData conn :: IO Text
-    time <- getCurrentTime
-    let msg = Message time msgT (toSqlKey 1) []   
-    WS.sendTextData conn (A.encode msg)
+    msgJSON <- WSC.receiveData conn
+    let msg = A.decode msgJSON :: Maybe WSMessage
+    case msg of 
+      Just (NewMessage msg') -> WS.sendTextData conn (A.encode (NewMessage msg')) 
+      -- ^ TODO send to all conns
+      otherwise -> putStrLn "TODO case for different type of WSMessage"
 
 -- | checks if the data in the LoginReq is a valid user in the database.
 sqlUserPwdExist :: MonadIO m => Text -> m (Maybe (Entity User))

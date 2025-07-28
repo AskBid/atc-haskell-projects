@@ -64,30 +64,45 @@ frontend = Frontend
                   eUrl = ("ws://localhost:8000/ws/" <>) <$> eName
 
               elClass "label" labelStyle $ text "Message:"
-              elInpMex <- inputElement $ def & initialAttributes .~ ("class" =: inputStyle)
-              (elBtnMex, _) <- elClass' "button" buttonStyle $ text "Send >"
+              elInpMess <- inputElement $ def & initialAttributes .~ ("class" =: inputStyle)
+              (elBtnSend, _) <- elClass' "button" buttonStyle $ text "Send >"
 
-              let eSend = domEvent Click elBtnMex
-                  dMex = _inputElement_value elInpMex
-                  eMex = tagPromptlyDyn dMex eSend
+              let eSend = domEvent Click elBtnSend
+                  dMessText = _inputElement_value elInpMess
+                  eMessText = tagPromptlyDyn dMessText eSend
+                  eWSMess = NewMessage <$> mkMessage <$> eMessText 
               
               let eSocket = ffor eUrl $ \url -> do 
                     let wsConfig = def & webSocketConfig_reconnect .~ True
-                                       & webSocketConfig_send .~ ((:[]) <$> eMex)
+                                       & webSocketConfig_send .~ ((:[]) <$> A.encode <$> eWSMess)
                     liftIO $ putStrLn $ "Opening WebSocket at: " ++ T.unpack url
                     ws <- webSocket url wsConfig
                     -- ^ Event keep on triggering when new message comes from WS backend
-                    let evmMessage = A.decode . BSL.fromStrict <$> _webSocket_recv ws
+                    let evmWSMessage = A.decode . BSL.fromStrict <$> _webSocket_recv ws
+
                     performEvent_ $ liftIO . putStrLn . (\m -> case m of 
                         Nothing -> "JSON invalid."
-                        Just message -> (T.unpack . messageText) message ) <$> evmMessage
-                    dChatMessages <- foldDyn (:) [] evmMessage 
-                    elClass "div" divVerticalStyle $ text "todo" -- $ do 
-                    --   dynText dText
+                        Just (NewMessage message) -> (T.unpack . messageText) message 
+                        otehrwise -> "case TODO..." ) <$> evmWSMessage
+
+                    dChatMessages <- foldDyn (:) [] evmWSMessage 
+
+                    d <- holdDyn "no message yet." $ (\wsm -> case wsm of 
+                           Just (NewMessage msg) -> messageText msg
+                           otherwise -> "Different type of WS message received") <$> evmWSMessage
+                    elClass "div" divVerticalStyle $ dynText d  
 
               widgetHold (el "div" $ text "nothing to see") eSocket
 
             return ()
 
       return ()
+  }
+
+mkMessage :: T.Text -> Message
+mkMessage t = Message 
+  { messageTimestamp = Nothing
+  , messageText = t
+  , messageOwner = Nothing
+  , messagePrivate = Nothing
   }
