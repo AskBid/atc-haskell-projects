@@ -27,7 +27,7 @@ import qualified Data.Aeson as A
 import Schema
 import Common.Api
 
-type NamedConn = (Text, WS.Connection)
+type NamedConn = (Entity User, WS.Connection)
 
 backend :: Backend BackendRoute FrontendRoute
 backend = Backend
@@ -43,20 +43,22 @@ backend = Backend
 backendHandlers :: TVar [NamedConn] -> R BackendRoute -> Snap ()
 backendHandlers conns = \case
   BackendRoute_Missing :/ () -> writeBS "404"
+
   BackendRoute_Websocket_Query :/ params -> do 
     let keys = fst <$> M.toList params 
     writeBS $ TE.encodeUtf8 $ Prelude.foldl (\b a -> b <> ((<> " ") a)) "" keys
-  BackendRoute_Websocket :/ user -> do 
+
+  BackendRoute_Websocket :/ user -> do
     -- is user authenticated or visiting?
-    mEUser <- sqlUserPwdExist user 
+    mEUser <- sqlUserPwdExist user
     case mEUser of
-      Nothing -> do 
+      Nothing -> do
         modifyResponse $ setResponseStatus 401 "Unauthorized"
         liftIO $ putStrLn "nothing happenninng user not found..../////////"
         writeBS "401 - Unauthorized"
-      Just eUser -> do 
+      Just eUser -> do
         liftIO $ putStrLn "User found... going to open socket..."
-        WSSnap.runWebSocketsSnap $ wsHandler conns user
+        WSSnap.runWebSocketsSnap $ wsHandler conns eUser
 
   -- ^ runWebSocketsSnap is just a bridge — it hands off the PendingConnection to your wsHandler. 
   -- Everything else is up to you. Broadcast messages to all clients, Count or log active connections,
@@ -65,21 +67,28 @@ backendHandlers conns = \case
 
 -- | @type ServerApp = PendingConnection -> IO ()@ is a fucntion type, hence why `pending`
 --   appears down here.
-wsHandler :: TVar [NamedConn] -> Text -> WS.ServerApp
-wsHandler tvarConns params pending = do 
-
+wsHandler :: TVar [NamedConn] -> Entity User -> WS.ServerApp
+wsHandler tvarConns eUser pending = do 
   let path = toString $ WS.requestPath $ WS.pendingRequest pending
   let req = WS.pendingRequest pending
       path = WS.requestPath req
+
   putStrLn $ "Request path: " <> show path
   conn <- WS.acceptRequest pending
+
+  conns <- liftIO $ atomically $ readTVar tvarConns
+  let connsPlusThis = (eUser, conn) : conns
+  liftIO $ atomically $ writeTVar tvarConns connsPlusThis
+
   forever $ do
     putStrLn $ "--------------------"
     msgJSON <- WSC.receiveData conn
     let msg = A.decode msgJSON :: Maybe WSMessage
     case msg of 
-      Just (NewMessage msg') -> WS.sendTextData conn (A.encode (NewMessage msg')) 
-      -- ^ TODO send to all conns
+      Just (NewMessage msg') -> do
+        conns <- atomically $ readTVar tvarConns
+        forM_ conns $ \(eUser, conn) -> WS.sendTextData conn (A.encode (NewMessage msg'))
+        return ()
       otherwise -> putStrLn "TODO case for different type of WSMessage"
 
 -- | checks if the data in the LoginReq is a valid user in the database.
