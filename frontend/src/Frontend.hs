@@ -63,16 +63,16 @@ frontend = Frontend
               let eName = tagPromptlyDyn dName ePostBuild
                   eUrl = ("ws://localhost:8000/ws/" <>) <$> eName
 
-              elClass "label" labelStyle $ text "Message:"
-              elInpMess <- inputElement $ def & initialAttributes .~ ("class" =: inputStyle)
-              (elBtnSend, _) <- elClass' "button" buttonStyle $ text "Send >"
-
-              let eSend = domEvent Click elBtnSend
-                  dMessText = _inputElement_value elInpMess
-                  eMessText = tagPromptlyDyn dMessText eSend
-                  eWSMess = NewMessage <$> mkMessage <$> eMessText 
-              
               let eSocket = ffor eUrl $ \url -> do 
+                    elClass "label" labelStyle $ text "Message:"
+                    elInpMess <- inputElement $ def & initialAttributes .~ ("class" =: inputStyle)
+                    (elBtnSend, _) <- elClass' "button" buttonStyle $ text "Send >"
+
+                    let eSend = domEvent Click elBtnSend
+                        dMessText = _inputElement_value elInpMess
+                        eMessText = tagPromptlyDyn dMessText eSend
+                        eWSMess = NewMessage <$> mkMessage <$> eMessText 
+                    
                     let wsConfig = def & webSocketConfig_reconnect .~ True
                                        & webSocketConfig_send .~ ((:[]) <$> A.encode <$> eWSMess)
                     liftIO $ putStrLn $ "Opening WebSocket at: " ++ T.unpack url
@@ -85,14 +85,16 @@ frontend = Frontend
                         Just (NewMessage message) -> (T.unpack . messageText) message 
                         otehrwise -> "case TODO..." ) <$> evmWSMessage
 
-                    dChatMessages <- foldDyn (:) [] evmWSMessage 
-
+                    dChatMessages <- foldDyn (:) [] $ feMessage <$> evmWSMessage 
+                    
                     d <- holdDyn "no message yet." $ (\wsm -> case wsm of 
                            Just (NewMessage msg) -> messageText msg
                            otherwise -> "Different type of WS message received") <$> evmWSMessage
-                    elClass "div" divVerticalStyle $ dynText d  
 
-              widgetHold (el "div" $ text "nothing to see") eSocket
+                    elClass "div" divVerticalStyle $ void $ do
+                      simpleList dChatMessages $ \dMsg -> el "div" $ dynText dMsg
+
+              widgetHold (el "div" $ text "No connection.") eSocket 
 
             return ()
 
