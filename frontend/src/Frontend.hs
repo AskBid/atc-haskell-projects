@@ -78,18 +78,12 @@ frontend = Frontend
                     liftIO $ putStrLn $ "Opening WebSocket at: " ++ T.unpack url
                     ws <- webSocket url wsConfig
                     -- ^ Event keep on triggering when new message comes from WS backend
+
                     let evmWSMessage = A.decode . BSL.fromStrict <$> _webSocket_recv ws
 
-                    performEvent_ $ liftIO . putStrLn . (\m -> case m of 
-                        Nothing -> "JSON invalid."
-                        Just (NewMessage message) -> (T.unpack . messageText) message 
-                        otehrwise -> "case TODO..." ) <$> evmWSMessage
+                    performEvent_ $ liftIO . putStrLn . T.unpack . feMessage <$> evmWSMessage
 
                     dChatMessages <- foldDyn (:) [] $ feMessage <$> evmWSMessage 
-                    
-                    d <- holdDyn "no message yet." $ (\wsm -> case wsm of 
-                           Just (NewMessage msg) -> messageText msg
-                           otherwise -> "Different type of WS message received") <$> evmWSMessage
 
                     elClass "div" divVerticalStyle $ void $ do
                       simpleList dChatMessages $ \dMsg -> el "div" $ dynText dMsg

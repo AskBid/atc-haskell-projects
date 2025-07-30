@@ -91,6 +91,9 @@ wsHandler tvarConns eUser pending = do
         return ()
       otherwise -> putStrLn "TODO case for different type of WSMessage"
 
+wsHandlerUnAuth :: TVar [NamedConn] -> WS.ServerApp
+wsHandlerUnAuth conns = undefined
+
 -- | checks if the data in the LoginReq is a valid user in the database.
 sqlUserPwdExist :: MonadIO m => Text -> m (Maybe (Entity User))
 sqlUserPwdExist name = do

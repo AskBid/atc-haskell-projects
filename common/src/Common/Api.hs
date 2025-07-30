@@ -13,4 +13,5 @@ import Schema
 data WSMessage 
   = NewMessage Message
   | ConnectedClients [User]
+  | UnAuthorised
   deriving (Show, Generic, FromJSON, ToJSON)
