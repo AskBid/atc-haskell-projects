@@ -27,6 +27,7 @@ import Common.Api
 import Common.Route
 import Common
 import Schema
+import UserChat
 
 
 -- This runs in a monad that can be run on the client or the server.
@@ -53,52 +54,7 @@ frontend = Frontend
                 eName = tagPromptlyDyn dInp eClick
             setRoute $ (FrontendRoute_User :/ ) <$> eName
           
-        FrontendRoute_User -> do
-          prerender_ blank $ do  
-            dName <- askRoute
-            el "h1" $ dynText dName
-            elClass "div" divVerticalStyle $ do
-
-              ePostBuild <- getPostBuild
-              let eName = tagPromptlyDyn dName ePostBuild
-                  eUrl = ("ws://localhost:8000/ws/" <>) <$> eName
-
-              let eSocket = ffor eUrl $ \url -> do 
-                    elClass "label" labelStyle $ text "Message:"
-                    elInpMess <- inputElement $ def & initialAttributes .~ ("class" =: inputStyle)
-                    (elBtnSend, _) <- elClass' "button" buttonStyle $ text "Send >"
-
-                    let eSend = domEvent Click elBtnSend
-                        dMessText = _inputElement_value elInpMess
-                        eMessText = tagPromptlyDyn dMessText eSend
-                        eWSMess = NewMessage <$> mkMessage <$> eMessText 
-                    
-                    let wsConfig = def & webSocketConfig_reconnect .~ True
-                                       & webSocketConfig_send .~ ((:[]) <$> A.encode <$> eWSMess)
-                    liftIO $ putStrLn $ "Opening WebSocket at: " ++ T.unpack url
-                    ws <- webSocket url wsConfig
-                    -- ^ Event keep on triggering when new message comes from WS backend
-
-                    let evmWSMessage = A.decode . BSL.fromStrict <$> _webSocket_recv ws
-
-                    performEvent_ $ liftIO . putStrLn . T.unpack . feMessage <$> evmWSMessage
-
-                    dChatMessages <- foldDyn (:) [] $ feMessage <$> evmWSMessage 
-
-                    elClass "div" divVerticalStyle $ void $ do
-                      simpleList dChatMessages $ \dMsg -> el "div" $ dynText dMsg
-
-              widgetHold (el "div" $ text "No connection.") eSocket 
-
-            return ()
-
+        FrontendRoute_User -> userChat
       return ()
   }
 
-mkMessage :: T.Text -> Message
-mkMessage t = Message 
-  { messageTimestamp = Nothing
-  , messageText = t
-  , messageOwner = Nothing
-  , messagePrivate = Nothing
-  }
