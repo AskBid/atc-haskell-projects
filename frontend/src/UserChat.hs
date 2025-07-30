@@ -44,7 +44,7 @@ userChat = do
                 eMessText = tagPromptlyDyn dMessText eSend
                 eWSMess = NewMessage <$> mkMessage <$> eMessText 
             
-            let wsConfig = def & webSocketConfig_reconnect .~ True
+            let wsConfig = def & webSocketConfig_reconnect .~ False
                                & webSocketConfig_send .~ ((:[]) <$> A.encode <$> eWSMess)
             liftIO $ putStrLn $ "Opening WebSocket at: " ++ T.unpack url
             ws <- webSocket url wsConfig

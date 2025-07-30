@@ -50,7 +50,7 @@ frontend = Frontend
             elInp <- inputElement $ def 
               & initialAttributes .~ ("class" =: inputStyle)
 
-            elClass "label" labelStyle $ text "Connect w/ username:"
+            elClass "label" labelStyle $ text "Authenticate w/ password:"
             elPwd <- inputElement $ def 
               & initialAttributes .~ ("class" =: inputStyle <> "type" =: "password")
             
@@ -60,14 +60,16 @@ frontend = Frontend
                 dInp = _inputElement_value elInp
                 eName = tagPromptlyDyn dInp eClick
 
-            let reqLogin = xhrRequest "GET" "/login" $ def 
+            let reqLogin = xhrRequest "POST" "/login" $ def 
                   & xhrRequestConfig_user .~ (Just "sergio")
                   & xhrRequestConfig_password .~ (Just "pwd")
+                  & xhrRequestConfig_withCredentials .~ True
+                  -- ^ those will be sent as "Authorization" HTTP Headers.
 
             prerender_ blank $ do 
               performRequestAsync $ reqLogin <$ eClick 
               return ()
-            setRoute $ (FrontendRoute_User :/ ) <$> eName
+              -- setRoute $ (FrontendRoute_User :/ ) <$> eName
           
         FrontendRoute_User -> userChat
       return ()

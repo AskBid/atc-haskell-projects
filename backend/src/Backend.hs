@@ -24,6 +24,9 @@ import Database.Persist.Sqlite
 import qualified Data.Text.Encoding as TE
 import qualified Data.Aeson as A
 
+import Data.CaseInsensitive (original)
+import Data.Maybe (fromMaybe)
+
 import Schema
 import Common.Api
 
@@ -45,7 +48,13 @@ backendHandlers conns = \case
   BackendRoute_Missing :/ () -> writeBS "404"
   
   BackendRoute_Login :/ () -> do 
-    undefined
+    req <- getRequest
+    let headers = listHeaders req
+    let auth = TE.decodeUtf8 $ fromMaybe (TE.encodeUtf8 "none") $ getHeader "Authorization" req
+    liftIO $ putStrLn $ unpack $ "here::::: " <> auth
+    liftIO $ sequence_ ((\hd -> putStrLn . unpack 
+               $ ((TE.decodeUtf8 (original $ fst hd)) <> " :: " <> (TE.decodeUtf8 $ snd hd))) <$> headers)
+    writeBS $ TE.encodeUtf8 ""
     -- sqlUserPwdExist user
 
   BackendRoute_Websocket_Query :/ params -> do 

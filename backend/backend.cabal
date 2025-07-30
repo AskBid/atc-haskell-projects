@@ -24,6 +24,7 @@ library
                , persistent-sqlite
                , persistent-template
                , jwt
+               , case-insensitive
   exposed-modules:
     Backend, Schema, MyJWT
   ghc-options: -Wall -O -fno-show-valid-hole-fits
