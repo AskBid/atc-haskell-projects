@@ -17,3 +17,5 @@
   - [ ] if accessed from auth user: standard public Chat you can send auth messages from
   - [ ] if UnAuth access public Chat no ability to send 
   - [ ] add list of online, offline users, click on user to send private message/visit user page
+
+- [ ] Socket URL should use Routes types and Document.Local to find protocol and host address.

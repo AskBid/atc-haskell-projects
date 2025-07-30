@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts  #-} 
 
 module UserChat where
 
@@ -14,8 +15,15 @@ import Control.Monad (void)
 import Common
 import Common.Api
 import Schema
+import Common.Route
 
-userChat :: m ()
+userChat 
+  :: ( Prerender t m
+     , Monad m
+     , Routed t T.Text m
+     , Routed t T.Text (Client m)
+     ) 
+  => m ()
 userChat = do
   prerender_ blank $ do  
     dName <- askRoute
