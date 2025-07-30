@@ -43,6 +43,10 @@ backend = Backend
 backendHandlers :: TVar [NamedConn] -> R BackendRoute -> Snap ()
 backendHandlers conns = \case
   BackendRoute_Missing :/ () -> writeBS "404"
+  
+  BackendRoute_Login :/ () -> do 
+    undefined
+    -- sqlUserPwdExist user
 
   BackendRoute_Websocket_Query :/ params -> do 
     let keys = fst <$> M.toList params 
@@ -50,7 +54,7 @@ backendHandlers conns = \case
 
   BackendRoute_Websocket :/ user -> do
     -- is user authenticated or visiting?
-    mEUser <- sqlUserPwdExist user
+    mEUser <- sqlUserPwdExist user ""
     case mEUser of
       Nothing -> do
         modifyResponse $ setResponseStatus 401 "Unauthorized"
@@ -95,8 +99,8 @@ wsHandlerUnAuth :: TVar [NamedConn] -> WS.ServerApp
 wsHandlerUnAuth conns = undefined
 
 -- | checks if the data in the LoginReq is a valid user in the database.
-sqlUserPwdExist :: MonadIO m => Text -> m (Maybe (Entity User))
-sqlUserPwdExist name = do
+sqlUserPwdExist :: MonadIO m => Text -> Text -> m (Maybe (Entity User))
+sqlUserPwdExist name pwd = do
   liftIO $ runSqlite myDB $ do
-    mEUser <- selectFirst [UserName ==. name] [] -- , UserPwd ==. (password lr)] []
+    mEUser <- selectFirst [UserName ==. name, UserPwd ==. pwd] []
     return mEUser

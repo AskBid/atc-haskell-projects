@@ -45,13 +45,28 @@ frontend = Frontend
         FrontendRoute_Main -> do
           elClass "div" divVerticalStyle $ do
             el "h1" $ text "MainPage"
+
             elClass "label" labelStyle $ text "Connect w/ username:"
             elInp <- inputElement $ def 
               & initialAttributes .~ ("class" =: inputStyle)
+
+            elClass "label" labelStyle $ text "Connect w/ username:"
+            elPwd <- inputElement $ def 
+              & initialAttributes .~ ("class" =: inputStyle <> "type" =: "password")
+            
             (elBtn, _) <- elClass' "button" buttonStyle $ text "click"
+
             let eClick = domEvent Click elBtn
                 dInp = _inputElement_value elInp
                 eName = tagPromptlyDyn dInp eClick
+
+            let reqLogin = xhrRequest "GET" "/login" $ def 
+                  & xhrRequestConfig_user .~ (Just "sergio")
+                  & xhrRequestConfig_password .~ (Just "pwd")
+
+            prerender_ blank $ do 
+              performRequestAsync $ reqLogin <$ eClick 
+              return ()
             setRoute $ (FrontendRoute_User :/ ) <$> eName
           
         FrontendRoute_User -> userChat
