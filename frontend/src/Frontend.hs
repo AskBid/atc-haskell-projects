@@ -28,6 +28,7 @@ import Common.Route
 import Common
 import Schema
 import UserChat
+import MainPage
 
 
 -- This runs in a monad that can be run on the client or the server.
@@ -41,38 +42,8 @@ frontend = Frontend
       elAttr "script" ("src" =: "https://cdn.tailwindcss.com") blank
   , _frontend_body = do
       el "div" $ text "Welcome to Chat!"
-      subRoute_ $ \r -> case r of
-        FrontendRoute_Main -> do
-          elClass "div" divVerticalStyle $ do
-            el "h1" $ text "MainPage"
-
-            elClass "label" labelStyle $ text "Connect w/ username:"
-            elInpName <- inputElement $ def 
-              & initialAttributes .~ ("class" =: inputStyle)
-
-            elClass "label" labelStyle $ text "Authenticate w/ password:"
-            elInpPwd <- inputElement $ def 
-              & initialAttributes .~ ("class" =: inputStyle <> "type" =: "password")
-            
-            (elBtn, _) <- elClass' "button" buttonStyle $ text "click"
-
-            let eClick = domEvent Click elBtn
-                dName = _inputElement_value elInpName
-                dPwd = _inputElement_value elInpPwd
-                dCredentials = Credentials <$> dName <*> dPwd
-                eCredentials = tagPromptlyDyn dCredentials eClick
-                reqLogin = \credentials -> xhrRequest "GET" "/login" $ def
-                  & xhrRequestConfig_withCredentials .~ True
-                  & xhrRequestConfig_headers .~ 
-                    ("Authorization" =: (ET.decodeUtf8 $ BSL.toStrict $ A.encode credentials))
-
-            prerender_ blank $ do 
-              eXhrResp <- performRequestAsync $ reqLogin <$> eCredentials
-              dStatusText <- holdDyn "noLog" $ T.pack . show . _xhrResponse_status <$> eXhrResp
-              el "h1" $ dynText dStatusText
-              return ()
-              -- setRoute $ (FrontendRoute_User :/ ) <$> eName
-          
+      subRoute_ $ \case
+        FrontendRoute_Main -> mainPage
         FrontendRoute_User -> userChat
       return ()
   }

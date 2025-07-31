@@ -18,6 +18,7 @@ labelStyle = "text-sm font-medium"
 divVerticalStyle :: Text
 divVerticalStyle = "flex flex-col gap-4 p-4"
 
+-- | transaltes websocket messages into Frontend messages, @Text@s ready for the chat.
 feMessage :: Maybe WSMessage -> Text
 feMessage wsm = case wsm of
   Nothing -> "*Non Valid Message*"

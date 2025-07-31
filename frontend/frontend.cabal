@@ -17,7 +17,7 @@ library
                , text
                , aeson
   exposed-modules:
-    Frontend, Common, UserChat
+    Frontend, Common, UserChat, MainPage
   ghc-options: -Wall -O -fno-show-valid-hole-fits
                -- unsafe code
                -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields

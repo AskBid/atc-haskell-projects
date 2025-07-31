@@ -51,14 +51,16 @@ backendHandlers conns = \case
   BackendRoute_Login :/ () -> do 
     req <- getRequest
     let headers = listHeaders req
-        auth = join $ A.decodeStrict <$> getHeader "Authorization" req 
-    case auth of 
-      Nothing -> liftIO $ putStrLn "Credentials not perceived."
+        auth = join $ A.decodeStrict <$> getHeader "Authorization" req
+    case auth of
+      Nothing -> do
+        liftIO $ putStrLn "Credentials not perceived."
+        modifyResponse $ setResponseCode 401
       Just credentials -> do 
         mEUser <- sqlUserPwdExist credentials
         case mEUser of 
           Nothing -> do 
-            liftIO $ putStrLn "User not found or wrong password." 
+            liftIO $ putStrLn "User not found or wrong password."
             modifyResponse $ setResponseCode 401
           Just (Entity e usr) -> do 
             let jwt = createJWT $ usr
@@ -66,7 +68,6 @@ backendHandlers conns = \case
             modifyResponse $ addResponseCookie $ mkJWTCookie jwt
             liftIO $ putStrLn "User Auth success."
             modifyResponse $ setResponseCode 200
-            writeLBS $ A.encode usr --TE.encodeUtf8 $ (userName $ user') <> " logged in."
 
   BackendRoute_Websocket_Query :/ params -> do 
     let keys = fst <$> M.toList params 
