@@ -67,7 +67,9 @@ frontend = Frontend
                     ("Authorization" =: (ET.decodeUtf8 $ BSL.toStrict $ A.encode credentials))
 
             prerender_ blank $ do 
-              performRequestAsync $ reqLogin <$> eCredentials
+              eXhrResp <- performRequestAsync $ reqLogin <$> eCredentials
+              dStatusText <- holdDyn "noLog" $ T.pack . show . _xhrResponse_status <$> eXhrResp
+              el "h1" $ dynText dStatusText
               return ()
               -- setRoute $ (FrontendRoute_User :/ ) <$> eName
           

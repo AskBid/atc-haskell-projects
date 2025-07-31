@@ -29,6 +29,7 @@ import Data.Maybe (fromMaybe)
 
 import Schema
 import Common.Api
+import MyJWT
 
 type NamedConn = (Entity User, WS.Connection)
 
@@ -50,12 +51,22 @@ backendHandlers conns = \case
   BackendRoute_Login :/ () -> do 
     req <- getRequest
     let headers = listHeaders req
-    let auth = TE.decodeUtf8 $ fromMaybe (TE.encodeUtf8 "none") $ getHeader "Authorization" req
-    liftIO $ putStrLn $ unpack $ "here::::: " <> auth
-    liftIO $ sequence_ ((\hd -> putStrLn . unpack 
-               $ ((TE.decodeUtf8 (original $ fst hd)) <> " :: " <> (TE.decodeUtf8 $ snd hd))) <$> headers)
-    writeBS $ TE.encodeUtf8 ""
-    -- sqlUserPwdExist user
+        auth = join $ A.decodeStrict <$> getHeader "Authorization" req 
+    case auth of 
+      Nothing -> liftIO $ putStrLn "Credentials not perceived."
+      Just credentials -> do 
+        mEUser <- sqlUserPwdExist credentials
+        case mEUser of 
+          Nothing -> do 
+            liftIO $ putStrLn "User not found or wrong password." 
+            modifyResponse $ setResponseCode 401
+          Just (Entity e usr) -> do 
+            let jwt = createJWT $ usr
+            modifyResponse $ setContentType "application/json"
+            modifyResponse $ addResponseCookie $ mkJWTCookie jwt
+            liftIO $ putStrLn "User Auth success."
+            modifyResponse $ setResponseCode 200
+            writeLBS $ A.encode usr --TE.encodeUtf8 $ (userName $ user') <> " logged in."
 
   BackendRoute_Websocket_Query :/ params -> do 
     let keys = fst <$> M.toList params 
@@ -63,7 +74,7 @@ backendHandlers conns = \case
 
   BackendRoute_Websocket :/ user -> do
     -- is user authenticated or visiting?
-    mEUser <- sqlUserPwdExist user ""
+    mEUser <- sqlUserExist user
     case mEUser of
       Nothing -> do
         modifyResponse $ setResponseStatus 401 "Unauthorized"
@@ -108,8 +119,14 @@ wsHandlerUnAuth :: TVar [NamedConn] -> WS.ServerApp
 wsHandlerUnAuth conns = undefined
 
 -- | checks if the data in the LoginReq is a valid user in the database.
-sqlUserPwdExist :: MonadIO m => Text -> Text -> m (Maybe (Entity User))
-sqlUserPwdExist name pwd = do
+sqlUserPwdExist :: MonadIO m => Credentials -> m (Maybe (Entity User))
+sqlUserPwdExist cs = do
   liftIO $ runSqlite myDB $ do
-    mEUser <- selectFirst [UserName ==. name, UserPwd ==. pwd] []
+    mEUser <- selectFirst [UserName ==. username cs, UserPwd ==. password cs] []
+    return mEUser
+
+sqlUserExist :: MonadIO m => Text -> m (Maybe (Entity User))
+sqlUserExist n = do
+  liftIO $ runSqlite myDB $ do
+    mEUser <- selectFirst [UserName ==. n] []
     return mEUser
