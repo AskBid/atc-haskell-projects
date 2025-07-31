@@ -15,3 +15,8 @@ data WSMessage
   | ConnectedClients [User]
   | UnAuthorised
   deriving (Show, Generic, FromJSON, ToJSON)
+
+data Credentials = Credentials 
+  { username :: Text
+  , password :: Text
+  } deriving (Show, Generic, ToJSON, FromJSON)

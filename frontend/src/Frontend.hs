@@ -47,27 +47,27 @@ frontend = Frontend
             el "h1" $ text "MainPage"
 
             elClass "label" labelStyle $ text "Connect w/ username:"
-            elInp <- inputElement $ def 
+            elInpName <- inputElement $ def 
               & initialAttributes .~ ("class" =: inputStyle)
 
             elClass "label" labelStyle $ text "Authenticate w/ password:"
-            elPwd <- inputElement $ def 
+            elInpPwd <- inputElement $ def 
               & initialAttributes .~ ("class" =: inputStyle <> "type" =: "password")
             
             (elBtn, _) <- elClass' "button" buttonStyle $ text "click"
 
             let eClick = domEvent Click elBtn
-                dInp = _inputElement_value elInp
-                eName = tagPromptlyDyn dInp eClick
-
-            let reqLogin = xhrRequest "POST" "/login" $ def 
-                  & xhrRequestConfig_user .~ (Just "sergio")
-                  & xhrRequestConfig_password .~ (Just "pwd")
+                dName = _inputElement_value elInpName
+                dPwd = _inputElement_value elInpPwd
+                dCredentials = Credentials <$> dName <*> dPwd
+                eCredentials = tagPromptlyDyn dCredentials eClick
+                reqLogin = \credentials -> xhrRequest "GET" "/login" $ def
                   & xhrRequestConfig_withCredentials .~ True
-                  -- ^ those will be sent as "Authorization" HTTP Headers.
+                  & xhrRequestConfig_headers .~ 
+                    ("Authorization" =: (ET.decodeUtf8 $ BSL.toStrict $ A.encode credentials))
 
             prerender_ blank $ do 
-              performRequestAsync $ reqLogin <$ eClick 
+              performRequestAsync $ reqLogin <$> eCredentials
               return ()
               -- setRoute $ (FrontendRoute_User :/ ) <$> eName
           
