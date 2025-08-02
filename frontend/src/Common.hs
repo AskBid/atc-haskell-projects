@@ -3,6 +3,9 @@
 module Common where
 
 import Data.Text
+import Reflex.Dom.Core
+import Database.Persist.Class.PersistEntity (Entity)
+
 import Common.Api
 import Schema
 
@@ -18,7 +21,7 @@ labelStyle = "text-sm font-medium"
 divVerticalStyle :: Text
 divVerticalStyle = "flex flex-col gap-4 p-4"
 
--- | transaltes websocket messages into Frontend messages, @Text@s ready for the chat.
+-- | translates websocket messages into Frontend messages, @Text@s ready for the chat.
 feMessage :: Maybe WSMessage -> Text
 feMessage wsm = case wsm of
   Nothing -> "*Non Valid Message*"
@@ -26,3 +29,10 @@ feMessage wsm = case wsm of
     NewMessage m -> "TODO: user> " <> messageText m
     ConnectedClients _ -> "TODO: List of connections message."
     otherwise -> "TODO: unknown message."
+
+data AppState t = AppState 
+  { authWSconn :: Maybe (WebSocket t)
+  , unAuthWSconn :: Maybe (WebSocket t)
+  , loggedAs :: Dynamic t (Maybe (Entity User))
+  , guestAs :: Maybe Text
+  }

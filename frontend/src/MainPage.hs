@@ -26,8 +26,8 @@ mainPage
      , DomSpace (DomBuilderSpace m)
      , DomBuilder t m
      ) 
-  => m ()
-mainPage = do
+  => AppState t -> m ()
+mainPage appState = do
   elClass "div" divVerticalStyle $ do
     el "h1" $ text "MainPage"
 

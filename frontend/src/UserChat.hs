@@ -23,8 +23,8 @@ userChat
      , Routed t T.Text m
      , Routed t T.Text (Client m)
      ) 
-  => m ()
-userChat = do
+  => AppState t -> m ()
+userChat appState = do
   prerender_ blank $ do  
     dName <- askRoute
     el "h1" $ dynText dName

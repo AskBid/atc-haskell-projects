@@ -23,6 +23,7 @@ import Obelisk.Route
 import Obelisk.Route.Frontend
 import Obelisk.Generated.Static
 import Reflex.Dom.Core
+import Database.Persist.Class.PersistEntity (Entity)
 
 import Common.Api
 import Common.Route
@@ -42,13 +43,23 @@ frontend = Frontend
       elAttr "script" ("type" =: "application/javascript" <> "src" =: $(static "lib.js")) blank
       elAttr "script" ("src" =: "https://cdn.tailwindcss.com") blank
   , _frontend_body = do
+
       ePostBuild <- getPostBuild
+      dynLoggedUser <- holdDyn (Nothing :: Maybe (Entity User)) $ Nothing <$ ePostBuild
+      let appState = AppState 
+            { authWSconn = Nothing
+            , unAuthWSconn = Nothing
+            , loggedAs = dynLoggedUser
+            , guestAs = Nothing
+            }
+
       elClass "div" "flex w-full h-screen" $ do
         elClass "div" "flex-1 bg-gray-200" $ do 
           el "div" $ text "Welcome to Chat!"
           subRoute_ $ \case
-            FrontendRoute_Main -> mainPage
-            FrontendRoute_User -> userChat
+            FrontendRoute_Main -> mainPage appState
+            FrontendRoute_User -> userChat appState
+
         elClass "div" "w-[clamp(100px,15%,999px)] bg-gray-100 gap-2 p-2" $ do 
           elClass "h1" "text-green-500" $ text "Connected Users"
           elClass "div" divVerticalStyle $ do 
@@ -56,6 +67,7 @@ frontend = Frontend
           elClass "h1" "text-red-500" $ text "Offline Users"
           elClass "div" divVerticalStyle $ do
             listUsers ["bob", "alice"] ePostBuild
+
       return ()
   }
 
