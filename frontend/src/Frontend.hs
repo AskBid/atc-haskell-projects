@@ -41,10 +41,24 @@ frontend = Frontend
       elAttr "script" ("type" =: "application/javascript" <> "src" =: $(static "lib.js")) blank
       elAttr "script" ("src" =: "https://cdn.tailwindcss.com") blank
   , _frontend_body = do
-      el "div" $ text "Welcome to Chat!"
-      subRoute_ $ \case
-        FrontendRoute_Main -> mainPage
-        FrontendRoute_User -> userChat
+      ePostBuild <- getPostBuild
+      elClass "div" "flex w-full h-screen" $ do
+        elClass "div" "flex-1 bg-gray-200" $ do 
+          el "div" $ text "Welcome to Chat!"
+          subRoute_ $ \case
+            FrontendRoute_Main -> mainPage
+            FrontendRoute_User -> userChat
+        elClass "div" "w-[clamp(100px,15%,999px)] bg-gray-100" $ do 
+          elClass "h1" "text-green-500" $ text "Connected Users"
+          elClass "div" divVerticalStyle $ do 
+            dUsrList <- holdDyn [] $ ["sergio", "mario", "UnAuthUser_Phill"] <$ ePostBuild
+            simpleList dUsrList (\dText -> el "div" $ dynText dText)
+          elClass "h1" "text-red-500" $ text "Offline Users"
+          -- elClass "div" divVerticalStyle $ do 
+          --   dUsrList <- holdDyn [] $ ["sergio", "mario", "UnAuthUser_Phill"] <$ ePostBuild
+          --   simpleList dUsrList (\dText -> el "div" $ dynText dText)
       return ()
   }
 
+listUsers :: [Text] -> m ()
+listUsers = undefined
