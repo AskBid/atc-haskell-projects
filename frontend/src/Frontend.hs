@@ -15,6 +15,7 @@ import Language.Javascript.JSaddle (liftJSM, js, js1, jsg)
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BSL 
+import Control.Monad.Fix (MonadFix)
 
 import Obelisk.Frontend
 import Obelisk.Configs
@@ -48,17 +49,26 @@ frontend = Frontend
           subRoute_ $ \case
             FrontendRoute_Main -> mainPage
             FrontendRoute_User -> userChat
-        elClass "div" "w-[clamp(100px,15%,999px)] bg-gray-100" $ do 
+        elClass "div" "w-[clamp(100px,15%,999px)] bg-gray-100 gap-2 p-2" $ do 
           elClass "h1" "text-green-500" $ text "Connected Users"
           elClass "div" divVerticalStyle $ do 
-            dUsrList <- holdDyn [] $ ["sergio", "mario", "UnAuthUser_Phill"] <$ ePostBuild
-            simpleList dUsrList (\dText -> el "div" $ dynText dText)
+            listUsers ["sergio", "mario", "UnAuthUser_Phill"] ePostBuild
           elClass "h1" "text-red-500" $ text "Offline Users"
-          -- elClass "div" divVerticalStyle $ do 
-          --   dUsrList <- holdDyn [] $ ["sergio", "mario", "UnAuthUser_Phill"] <$ ePostBuild
-          --   simpleList dUsrList (\dText -> el "div" $ dynText dText)
+          elClass "div" divVerticalStyle $ do
+            listUsers ["bob", "alice"] ePostBuild
       return ()
   }
 
-listUsers :: [Text] -> m ()
-listUsers = undefined
+listUsers 
+  :: ( Monad m
+     , MonadHold t m
+     , Reflex t
+     , MonadFix m
+     , PostBuild t m
+     , Adjustable t m
+     , DomBuilder t m
+     ) 
+  => [T.Text] -> Event t a -> m (Dynamic t [()])
+listUsers names event = do 
+  dUsrList <- holdDyn [] $ names <$ event
+  simpleList dUsrList (\dText -> el "div" $ dynText dText)
