@@ -39,8 +39,8 @@ feMessage wsm = case wsm of
 data AppState t = AppState 
   { authWSconn :: Maybe (WebSocket t)
   , unAuthWSconn :: Maybe (WebSocket t)
-  , loggedAs :: Dynamic t (Maybe (Entity User))
-  , guestAs :: Maybe Text
+  , loggedAs :: Dynamic t (Maybe (User))
+  , loggedTrigger :: Maybe User -> IO ()
   }
 
 -- | @fullRouteEncoder@ has an `Either Text` as a first (check) argument
@@ -60,3 +60,13 @@ getUrl :: R (FullRoute BackendRoute FrontendRoute) -> Text
 getUrl route = intercalate "/" $ fst pageName
   where 
     pageName = encode safeEncoder route
+
+-- | check on the status of XhrResponses given a range of acceptability.
+-- e.g.
+-- >>> statusCheck 200 400 xhrResp
+-- >>> True
+statusCheck :: Word -> Word -> XhrResponse -> Bool
+statusCheck min max xhr
+  | status >= min && status < max = True
+  | otherwise                     = False
+  where status = _xhrResponse_status xhr

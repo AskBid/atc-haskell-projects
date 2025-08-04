@@ -46,43 +46,45 @@ frontend = Frontend
   , _frontend_body = do
 
       ePostBuild <- getPostBuild
-
-      dynLoggedUser <- holdDyn (Nothing :: Maybe (Entity User)) $ Nothing <$ ePostBuild
-
+      dLogCheck <- amILogged ePostBuild
+      (evLoggedByTrigger, loggedTrigger) <- newTriggerEvent
+      let evLogged = leftmost [switchDyn dLogCheck, evLoggedByTrigger]
+      dLogged <- holdDyn Nothing evLogged
+      
       let appState = AppState 
             { authWSconn = Nothing
             , unAuthWSconn = Nothing
-            , loggedAs = dynLoggedUser
-            , guestAs = Nothing
+            , loggedAs = dLogged
+            , loggedTrigger = loggedTrigger
             }
 
-      elClass "div" "flex w-full h-screen" $ do
-        elClass "div" "flex-1 bg-gray-200" $ do 
+      prerender_ blank $ do
+        elClass "div" "flex w-full h-screen" $ do
+          elClass "div" "flex-1 bg-gray-200" $ do 
 
-          elClass "div" ("bg-white " <> divHorizontalStyle) $ do
-            
-            dyn_ $ ffor (loggedAs appState) $ \case
-              Just _ -> do 
-                prerender_ blank $ do
-                  (elBtnLogout, _) <- elClass' "button" buttonStyle $ text "Logout"
-                  let eClickLogout = domEvent Click elBtnLogout 
-                  resp <- requestLogout eClickLogout
-                  blank
-              Nothing -> void $ el "div" $ text "Welcome to Chat!"
+            elClass "div" ("bg-white " <> divHorizontalStyle) $ do
+              
+              dyn_ $ ffor (loggedAs appState) $ \case
+                Just _ -> logoutButton appState 
+                Nothing -> do 
+                  el "div" $ text "Welcome to Chat!"
+                  elAttr "a" ("href" =: "/signup" <> "class" =: "text-blue-500 underline") $ text "Signup"
 
-          subRoute_ $ \case
-            FrontendRoute_Main -> mainPage appState
-            FrontendRoute_User -> userChat appState
+            subRoute_ $ \case
+              FrontendRoute_Main -> mainPage appState
+              FrontendRoute_User -> userChat appState
 
-        elClass "div" "w-[clamp(100px,15%,999px)] bg-gray-100 gap-2 p-2" $ do 
+          elClass "div" "w-[clamp(100px,15%,999px)] bg-gray-100 gap-2 p-2" $ do 
 
-          elClass "h1" "text-green-500" $ text "Connected Users"
-          elClass "div" divVerticalStyle $ do 
-            listUsers ["sergio", "mario", "UnAuthUser_Phill"] ePostBuild
+            elClass "h1" "text-green-500 font-bold" $ text "Connected Users"
+            elClass "div" divVerticalStyle $ do 
+              _ <- listUsers ["sergio", "mario"] ePostBuild
+              return ()
 
-          elClass "h1" "text-red-500" $ text "Offline Users"
-          elClass "div" divVerticalStyle $ do
-            listUsers ["bob", "alice"] ePostBuild
+            elClass "h1" "text-red-500 font-bold" $ text "Offline Users"
+            elClass "div" divVerticalStyle $ do
+              listUsers ["bob", "alice"] ePostBuild
+        return ()
 
       return ()
   }
@@ -94,8 +96,7 @@ listUsers
      , MonadFix m
      , PostBuild t m
      , Adjustable t m
-     , DomBuilder t m
-     ) 
+     , DomBuilder t m ) 
   => [T.Text] -> Event t a -> m (Dynamic t [()])
 listUsers names event = do 
   dUsrList <- holdDyn [] $ names <$ event
@@ -106,8 +107,7 @@ requestLogout
      , MonadJSM m
      , MonadJSM (Performable m)
      , PerformEvent t m
-     , TriggerEvent t m
-     ) 
+     , TriggerEvent t m ) 
   => Event t a -> m (Event t XhrResponse)
 requestLogout event = 
   let
@@ -116,3 +116,48 @@ requestLogout event =
   in do 
     resp <- performRequestAsync $ req <$ event
     return resp
+
+requestLogCheck
+  :: ( Monad m
+     , MonadJSM (Performable m)
+     , PerformEvent t m
+     , TriggerEvent t m ) 
+  => Event t a -> m (Event t XhrResponse)
+requestLogCheck event = 
+  let
+    url = getUrl $ FullRoute_Backend BackendRoute_Me :/ ()
+    req = xhrRequest "POST" url $ def 
+  in do 
+    resp <- performRequestAsync $ req <$ event
+    return resp
+
+amILogged 
+  :: ( Monad m
+     , Prerender t m )
+  => Event t a -> m (Dynamic t (Event t (Maybe (User))))
+amILogged event = do 
+  dEvMUser <- prerender (pure never) $ do
+    eLogCheckResp <- requestLogCheck event
+    let evRespSucc = ffilter (statusCheck 200 300) eLogCheckResp
+        evMTextResp = _xhrResponse_responseText <$> evRespSucc
+        evMUser = ffor evMTextResp $ 
+          \mTextResp -> case mTextResp of 
+            Nothing -> Nothing 
+            Just textResp -> (A.decode . BSL.fromStrict . ET.encodeUtf8) textResp 
+    return evMUser
+  return dEvMUser
+
+logoutButton 
+  :: ( Monad m
+     , DomBuilder t m 
+     , MonadJSM (Performable m)
+     , MonadJSM m 
+     , PerformEvent t m
+     , TriggerEvent t m ) 
+  => AppState t -> m ()
+logoutButton appState = do 
+  (elBtnLogout, _) <- elClass' "button" buttonStyle $ text "Logout"
+  let eClickLogout = domEvent Click elBtnLogout 
+  evResp <- requestLogout eClickLogout
+  let evLogSuccess = ffilter (statusCheck 200 300) evResp
+  performEvent_ $ (liftIO $ loggedTrigger appState $ Nothing) <$ evLogSuccess
