@@ -45,20 +45,20 @@ frontend = Frontend
       elAttr "script" ("src" =: "https://cdn.tailwindcss.com") blank
   , _frontend_body = do
 
-      ePostBuild <- getPostBuild
-      dLogCheck <- amILogged ePostBuild
-      (evLoggedByTrigger, loggedTrigger) <- newTriggerEvent
-      let evLogged = leftmost [switchDyn dLogCheck, evLoggedByTrigger]
-      dLogged <- holdDyn Nothing evLogged
-      
-      let appState = AppState 
-            { authWSconn = Nothing
-            , unAuthWSconn = Nothing
-            , loggedAs = dLogged
-            , loggedTrigger = loggedTrigger
-            }
-
       prerender_ blank $ do
+        ePostBuild <- getPostBuild
+        dLogCheck <- amILogged ePostBuild
+        (evLoggedByTrigger, loggedTrigger) <- newTriggerEvent
+        let evLogged = leftmost [switchDyn dLogCheck, evLoggedByTrigger]
+        dLogged <- holdDyn Nothing evLogged
+        
+        let appState = AppState 
+              { authWSconn = Nothing
+              , unAuthWSconn = Nothing
+              , loggedAs = dLogged
+              , loggedTrigger = loggedTrigger
+              }
+
         elClass "div" "flex w-full h-screen" $ do
           elClass "div" "flex-1 bg-gray-200" $ do 
 
