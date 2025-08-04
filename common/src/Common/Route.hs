@@ -31,6 +31,8 @@ data BackendRoute :: * -> * where
   BackendRoute_Websocket_Query :: BackendRoute (Map Text (Maybe Text))
   BackendRoute_Websocket :: BackendRoute Text
   BackendRoute_Login :: BackendRoute ()
+  BackendRoute_Logout :: BackendRoute ()
+  BackendRoute_Me :: BackendRoute ()
   -- You can define any routes that will be handled specially by the backend here.
   -- i.e. These do not serve the frontend, but do something different, such as serving static files.
 
@@ -46,6 +48,8 @@ fullRouteEncoder = mkFullRouteEncoder
   (\case
       BackendRoute_Missing -> PathSegment "missing" $ unitEncoder mempty
       BackendRoute_Login -> PathSegment "login" $ unitEncoder mempty
+      BackendRoute_Logout -> PathSegment "logout" $ unitEncoder mempty
+      BackendRoute_Me -> PathSegment "me" $ unitEncoder mempty
       BackendRoute_Websocket_Query -> PathSegment "ws-query" $ queryOnlyEncoder
       BackendRoute_Websocket -> PathSegment "ws" $ singlePathSegmentEncoder
   )
