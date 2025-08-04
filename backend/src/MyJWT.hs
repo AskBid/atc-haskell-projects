@@ -19,7 +19,18 @@ jwtSecret = JWT.hmacSecret "my-super-secret-key"
 verifyJWT :: MonadSnap m => m (Maybe T.Text) 
 verifyJWT = do 
   maybeCookie <- getCookie "jwt"
-  return $ Just "someuser"
+  case maybeCookie of
+    Nothing -> return Nothing
+    Just (Cookie _ valueJWT _ _ _ _ _) -> do 
+      let mVerifiedJWT = JWT.decodeAndVerifySignature (JWT.toVerify jwtSecret) $ TE.decodeUtf8 valueJWT
+      case mVerifiedJWT of
+        Nothing  -> return Nothing
+        Just jwt -> do
+          case JWT.sub $ JWT.claims jwt of
+            Nothing       -> return Nothing
+            Just strOrUri -> do 
+              let username = JWT.stringOrURIToText strOrUri
+              return $ Just username
 
 -- | Using JWT library to create an encoded JWT ByteString, the likes of: 
 --  `asxcasas.asdasdasc.aierhuhdf`

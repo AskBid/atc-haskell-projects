@@ -66,7 +66,7 @@ frontend = Frontend
                 prerender_ blank $ do
                   (elBtnLogout, _) <- elClass' "button" buttonStyle $ text "Logout"
                   let eClickLogout = domEvent Click elBtnLogout 
-                  resp <- requestLogin eClickLogout
+                  resp <- requestLogout eClickLogout
                   blank
               Nothing -> void $ el "div" $ text "Welcome to Chat!"
 

@@ -23,6 +23,7 @@ import Database.Persist
 import Database.Persist.Sqlite
 import qualified Data.Text.Encoding as TE
 import qualified Data.Aeson as A
+import qualified Data.ByteString.Lazy.Char8 as BL
 
 import Data.CaseInsensitive (original)
 import Data.Maybe (fromMaybe)
@@ -68,6 +69,27 @@ backendHandlers conns = \case
             modifyResponse $ addResponseCookie $ mkJWTCookie jwt
             liftIO $ putStrLn "User Auth success."
             modifyResponse $ setResponseCode 200
+
+  BackendRoute_Logout :/ () -> do 
+    modifyResponse $ setContentType "application/json"
+    let expiredJWTCookie = cookieLogout
+    modifyResponse $ addResponseCookie $ expiredJWTCookie
+    writeBS "logout backend. You shouldn't be here!"
+
+  BackendRoute_Me :/ () -> do
+    mUsername <- verifyJWT
+    case mUsername of
+      Nothing -> do
+        modifyResponse $ setResponseStatus 401 "unauthorized"
+        writeBS "invalid JWT"
+      Just username' -> do
+        modifyResponse $ setResponseStatus 200 "OK"
+        mEUser <- liftIO $ runSqlite myDB $ selectFirst [UserName ==. username'] [] 
+        case mEUser of
+          Nothing -> do 
+            modifyResponse $ setResponseStatus 401 "unauthorized"
+            writeBS "User did not exist."
+          Just entityUser -> writeBS $ BL.toStrict $ A.encode $ entityVal entityUser
 
   BackendRoute_Websocket_Query :/ params -> do 
     let keys = fst <$> M.toList params 
@@ -115,9 +137,6 @@ wsHandler tvarConns eUser pending = do
         forM_ conns $ \(eUser, conn) -> WS.sendTextData conn (A.encode (NewMessage msg'))
         return ()
       otherwise -> putStrLn "TODO case for different type of WSMessage"
-
-wsHandlerUnAuth :: TVar [NamedConn] -> WS.ServerApp
-wsHandlerUnAuth conns = undefined
 
 -- | checks if the data in the LoginReq is a valid user in the database.
 sqlUserPwdExist :: MonadIO m => Credentials -> m (Maybe (Entity User))
