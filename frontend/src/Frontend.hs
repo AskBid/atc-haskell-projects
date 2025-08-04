@@ -46,10 +46,11 @@ frontend = Frontend
   , _frontend_body = do
 
       prerender_ blank $ do
-        ePostBuild <- getPostBuild
-        dLogCheck <- amILogged ePostBuild
         (evLoggedByTrigger, loggedTrigger) <- newTriggerEvent
-        let evLogged = leftmost [switchDyn dLogCheck, evLoggedByTrigger]
+        ePostBuild <- getPostBuild
+        let route = FullRoute_Backend BackendRoute_Me :/ () 
+        evLoggedMUser <- requestWithCredentialsAndDecode route ePostBuild
+        let evLogged = leftmost [evLoggedMUser, evLoggedByTrigger]
         dLogged <- holdDyn Nothing evLogged
         
         let appState = AppState 
@@ -99,50 +100,34 @@ listUsers names event = do
   dUsrList <- holdDyn [] $ names <$ event
   simpleList dUsrList (\dText -> el "div" $ dynText dText)
 
-requestLogout 
-  :: ( Monad m
-     , MonadJSM m
-     , MonadJSM (Performable m)
-     , PerformEvent t m
-     , TriggerEvent t m ) 
-  => Event t a -> m (Event t XhrResponse)
-requestLogout event = 
-  let
-    url = getUrl $ FullRoute_Backend BackendRoute_Logout :/ ()
-    req = xhrRequest "POST" url $ def 
-  in do 
-    resp <- performRequestAsync $ req <$ event
-    return resp
+requestWithCredentialsAndDecode 
+  :: ( MonadJSM (Performable m)
+     , PerformEvent t m 
+     , TriggerEvent t m 
+     , A.FromJSON b
+     )
+  => R (FullRoute BackendRoute FrontendRoute) -> Event t a -> m (Event t (Maybe b))
+requestWithCredentialsAndDecode route event = do 
+  let url = getUrl route
+      req = xhrRequest "POST" url $ def & xhrRequestConfig_withCredentials .~ True
+  requestAndDecode req event
 
-requestLogCheck
+requestAndDecode 
   :: ( Monad m
      , MonadJSM (Performable m)
-     , PerformEvent t m
-     , TriggerEvent t m ) 
-  => Event t a -> m (Event t XhrResponse)
-requestLogCheck event = 
-  let
-    url = getUrl $ FullRoute_Backend BackendRoute_Me :/ ()
-    req = xhrRequest "POST" url $ def 
-  in do 
-    resp <- performRequestAsync $ req <$ event
-    return resp
-
-amILogged 
-  :: ( Monad m
-     , Prerender t m )
-  => Event t a -> m (Dynamic t (Event t (Maybe (User))))
-amILogged event = do 
-  dEvMUser <- prerender (pure never) $ do
-    eLogCheckResp <- requestLogCheck event
-    let evRespSucc = ffilter (statusCheck 200 300) eLogCheckResp
-        evMTextResp = _xhrResponse_responseText <$> evRespSucc
-        evMUser = ffor evMTextResp $ 
-          \mTextResp -> case mTextResp of 
-            Nothing -> Nothing 
-            Just textResp -> (A.decode . BSL.fromStrict . ET.encodeUtf8) textResp 
-    return evMUser
-  return dEvMUser
+     , PerformEvent t m 
+     , TriggerEvent t m 
+     , A.FromJSON b
+     , IsXhrPayload x
+     )
+  => XhrRequest x -> Event t a -> m (Event t (Maybe b))
+requestAndDecode req event = do 
+  evRes <- performRequestAsync $ req <$ event
+  let evRespSucc = ffilter (statusCheck 200 300) evRes
+      evMTextResp = _xhrResponse_responseText <$> evRespSucc
+  return $ ffor evMTextResp $ \case
+    Nothing       -> Nothing 
+    Just textResp -> (A.decode . BSL.fromStrict . ET.encodeUtf8) textResp
 
 logoutButton 
   :: ( Monad m
@@ -150,11 +135,17 @@ logoutButton
      , MonadJSM (Performable m)
      , MonadJSM m 
      , PerformEvent t m
-     , TriggerEvent t m ) 
+     , TriggerEvent t m 
+     ) 
   => AppState t -> m ()
 logoutButton appState = do 
   (elBtnLogout, _) <- elClass' "button" buttonStyle $ text "Logout"
   let eClickLogout = domEvent Click elBtnLogout 
-  evResp <- requestLogout eClickLogout
-  let evLogSuccess = ffilter (statusCheck 200 300) evResp
-  performEvent_ $ (liftIO $ loggedTrigger appState $ Nothing) <$ evLogSuccess
+      route = FullRoute_Backend BackendRoute_Logout :/ () 
+  evMUser <- requestWithCredentialsAndDecode route eClickLogout
+  let evSucc = ffor evMUser $ \case 
+        Nothing         -> ()
+        Just (User _ _) -> () 
+  -- ^ I am here using User solely to be able to reuse @requestWithCredentialsAndDecode@
+  --   but we are only interested that the events fires if the statusCheck was filtered
+  performEvent_ $ (liftIO $ loggedTrigger appState $ Nothing) <$ evSucc

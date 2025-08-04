@@ -74,7 +74,7 @@ backendHandlers conns = \case
     modifyResponse $ setContentType "application/json"
     let expiredJWTCookie = cookieLogout
     modifyResponse $ addResponseCookie $ expiredJWTCookie
-    writeBS "logout backend. You shouldn't be here!"
+    writeBS $ BL.toStrict $ A.encode $ User "dummy" "dummy"
 
   BackendRoute_Me :/ () -> do
     mUsername <- verifyJWT
