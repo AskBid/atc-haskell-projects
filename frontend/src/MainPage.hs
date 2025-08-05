@@ -59,11 +59,10 @@ mainPage appState = do
       evRes <- performRequestAsync $ reqLogin <$> eCredentials
       let evEitherResp = decodeResponse "Invalid username or password." evRes
       let evErr = either id (const "Login success.") <$> evEitherResp
-      let evOk = fmapMaybe (either (const Nothing) id) evEitherResp
+      let evOkUsr = fmapMaybe (either (const Nothing) id) evEitherResp
       dErr <- holdDyn "" evErr
       el "div" $ dynText $ dErr
-      setRoute $ (FrontendRoute_User :/ ) <$> userName <$> evOk
+      performEvent_ $ liftIO . loggedTrigger appState <$> Just <$> evOkUsr
+      setRoute $ (FrontendRoute_User :/ ) <$> userName <$> evOkUsr
 
-      -- let eName = fforMaybe (decodeResponse evRes) (fmap userName)
-      -- performEvent_ $ liftIO . loggedTrigger appState <$> fforMaybe (decodeResponse evRes) id
       

@@ -111,7 +111,7 @@ requestWithCredentialsAndDecode route event = do
   let url = getUrl route
       req = xhrRequest "POST" url $ def & xhrRequestConfig_withCredentials .~ True
   evRes <- performRequestAsync $ req <$ event
-  pure $ decodeResponse evRes
+  pure $ fmapMaybe (either (const Nothing) id) $ decodeResponse "Error." evRes
 
 logoutButton 
   :: ( Monad m
