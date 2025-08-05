@@ -110,24 +110,8 @@ requestWithCredentialsAndDecode
 requestWithCredentialsAndDecode route event = do 
   let url = getUrl route
       req = xhrRequest "POST" url $ def & xhrRequestConfig_withCredentials .~ True
-  requestAndDecode req event
-
-requestAndDecode 
-  :: ( Monad m
-     , MonadJSM (Performable m)
-     , PerformEvent t m 
-     , TriggerEvent t m 
-     , A.FromJSON b
-     , IsXhrPayload x
-     )
-  => XhrRequest x -> Event t a -> m (Event t (Maybe b))
-requestAndDecode req event = do 
   evRes <- performRequestAsync $ req <$ event
-  let evRespSucc = ffilter (statusCheck 200 300) evRes
-      evMTextResp = _xhrResponse_responseText <$> evRespSucc
-  return $ ffor evMTextResp $ \case
-    Nothing       -> Nothing 
-    Just textResp -> (A.decode . BSL.fromStrict . ET.encodeUtf8) textResp
+  pure $ decodeResponse evRes
 
 logoutButton 
   :: ( Monad m

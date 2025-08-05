@@ -1,4 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-} 
+{-# LANGUAGE LambdaCase #-} 
+{-# LANGUAGE FlexibleContexts #-} 
 
 module Common where
 
@@ -7,6 +9,10 @@ import Reflex.Dom.Core
 import Database.Persist.Class.PersistEntity (Entity)
 import Obelisk.Route
 import Data.Functor.Identity
+import Language.Javascript.JSaddle (MonadJSM)
+import qualified Data.Aeson as A (FromJSON, decode)
+import qualified Data.ByteString.Lazy as BSL 
+import qualified Data.Text.Encoding as ET (encodeUtf8)
 
 import Common.Api
 import Schema
@@ -70,3 +76,9 @@ statusCheck min max xhr
   | status >= min && status < max = True
   | otherwise                     = False
   where status = _xhrResponse_status xhr
+
+-- | handles the response from a given XhrRequest filtering for successul response
+--   and decodes response using Aeson.FromJSON
+decodeResponse :: (A.FromJSON a, Reflex t)
+  =>  Event t XhrResponse -> Event t (Maybe a)
+decodeResponse evRes = decodeXhrResponse <$> ffilter (statusCheck 200 300) evRes
