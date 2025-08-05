@@ -57,6 +57,13 @@ mainPage appState = do
               ("Authorization" =: (ET.decodeUtf8 $ BSL.toStrict $ A.encode credentials))
       
       evRes <- performRequestAsync $ reqLogin <$> eCredentials
-      let eName = fforMaybe (decodeResponse evRes) (fmap userName)
-      performEvent_ $ liftIO . loggedTrigger appState <$> fforMaybe (decodeResponse evRes) id
-      setRoute $ (FrontendRoute_User :/ ) <$> eName
+      let evEitherResp = decodeResponse "Invalid username or password." evRes
+      let evErr = either id (const "Login success.") <$> evEitherResp
+      let evOk = fmapMaybe (either (const Nothing) id) evEitherResp
+      dErr <- holdDyn "" evErr
+      el "div" $ dynText $ dErr
+      setRoute $ (FrontendRoute_User :/ ) <$> userName <$> evOk
+
+      -- let eName = fforMaybe (decodeResponse evRes) (fmap userName)
+      -- performEvent_ $ liftIO . loggedTrigger appState <$> fforMaybe (decodeResponse evRes) id
+      

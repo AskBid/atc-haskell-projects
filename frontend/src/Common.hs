@@ -80,5 +80,8 @@ statusCheck min max xhr
 -- | handles the response from a given XhrRequest filtering for successul response
 --   and decodes response using Aeson.FromJSON
 decodeResponse :: (A.FromJSON a, Reflex t)
-  =>  Event t XhrResponse -> Event t (Maybe a)
-decodeResponse evRes = decodeXhrResponse <$> ffilter (statusCheck 200 300) evRes
+  =>  b -> Event t XhrResponse -> Event t (Either b (Maybe a))
+decodeResponse err evRes = do 
+  ffor evRes $ \res -> if statusCheck 200 300 res
+    then Right $ decodeXhrResponse res
+    else Left err
