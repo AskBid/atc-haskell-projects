@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts  #-} 
+{-# LANGUAGE LambdaCase        #-} 
 
 module MainPage where
 
@@ -12,6 +13,7 @@ import Obelisk.Route
 import Obelisk.Route.Frontend
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad (void)
+import Data.Maybe (isJust, fromMaybe)
 
 import Common
 import Common.Api
@@ -25,6 +27,7 @@ mainPage
      , Routed t () (Client m)
      , DomSpace (DomBuilderSpace m)
      , DomBuilder t m
+     , SetRoute t (R FrontendRoute) (Client m)
      ) 
   => AppState t -> m ()
 mainPage appState = do
@@ -46,14 +49,14 @@ mainPage appState = do
           dPwd = _inputElement_value elInpPwd
           dCredentials = Credentials <$> dName <*> dPwd
           eCredentials = tagPromptlyDyn dCredentials eClick
-          url = getUrl $ FullRoute_Frontend (ObeliskRoute_App FrontendRoute_Main) :/ () 
-          reqLogin = \credentials -> xhrRequest "GET" url $ def
+
+          url = getUrl $ FullRoute_Backend BackendRoute_Login :/ () 
+          reqLogin = \credentials -> xhrRequest "POST" url $ def
             & xhrRequestConfig_withCredentials .~ True
             & xhrRequestConfig_headers .~ 
               ("Authorization" =: (ET.decodeUtf8 $ BSL.toStrict $ A.encode credentials))
-
-      eXhrResp <- performRequestAsync $ reqLogin <$> eCredentials
-      dStatusText <- holdDyn "noLog" $ T.pack . show . _xhrResponse_status <$> eXhrResp
-      el "h1" $ dynText dStatusText
-      return ()
-        -- setRoute $ (FrontendRoute_User :/ ) <$> eName
+      
+      evRes <- performRequestAsync $ reqLogin <$> eCredentials
+      let eName = fforMaybe (decodeResponse evRes) (fmap userName)
+      performEvent_ $ liftIO . loggedTrigger appState <$> fforMaybe (decodeResponse evRes) id
+      setRoute $ (FrontendRoute_User :/ ) <$> eName

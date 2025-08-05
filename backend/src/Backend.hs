@@ -69,6 +69,7 @@ backendHandlers conns = \case
             modifyResponse $ addResponseCookie $ mkJWTCookie jwt
             liftIO $ putStrLn "User Auth success."
             modifyResponse $ setResponseCode 200
+            writeBS $ BL.toStrict $ A.encode usr 
 
   BackendRoute_Logout :/ () -> do 
     modifyResponse $ setContentType "application/json"
