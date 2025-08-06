@@ -77,6 +77,9 @@ backendHandlers conns = \case
     modifyResponse $ addResponseCookie $ expiredJWTCookie
     writeBS $ BL.toStrict $ A.encode $ User "dummy" "dummy"
 
+  BackendRoute_Signup :/ () -> do 
+    writeBS $ "signup"
+
   BackendRoute_Me :/ () -> do
     mUsername <- verifyJWT
     case mUsername of
@@ -92,11 +95,7 @@ backendHandlers conns = \case
             writeBS "User did not exist."
           Just entityUser -> writeBS $ BL.toStrict $ A.encode $ entityVal entityUser
 
-  BackendRoute_Websocket_Query :/ params -> do 
-    let keys = fst <$> M.toList params 
-    writeBS $ TE.encodeUtf8 $ Prelude.foldl (\b a -> b <> ((<> " ") a)) "" keys
-
-  BackendRoute_Websocket :/ user -> do
+  BackendRoute_Websocket :/ WebscocketRoute_User :/ user -> do
     -- is user authenticated or visiting?
     mEUser <- sqlUserExist user
     case mEUser of
@@ -107,6 +106,9 @@ backendHandlers conns = \case
       Just eUser -> do
         liftIO $ putStrLn "User found... going to open socket..."
         WSSnap.runWebSocketsSnap $ wsHandler conns eUser
+
+  BackendRoute_Websocket :/ WebscocketRoute_Main :/ () -> do 
+    writeBS "Connection with no permission to chat."
 
   -- ^ runWebSocketsSnap is just a bridge — it hands off the PendingConnection to your wsHandler. 
   -- Everything else is up to you. Broadcast messages to all clients, Count or log active connections,

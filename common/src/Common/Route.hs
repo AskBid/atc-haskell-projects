@@ -28,9 +28,10 @@ import Data.Map.Strict (Map)
 data BackendRoute :: * -> * where
   -- | Used to handle unparseable routes.
   BackendRoute_Missing :: BackendRoute ()
-  BackendRoute_Websocket_Query :: BackendRoute (Map Text (Maybe Text))
-  BackendRoute_Websocket :: BackendRoute Text
+  -- BackendRoute_WebsocketUser :: BackendRoute Text
+  BackendRoute_Websocket :: BackendRoute (R WebsocketRoute)
   BackendRoute_Login :: BackendRoute ()
+  BackendRoute_Signup :: BackendRoute ()
   BackendRoute_Logout :: BackendRoute ()
   BackendRoute_Me :: BackendRoute ()
   -- You can define any routes that will be handled specially by the backend here.
@@ -38,8 +39,19 @@ data BackendRoute :: * -> * where
 
 data FrontendRoute :: * -> * where
   FrontendRoute_Main :: FrontendRoute ()
+  -- FrontendRoute_Signup :: FrontendRoute ()
   FrontendRoute_User :: FrontendRoute Text
-  -- This type is used to define frontend routes, i.e. ones for which the backend will serve the frontend.
+  -- This type is used to define frontend routes, i.e. ones for which 
+  -- the backend will serve the frontend.
+
+data WebsocketRoute :: * -> * where
+  WebscocketRoute_Main :: WebsocketRoute () 
+  WebscocketRoute_User :: WebsocketRoute Text 
+
+websocketRouteEncoder :: Encoder (Either Text) (Either Text) (R WebsocketRoute) PageName
+websocketRouteEncoder = pathComponentEncoder $ \case
+  WebscocketRoute_Main -> PathEnd $ unitEncoder mempty
+  WebscocketRoute_User -> PathSegment "user" $ singlePathSegmentEncoder
 
 fullRouteEncoder
   :: Encoder (Either Text) Identity (R (FullRoute BackendRoute FrontendRoute)) PageName
@@ -48,17 +60,19 @@ fullRouteEncoder = mkFullRouteEncoder
   (\case
       BackendRoute_Missing -> PathSegment "missing" $ unitEncoder mempty
       BackendRoute_Login -> PathSegment "login" $ unitEncoder mempty
+      BackendRoute_Signup -> PathSegment "signup-request" $ unitEncoder mempty
       BackendRoute_Logout -> PathSegment "logout" $ unitEncoder mempty
       BackendRoute_Me -> PathSegment "me" $ unitEncoder mempty
-      BackendRoute_Websocket_Query -> PathSegment "ws-query" $ queryOnlyEncoder
-      BackendRoute_Websocket -> PathSegment "ws" $ singlePathSegmentEncoder
+      BackendRoute_Websocket -> PathSegment "ws" $ websocketRouteEncoder
   )
   (\case
       FrontendRoute_Main -> PathEnd $ unitEncoder mempty
+      -- FrontendRoute_Signup -> PathSegment "signup" $ unitEncoder mempty
       FrontendRoute_User -> PathSegment "user" $ singlePathSegmentEncoder
   )
 
 concat <$> mapM deriveRouteComponent
   [ ''BackendRoute
   , ''FrontendRoute
+  , ''WebsocketRoute
   ]
