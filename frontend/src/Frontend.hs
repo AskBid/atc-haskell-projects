@@ -5,6 +5,7 @@
 {-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeApplications #-}
 
 module Frontend where
 
@@ -25,6 +26,7 @@ import Obelisk.Route.Frontend
 import Obelisk.Generated.Static
 import Reflex.Dom.Core
 import Database.Persist.Class.PersistEntity (Entity)
+import Reflex.Dom.WebSocket (webSocket, WebSocketConfig(..), WebSocket)
 
 import Common.Api
 import Common.Route
@@ -54,26 +56,23 @@ frontend = Frontend
         dLogged <- holdDyn LoggedOut evLogged
         
         let appState = AppState 
-              { authWSconn = Nothing
-              , unAuthWSconn = Nothing
+              { wsConn = Nothing 
               , loggedAs = dLogged
               , loggedTrigger = loggedTrigger
               }
-
+        
         elClass "div" "flex flex-col h-screen w-screen" $ do
           elClass "div" ("bg-white w-full p-0 " <> divHorizontalStyle) $ do
             dyn_ $ ffor (loggedAs appState) $ \case
               LoggedIn _  -> logoutButton appState 
-              LoggedOut -> do 
-                el "div" $ text "Welcome to Chat!"
-                elAttr "a" ("href" =: "/signup" <> "class" =: "text-blue-500 underline") $ text "Signup"
+              LoggedOut   -> el "div" $ text "Welcome to Chat!"
 
           elClass "div" ("flex flex-1 w-full") $ do
             elClass "div" "flex-1 bg-gray-100 p-4" $ do
               subRoute_ $ \case
                 FrontendRoute_Main -> do 
                   dyn_ $ ffor (loggedAs appState) $ \case
-                    LoggedOut -> mainPage appState
+                    LoggedOut   -> mainPage appState
                     LoggedIn _  -> mainPageLogged appState
                 FrontendRoute_User -> userChat appState
 

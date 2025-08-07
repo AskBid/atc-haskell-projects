@@ -141,6 +141,19 @@ wsHandler tvarConns eUser pending = do
         return ()
       otherwise -> putStrLn "TODO case for different type of WSMessage"
 
+wsHandlerPublic :: TVar [NamedConn] -> WS.ServerApp
+wsHandlerPublic conns pending = do
+  conn <- WS.acceptRequest pending
+  forever $ do
+    putStrLn $ "--------------------"
+    msgJSON <- WSC.receiveData conn
+    let msg = TE.decodeUtf8 msgJSON
+    mEUser <- sqlUserExist msg
+    case mEUser of 
+      Nothing -> WS.sendTextData conn (A.encode NoUser)
+    return ()
+
+
 -- | checks if the data in the LoginReq is a valid user in the database.
 sqlUserPwdExist :: MonadIO m => Credentials -> m (Maybe (Entity User))
 sqlUserPwdExist cs = do

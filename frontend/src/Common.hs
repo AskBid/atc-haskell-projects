@@ -43,8 +43,7 @@ feMessage wsm = case wsm of
     otherwise -> "TODO: unknown message."
 
 data AppState t = AppState 
-  { authWSconn :: Maybe (WebSocket t)
-  , unAuthWSconn :: Maybe (WebSocket t)
+  { wsConn :: Maybe (WebSocket t)
   , loggedAs :: Dynamic t (LoginState User)
   , loggedTrigger :: LoginState User -> IO ()
   }

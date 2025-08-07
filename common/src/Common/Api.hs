@@ -13,7 +13,8 @@ import Schema
 data WSMessage 
   = NewMessage Message
   | ConnectedClients [User]
-  | UnAuthorised
+  | UserExist Text
+  | NoUser
   deriving (Show, Generic, FromJSON, ToJSON)
 
 data Credentials = Credentials 
