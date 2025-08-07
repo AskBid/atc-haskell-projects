@@ -45,9 +45,22 @@ feMessage wsm = case wsm of
 data AppState t = AppState 
   { authWSconn :: Maybe (WebSocket t)
   , unAuthWSconn :: Maybe (WebSocket t)
-  , loggedAs :: Dynamic t (Maybe (User))
-  , loggedTrigger :: Maybe User -> IO ()
+  , loggedAs :: Dynamic t (LoginState User)
+  , loggedTrigger :: LoginState User -> IO ()
   }
+
+data LoginState a = LoggedIn a | LoggedOut
+  deriving (Show)
+
+class LikeMaybe f where
+  fromMaybe :: Maybe a -> f a
+
+instance LikeMaybe LoginState where
+  fromMaybe Nothing  = LoggedOut
+  fromMaybe (Just a) = LoggedIn a
+
+instance LikeMaybe Maybe where
+  fromMaybe = id 
 
 -- | @fullRouteEncoder@ has an `Either Text` as a first (check) argument
 --   to make it Identity as required from the use of @encode@, we need first to pass
@@ -63,9 +76,7 @@ safeEncoder =
 --  getUrl (FullRoute_Frontend (ObeliskRoute_App FrontendRoute_Login) :/ ())
 --  getUrl $ FullRoute_Backend BackendRoute_Api :/ Tail_Login
 getUrl :: R (FullRoute BackendRoute FrontendRoute) -> Text
-getUrl route = intercalate "/" $ fst pageName
-  where 
-    pageName = encode safeEncoder route
+getUrl = renderObeliskRoute safeEncoder
 
 -- | check on the status of XhrResponses given a range of acceptability.
 -- e.g.

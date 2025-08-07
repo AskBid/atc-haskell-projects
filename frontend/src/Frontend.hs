@@ -51,7 +51,7 @@ frontend = Frontend
         let route = FullRoute_Backend BackendRoute_Me :/ () 
         evLoggedMUser <- requestWithCredentialsAndDecode route ePostBuild
         let evLogged = leftmost [evLoggedMUser, evLoggedByTrigger]
-        dLogged <- holdDyn Nothing evLogged
+        dLogged <- holdDyn LoggedOut evLogged
         
         let appState = AppState 
               { authWSconn = Nothing
@@ -63,8 +63,8 @@ frontend = Frontend
         elClass "div" "flex flex-col h-screen w-screen" $ do
           elClass "div" ("bg-white w-full p-0 " <> divHorizontalStyle) $ do
             dyn_ $ ffor (loggedAs appState) $ \case
-              Just _  -> logoutButton appState 
-              Nothing -> do 
+              LoggedIn _  -> logoutButton appState 
+              LoggedOut -> do 
                 el "div" $ text "Welcome to Chat!"
                 elAttr "a" ("href" =: "/signup" <> "class" =: "text-blue-500 underline") $ text "Signup"
 
@@ -73,8 +73,8 @@ frontend = Frontend
               subRoute_ $ \case
                 FrontendRoute_Main -> do 
                   dyn_ $ ffor (loggedAs appState) $ \case
-                    Nothing -> mainPage appState
-                    Just _  -> mainPageLogged appState
+                    LoggedOut -> mainPage appState
+                    LoggedIn _  -> mainPageLogged appState
                 FrontendRoute_User -> userChat appState
 
             elClass "div" "w-[clamp(100px,20%,999px)] bg-gray-200 p-4" $ do 
@@ -109,12 +109,13 @@ requestWithCredentialsAndDecode
      , TriggerEvent t m 
      , A.FromJSON b
      )
-  => R (FullRoute BackendRoute FrontendRoute) -> Event t a -> m (Event t (Maybe b))
+  => R (FullRoute BackendRoute FrontendRoute) -> Event t a -> m (Event t (LoginState b))
 requestWithCredentialsAndDecode route event = do 
   let url = getUrl route
       req = xhrRequest "POST" url $ def & xhrRequestConfig_withCredentials .~ True
   evRes <- performRequestAsync $ req <$ event
-  pure $ fmapMaybe (either (const Nothing) id) $ decodeResponse "Error." evRes
+  let evEMDecoded = decodeResponse "Error." evRes
+  pure $ fromMaybe <$> (fmapMaybe (either (const Nothing) id)) evEMDecoded
 
 logoutButton 
   :: ( Monad m
@@ -131,8 +132,8 @@ logoutButton appState = do
       route = FullRoute_Backend BackendRoute_Logout :/ () 
   evMUser <- requestWithCredentialsAndDecode route eClickLogout
   let evSucc = ffor evMUser $ \case 
-        Nothing         -> ()
-        Just (User _ _) -> () 
+        LoggedOut           -> ()
+        LoggedIn (User _ _) -> () 
   -- ^ I am here using User solely to be able to reuse @requestWithCredentialsAndDecode@
   --   but we are only interested that the events fires if the statusCheck was filtered
-  performEvent_ $ (liftIO $ loggedTrigger appState $ Nothing) <$ evSucc
+  performEvent_ $ (liftIO $ loggedTrigger appState $ LoggedOut) <$ evSucc

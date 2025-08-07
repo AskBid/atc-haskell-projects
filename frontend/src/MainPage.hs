@@ -78,7 +78,7 @@ mainPage appState = do
       let evOkUsr = fmapMaybe (either (const Nothing) id) evEitherResp
       dErr <- holdDyn "" evErr
       el "div" $ dynText $ dErr
-      performEvent_ $ liftIO . loggedTrigger appState <$> Just <$> evOkUsr
+      performEvent_ $ liftIO . loggedTrigger appState <$> LoggedIn <$> evOkUsr
       setRoute $ (FrontendRoute_User :/ ) <$> userName <$> evOkUsr
 
       

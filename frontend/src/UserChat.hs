@@ -32,7 +32,7 @@ userChat appState = do
 
       ePostBuild <- getPostBuild
       let eName = tagPromptlyDyn dName ePostBuild
-          eUrl = ("ws://localhost:8000/ws/" <>) <$> eName
+          eUrl = ("ws://localhost:8000/ws/user/" <>) <$> eName
 
       let eSocket = ffor eUrl $ \url -> do 
             elClass "label" labelStyle $ text "Message:"
@@ -46,6 +46,7 @@ userChat appState = do
             
             let wsConfig = def & webSocketConfig_reconnect .~ False
                                & webSocketConfig_send .~ ((:[]) <$> A.encode <$> eWSMess)
+
             liftIO $ putStrLn $ "Opening WebSocket at: " ++ T.unpack url
             ws <- webSocket url wsConfig
             -- ^ Event keep on triggering when new message comes from WS backend
@@ -56,8 +57,8 @@ userChat appState = do
 
             dChatMessages <- foldDyn (:) [] $ feMessage <$> evmWSMessage 
 
-            elClass "div" divVerticalStyle $ void $ do
-              simpleList dChatMessages $ \dMsg -> el "div" $ dynText dMsg
+            elClass "div" "flex flex-col gap-0 p-4" $ void $ do
+              simpleList dChatMessages $ \dMsg -> elClass "div" "p-0 " $ dynText dMsg
 
       widgetHold (el "div" $ text "No connection.") eSocket 
 
