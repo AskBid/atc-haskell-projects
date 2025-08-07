@@ -63,7 +63,7 @@ frontend = Frontend
         elClass "div" "flex flex-col h-screen w-screen" $ do
           elClass "div" ("bg-white w-full p-0 " <> divHorizontalStyle) $ do
             dyn_ $ ffor (loggedAs appState) $ \case
-              Just _ -> logoutButton appState 
+              Just _  -> logoutButton appState 
               Nothing -> do 
                 el "div" $ text "Welcome to Chat!"
                 elAttr "a" ("href" =: "/signup" <> "class" =: "text-blue-500 underline") $ text "Signup"
@@ -71,7 +71,10 @@ frontend = Frontend
           elClass "div" ("flex flex-1 w-full") $ do
             elClass "div" "flex-1 bg-gray-100 p-4" $ do
               subRoute_ $ \case
-                FrontendRoute_Main -> mainPage appState
+                FrontendRoute_Main -> do 
+                  dyn_ $ ffor (loggedAs appState) $ \case
+                    Nothing -> mainPage appState
+                    Just _  -> mainPageLogged appState
                 FrontendRoute_User -> userChat appState
 
             elClass "div" "w-[clamp(100px,20%,999px)] bg-gray-200 p-4" $ do 

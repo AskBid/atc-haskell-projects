@@ -20,6 +20,22 @@ import Common.Api
 import Schema
 import Common.Route
 
+
+mainPageLogged 
+  :: ( Prerender t m
+     , Monad m
+     , Routed t () m
+     , Routed t () (Client m)
+     , DomSpace (DomBuilderSpace m)
+     , DomBuilder t m
+     , SetRoute t (R FrontendRoute) (Client m)
+     ) 
+  => AppState t -> m ()
+mainPageLogged appState = do
+  el "div" $ text "you already logged in."
+  el "div" $ text "TODO: link to logout" 
+  el "div" $ text "TODO: link to user's chat"
+
 mainPage 
   :: ( Prerender t m
      , Monad m
@@ -50,7 +66,7 @@ mainPage appState = do
           dCredentials = Credentials <$> dName <*> dPwd
           eCredentials = tagPromptlyDyn dCredentials eClick
 
-          url = getUrl $ FullRoute_Backend BackendRoute_Login :/ () 
+          url = getUrl $ FullRoute_Backend BackendRoute_Login :/ ()
           reqLogin = \credentials -> xhrRequest "POST" url $ def
             & xhrRequestConfig_withCredentials .~ True
             & xhrRequestConfig_headers .~ 
