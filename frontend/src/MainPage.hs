@@ -57,12 +57,20 @@ mainPage appState = do
       elClass "label" labelStyle $ text "Connect w/ username:"
       elInpName <- inputElement $ def 
         & initialAttributes .~ ("class" =: inputStyle)
-      let eBlur = domEvent Blur elInpName
+      let eInput = domEvent Input elInpName
           dName = _inputElement_value elInpName
-          eName = tagPromptlyDyn dName eBlur
+      eDebounced <- debounce 0.8 eInput
+      let eName = tagPromptlyDyn dName eDebounced
       
-      ws <- webSocket "ws://localhost:8000/ws" $ def & webSocketConfig_send .~ ((:[]) <$> eName)
-      let evmWSMessage = _webSocket_recv ws
+      ws <- webSocket "ws://localhost:8000/ws" $ def 
+              & webSocketConfig_reconnect .~ False
+              & webSocketConfig_send .~ ((:[]) <$> eName)
+      let evMWSMessage = A.decode . BSL.fromStrict <$> _webSocket_recv ws
+
+      let eUserExistence = ffor evMWSMessage $ 
+            \case 
+              Just (UserExist name) -> "user exist."
+              otherwise             -> "no user, want to create?"
 
       elClass "label" labelStyle $ text "Authenticate w/ password:"
       elInpPwd <- inputElement $ def 
@@ -74,7 +82,9 @@ mainPage appState = do
             if enabled
             then (fromList [("class", buttonStyle)])
             else (fromList [("class", buttonStyleDisabled), ("disabled","")])
-
+      
+      dresult <- holdDyn "Enter your credentials or input new ones to signup." eUserExistence
+      el "div" $ dynText dresult
       (elBtn, _) <- elDynAttr' "button" dButtonAttrs $ text "Connect"
       (elBtnSignUp, _) <- elDynAttr' "button" dButtonAttrs $ text "Sign Up"
 

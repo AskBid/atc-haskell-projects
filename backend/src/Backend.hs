@@ -109,6 +109,7 @@ backendHandlers conns = \case
 
   BackendRoute_Websocket :/ WebscocketRoute_Main :/ () -> do 
     writeBS "Connection with no permission to chat."
+    WSSnap.runWebSocketsSnap $ wsHandlerPublic conns
 
   -- ^ runWebSocketsSnap is just a bridge — it hands off the PendingConnection to your wsHandler. 
   -- Everything else is up to you. Broadcast messages to all clients, Count or log active connections,
@@ -143,14 +144,16 @@ wsHandler tvarConns eUser pending = do
 
 wsHandlerPublic :: TVar [NamedConn] -> WS.ServerApp
 wsHandlerPublic conns pending = do
+  -- putStrLn "inside public ws handler..."
   conn <- WS.acceptRequest pending
   forever $ do
-    putStrLn $ "--------------------"
+    putStrLn "--------------------"
     msgJSON <- WSC.receiveData conn
     let msg = TE.decodeUtf8 msgJSON
     mEUser <- sqlUserExist msg
     case mEUser of 
       Nothing -> WS.sendTextData conn (A.encode NoUser)
+      Just e -> WS.sendTextData conn (A.encode (UserExist (userName $ entityVal e)))
     return ()
 
 
