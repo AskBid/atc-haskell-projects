@@ -13,9 +13,9 @@ import Reflex.Dom.Core
 import Obelisk.Route
 import Obelisk.Route.Frontend
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad (void)
-import Data.Maybe (isJust, fromMaybe)
-import Data.Map (fromList)
+import Control.Monad (void, join)
+import qualified Data.Maybe as DM (isJust, fromMaybe)
+import Data.Map (fromList, Map)
 import Control.Monad.Fix
 
 import Common
@@ -58,7 +58,7 @@ mainPage appState = do
       elInpName <- inputElement $ def 
         & initialAttributes .~ ("class" =: inputStyle)
       let eInput = domEvent Input elInpName
-          dName = _inputElement_value elInpName
+          dName = _inputElement_value elInpName 
       eDebounced <- debounce 0.8 eInput
       let eName = tagPromptlyDyn dName eDebounced
       
@@ -66,6 +66,7 @@ mainPage appState = do
               & webSocketConfig_reconnect .~ False
               & webSocketConfig_send .~ ((:[]) <$> eName)
       let evMWSMessage = A.decode . BSL.fromStrict <$> _webSocket_recv ws
+      dWSMessage <- holdDyn NoUser $ DM.fromMaybe NoUser <$> evMWSMessage 
 
       let eUserExistence = ffor evMWSMessage $ 
             \case 
@@ -76,17 +77,25 @@ mainPage appState = do
       elInpPwd <- inputElement $ def 
         & initialAttributes .~ ("class" =: inputStyle <> "type" =: "password")
       
-      let dIsEnabled = ffor dName $ \val -> T.length val > 3
-          dPwd = _inputElement_value elInpPwd
-          dButtonAttrs = ffor dIsEnabled $ \enabled ->
-            if enabled
-            then (fromList [("class", buttonStyle)])
-            else (fromList [("class", buttonStyleDisabled), ("disabled","")])
-      
+      let dNameLenght = ffor dName $ \name -> T.length name > 2
+          dLoginConditions = fmap and $ sequence 
+            [ dNameLenght
+            , join $ ffor dWSMessage $ wsMessage2equalName dName
+            ]
+          dSignupConditions = fmap and $ sequence
+            [ dNameLenght
+            , not <$> (join $ ffor dWSMessage $ (wsMessage2equalName dName))
+            ]
+
+      let dPwd = _inputElement_value elInpPwd
+                
       dresult <- holdDyn "Enter your credentials or input new ones to signup." eUserExistence
-      el "div" $ dynText dresult
-      (elBtn, _) <- elDynAttr' "button" dButtonAttrs $ text "Connect"
-      (elBtnSignUp, _) <- elDynAttr' "button" dButtonAttrs $ text "Sign Up"
+      elClass "div" "flex items-center justify-center" $ dynText dresult
+
+      (elBtn, _) <- elDynAttr' "button" 
+        (toggleEnableStyle dLoginConditions) $ text "Connect"
+      (elBtnSignUp, _) <- elDynAttr' "button" 
+        (toggleEnableStyle dSignupConditions) $ text "Sign Up"
 
       let eClick = domEvent Click elBtn
           dCredentials = Credentials <$> dName <*> dPwd
@@ -111,3 +120,20 @@ mainPage appState = do
 
 buttonStyleDisabled :: T.Text
 buttonStyleDisabled = buttonStyle <> " disabled:bg-grey-200 disabled:opacity-50 disabled:border-grey-300"
+
+wsMessage2equalName 
+  :: (Reflex t, Functor (Dynamic t)) 
+  => Dynamic t T.Text -> WSMessage -> Dynamic t Bool
+wsMessage2equalName dName wsm = 
+  case wsm of
+    UserExist nameuser -> (nameuser ==) <$> dName
+    otherwise          -> False <$ dName
+
+toggleEnableStyle 
+  :: Functor (Dynamic t)
+  => Dynamic t Bool -> Dynamic t (Map T.Text T.Text)
+toggleEnableStyle dConditions = ffor dConditions $ 
+  \enabled ->
+    if enabled
+      then (fromList [("class", buttonStyle)])
+      else (fromList [("class", buttonStyleDisabled), ("disabled","")])
