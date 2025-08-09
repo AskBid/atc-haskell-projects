@@ -58,9 +58,11 @@ mainPage appState = do
       elClass "label" labelStyle $ text "Connect w/ username:"
       elInpName <- inputElement $ def 
         & initialAttributes .~ ("class" =: inputStyle)
+
       elClass "label" labelStyle $ text "Authenticate w/ password:"
       elInpPwd <- inputElement $ def 
         & initialAttributes .~ ("class" =: inputStyle <> "type" =: "password")
+
       let eInput = domEvent Input elInpName
           dPwd = _inputElement_value elInpPwd
           dName = _inputElement_value elInpName 
@@ -72,12 +74,24 @@ mainPage appState = do
               & webSocketConfig_reconnect .~ False
               & webSocketConfig_send .~ ((:[]) <$> eName)
       let evMWSMessage = A.decode . BSL.fromStrict <$> _webSocket_recv ws
-      dWSMessage <- holdDyn NoUser $ DM.fromMaybe NoUser <$> evMWSMessage 
+      dWSMessage <- holdDyn NoMessage $ DM.fromMaybe NoUser <$> evMWSMessage 
 
-      let eUserExistence = ffor evMWSMessage $ 
+      let eConnections = flip ffilter evMWSMessage $ 
             \case 
-              Just (UserExist name) -> "user exist."
-              otherwise             -> "no user, want to create?"
+              Just (ConnectedClients users) -> True
+              otherwise                     -> False
+
+          eUserResult = flip ffilter evMWSMessage $ 
+            \case
+              Just (UserExist name) -> True
+              Just NoUser           -> True
+              otherwise             -> False
+          
+          eUserExistence = ffor eUserResult $ 
+            \case 
+              Just (UserExist name) -> "This user already exist. Login with password."
+              Just NoUser           -> "No user found, Register as new one?"
+              otherwise             -> "Error!"
       
       let dNameLenght = ffor dName $ \name -> T.length name > 2
           dLoginConditions = fmap and $ sequence 

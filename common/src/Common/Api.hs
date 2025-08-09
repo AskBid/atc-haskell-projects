@@ -15,6 +15,7 @@ data WSMessage
   | ConnectedClients [User]
   | UserExist Text
   | NoUser
+  | NoMessage
   deriving (Show, Generic, FromJSON, ToJSON)
 
 data Credentials = Credentials 
