@@ -73,31 +73,33 @@ mainPage appState = do
       ws <- webSocket "ws://localhost:8000/ws" $ def 
               & webSocketConfig_reconnect .~ False
               & webSocketConfig_send .~ ((:[]) <$> eName)
-      let evMWSMessage = A.decode . BSL.fromStrict <$> _webSocket_recv ws
-      dWSMessage <- holdDyn NoMessage $ DM.fromMaybe NoUser <$> evMWSMessage 
+      let eWSMessage = DM.fromMaybe NoMessage <$> A.decode . BSL.fromStrict <$> _webSocket_recv ws
+      dWSMessage <- holdDyn NoMessage eWSMessage 
 
-      let eConnections = flip ffilter evMWSMessage $ 
+      let eConnections = flip ffilter eWSMessage $ 
             \case 
-              Just (ConnectedClients users) -> True
-              otherwise                     -> False
+              ConnectedClients users -> True
+              otherwise              -> False
 
-          eUserResult = flip ffilter evMWSMessage $ 
+          eUserResult = flip ffilter eWSMessage $ 
             \case
-              Just (UserExist name) -> True
-              Just NoUser           -> True
-              otherwise             -> False
+              UserExist name -> True
+              NoUser         -> True
+              otherwise      -> False
           
           eUserExistence = ffor eUserResult $ 
             \case 
-              Just (UserExist name) -> "This user already exist. Login with password."
-              Just NoUser           -> "No user found, Register as new one?"
-              otherwise             -> "Error!"
+              UserExist name -> "This user already exist. Login with password."
+              NoUser         -> "No user found, Register as new one?"
+              otherwise      -> "Error!"
       
-      let dNameLenght = ffor dName $ \name -> T.length name > 2
+          dNameLenght = ffor dName $ \name -> T.length name > 2
+          
           dLoginConditions = fmap and $ sequence 
             [ dNameLenght
             , join $ ffor dWSMessage $ wsMessage2equalName dName
             ]
+          
           dSignupConditions = fmap and $ sequence
             [ dNameLenght
             , not <$> (join $ ffor dWSMessage $ (wsMessage2equalName dName))
