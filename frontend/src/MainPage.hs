@@ -55,11 +55,11 @@ mainPage appState = do
   prerender_ blank $ mdo
     elClass "div" divVerticalStyle $ do
 
-      elClass "label" labelStyle $ text "Connect w/ username:"
+      elClass "label" labelStyle $ text "Username:"
       elInpName <- inputElement $ def 
         & initialAttributes .~ ("class" =: inputStyle)
 
-      elClass "label" labelStyle $ text "Authenticate w/ password:"
+      elClass "label" labelStyle $ text "Password:"
       elInpPwd <- inputElement $ def 
         & initialAttributes .~ ("class" =: inputStyle <> "type" =: "password")
 
@@ -78,8 +78,8 @@ mainPage appState = do
 
       let eConnections = flip ffilter eWSMessage $ 
             \case 
-              ConnectedClients users -> True
-              otherwise              -> False
+              ConnectedClients _ -> True
+              otherwise          -> False
 
           eUserResult = flip ffilter eWSMessage $ 
             \case
@@ -89,7 +89,7 @@ mainPage appState = do
           
           eUserExistence = ffor eUserResult $ 
             \case 
-              UserExist name -> "This user already exist. Login with password."
+              UserExist name -> "User `" <> name <> "` already exist. Connect to the chat with a password."
               NoUser         -> "No user found, Register as new one?"
               otherwise      -> "Error!"
       
@@ -104,14 +104,17 @@ mainPage appState = do
             [ dNameLenght
             , not <$> (join $ ffor dWSMessage $ (wsMessage2equalName dName))
             ]
-                
-      dresult <- holdDyn "Enter your credentials or input new ones to signup." eUserExistence
+      
+      let initialText = "Connect to chat with existing credentials or signup with new ones."
+      dresult <- holdDyn initialText eUserExistence
       elClass "div" "flex items-center justify-center text-blue-500" $ dynText dresult
 
-      evLoginRes <- loginButton dCredentials dLoginConditions
+      evLoginRes <- sendButton dCredentials dLoginConditions "Connect" $ 
+        FullRoute_Backend BackendRoute_Login :/ ()
+
+      evSignupRes <- sendButton dCredentials dSignupConditions "Signup" $ 
+        FullRoute_Backend BackendRoute_Signup :/ ()
       
-
-
       let evEitherResp = decodeResponse "Invalid username or password." evLoginRes
           evErr = either id (const "Login success.") <$> evEitherResp
           evOkUsr = fmapMaybe (either (const Nothing) id) evEitherResp
@@ -140,7 +143,7 @@ enableDisable dConditions = ffor dConditions $
       then (fromList [("class", buttonStyle)])
       else (fromList [("class", buttonStyleDisabled), ("disabled","")])
 
-loginButton 
+sendButton 
   :: ( Monad m
      , DomBuilder t m
      , PostBuild t m
@@ -148,14 +151,17 @@ loginButton
      , PerformEvent t m
      , TriggerEvent t m
      )
-  => Dynamic t Credentials -> Dynamic t Bool -> m (Event t XhrResponse)
-loginButton dCredentials enableCondition = do 
-  (elBtn, _) <- elDynAttr' "button" (enableDisable enableCondition) $ text "Connect"
+  => Dynamic t Credentials 
+  -> Dynamic t Bool 
+  -> T.Text
+  -> R (FullRoute BackendRoute FrontendRoute)
+  -> m (Event t XhrResponse)
+sendButton dCredentials enableCondition btnText route = do 
+  (elBtn, _) <- elDynAttr' "button" (enableDisable enableCondition) $ text btnText
   let eClick = domEvent Click elBtn 
       eCredentials = tagPromptlyDyn dCredentials eClick
 
-      url = getUrl $ FullRoute_Backend BackendRoute_Login :/ ()
-
+      url = getUrl route
       reqLogin = \credentials -> xhrRequest "POST" url $ def
         & xhrRequestConfig_withCredentials .~ True
         & xhrRequestConfig_headers .~ 
@@ -163,27 +169,3 @@ loginButton dCredentials enableCondition = do
 
   evRes <- performRequestAsync $ reqLogin <$> eCredentials
   return evRes
-
-signupButton 
-  :: ( Monad m
-     , DomBuilder t m
-     , PostBuild t m
-     , MonadJSM (Performable m)
-     , PerformEvent t m
-     , TriggerEvent t m
-     )
-  => Dynamic t Credentials -> Dynamic t Bool -> m (Event t XhrResponse)
-signupButton dCredentials enableCondition = do
-  (elBtn, _) <- elDynAttr' "button" (enableDisable enableCondition) $ text "Sign Up"
-  let eClick = domEvent Click elBtn 
-      eCredentials = tagPromptlyDyn dCredentials eClick
-
-      url = getUrl $ FullRoute_Backend BackendRoute_Signup :/ ()
-
-      reqLogin = \credentials -> xhrRequest "POST" url $ def
-        & xhrRequestConfig_withCredentials .~ True
-        & xhrRequestConfig_headers .~ 
-            ("Authorization" =: (ET.decodeUtf8 $ BSL.toStrict $ A.encode credentials))
-
-  evRes <- performRequestAsync $ reqLogin <$> eCredentials
-  return undefined
