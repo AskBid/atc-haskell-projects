@@ -51,8 +51,7 @@ backendHandlers conns = \case
   
   BackendRoute_Login :/ () -> do 
     req <- getRequest
-    let headers = listHeaders req
-        auth = join $ A.decodeStrict <$> getHeader "Authorization" req
+    let auth = join $ A.decodeStrict <$> getHeader "Authorization" req
     case auth of
       Nothing -> do
         liftIO $ putStrLn "Credentials not perceived."
@@ -78,7 +77,31 @@ backendHandlers conns = \case
     writeBS $ BL.toStrict $ A.encode $ User "dummy" "dummy"
 
   BackendRoute_Signup :/ () -> do 
-    writeBS $ "signup"
+    req <- getRequest
+    modifyResponse $ setResponseCode 401
+    -- let auth = join $ A.decodeStrict <$> getHeader "Authorization" req
+    -- case auth of
+    --   Nothing -> do
+    --     liftIO $ putStrLn "Credentials not perceived."
+    --     modifyResponse $ setResponseCode 401
+    --   Just credentials -> do
+        -- mEUser <- sqlUserExist credentials
+        -- case mEUser of 
+        --   Nothing -> do 
+        --     modifyResponse $ setContentType "application/json"
+        --     modifyResponse $ setResponseCode 200
+        --     writeBS $ username credentials 
+        --   Just (Entity e usr) -> do
+        --     liftIO $ putStrLn $ username credentials <> " already exist. No signup possible."
+            -- modifyResponse $ setResponseCode 401
+            -- writeBS $ 
+
+            -- let jwt = createJWT $ usr
+            -- modifyResponse $ setContentType "application/json"
+            -- modifyResponse $ addResponseCookie $ mkJWTCookie jwt
+            -- liftIO $ putStrLn "User Auth success."
+            -- modifyResponse $ setResponseCode 200
+            -- writeBS $ BL.toStrict $ A.encode usr 
 
   BackendRoute_Me :/ () -> do
     mUsername <- verifyJWT
@@ -146,7 +169,7 @@ wsHandlerPublic :: TVar [NamedConn] -> WS.ServerApp
 wsHandlerPublic conns pending = do
   -- putStrLn "inside public ws handler..."
   conn <- WS.acceptRequest pending
-  forever $ do
+  forever $ do 
     putStrLn "--------------------"
     msgJSON <- WSC.receiveData conn
     let msg = TE.decodeUtf8 msgJSON
