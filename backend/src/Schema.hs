@@ -17,9 +17,9 @@
 
 module Schema where
 
-import Database.Persist.TH
-import Database.Persist
-import Database.Persist.Sqlite
+import Database.Beam
+import Database.Beam.Sqlite
+import Database.Beam.Migrate
 import Data.Text (Text)
 import Data.Aeson (FromJSON(..), ToJSON(..))
 import GHC.Generics (Generic)

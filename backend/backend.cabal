@@ -20,9 +20,10 @@ library
                , bytestring
                , utf8-string
                , containers
-               , persistent
-               , persistent-sqlite
-               , persistent-template
+               , beam-core == 0.9.*
+               , beam-sqlite == 0.5.*
+               , beam-migrate == 0.5.*
+               , aeson >= 0.11 && < 2.1
                , jwt
                , case-insensitive
   exposed-modules:
