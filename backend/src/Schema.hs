@@ -32,6 +32,10 @@ data UserT f = User
   , _userName :: C f Text
   , _userPwd  :: C f Text
   } deriving (Generic, Beamable)
+-- ^ basically every attribute is a @Columnar@ also said @C@ that is a Data Family in 
+--   which one argument needs a type to give back a concrete type, so it is a container
+--   (Type -> Type) or (* -> *) like Identity or Nullable (it's Type Constructor)
+--   and @a@ that is the actual values type we want for our Columns.
 
 type User = UserT Identity
 -- ^ not to use UserT specifick for its true form (Identity) all the time 
@@ -70,6 +74,13 @@ instance Table MessageT where
     deriving (Generic, Beamable)
   primaryKey = MessageId . _messageId
 
+data DatabaseSchema f = DatabaseSchema
+  { userTable  :: TableEntity (User f)
+  , messageTable :: TableEntity (Message f)
+  } deriving (Generic, Database Sqlite)
+
+db :: DatabaseSettings Sqlite DatabaseSchema
+db = defaultDbSettings
 --   Message
 --     timestamp UTCTime Maybe
 --     text Text
