@@ -26,32 +26,69 @@ import GHC.Generics (Generic)
 import Data.Time (UTCTime(..), fromGregorian, secondsToDiffTime)
 import Control.Monad.IO.Class (MonadIO)
 
-share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
-  User
-    name Text
-    pwd Text
-    UniqueName name
-    deriving Show Generic FromJSON ToJSON
-  
-  Message
-    timestamp UTCTime Maybe
-    text Text
-    owner UserId Maybe
-    private [UserId] Maybe
-    deriving Show Generic FromJSON ToJSON
-|]
+
+data UserT f = User
+  { _userId   :: C f Int
+  , _userName :: C f Text
+  , _userPwd  :: C f Text
+  } deriving (Generic, Beamable)
+
+type User = UserT Identity
+-- ^ not to use UserT specifick for its true form (Identity) all the time 
+--   we shortend the userT Identity to User.
+type UserId = PrimaryKey UserT Identity
+-- ^ like saying: I want a convenient short name UserId for the concrete 
+--   primary-key type of the UserT table, in its real-data form.”
+
+deriving instance Show User
+deriving instance Eq User
+deriving instance FromJSON User
+deriving instance ToJSON User
+
+instance Table UserT where
+  data PrimaryKey UserT f = UserId (C f Int) 
+    deriving (Generic, Beamable)
+  primaryKey = UserId . _userId
+
+
+
+data MessageT f = Message
+  { _messageId   :: C f Int 
+  , _messageText :: C f Text
+  } deriving (Generic, Beamable)
+
+type Message = MessageT Identity
+type MessageId = PrimaryKey UserT Identity
+
+deriving instance Show Message
+deriving instance Eq Message
+deriving instance FromJSON Message
+deriving instance ToJSON Message
+
+instance Table MessageT where
+  data PrimaryKey MessageT f = MessageId (C f Int) 
+    deriving (Generic, Beamable)
+  primaryKey = MessageId . _messageId
+
+--   Message
+--     timestamp UTCTime Maybe
+--     text Text
+--     owner UserId Maybe
+--     private [UserId] Maybe
+--     deriving Show Generic FromJSON ToJSON
+-- |]
 
 -- | this makes it eprsistent, use :memory: instead of Xs.db otherwise 
-myDB :: Text
-myDB = "Xs.db"
-
-populateDB :: MonadIO m => SqlPersistT m ()
-populateDB = do
-  runMigration migrateAll
-  _  <- insertBy $ User "alice" "alice"
-  _  <- insertBy $ User "bob" "bob"
-  _  <- insertBy $ User "sergio" "pwd"
-  _  <- insertBy $ User "mario" "mario"
-  _  <- insertBy $ User "luigi" "luigi"
-  _  <- insertBy $ User "raoul" "raoul"
-  return ()
+-- myDB :: Text
+-- myDB = "Xs.db"
+--
+-- populateDB :: MonadIO m => SqlPersistT m ()
+-- populateDB = do
+--   runMigration migrateAll
+--   _  <- insertBy $ User "alice" "alice"
+--   _  <- insertBy $ User "bob" "bob"
+--   _  <- insertBy $ User "sergio" "pwd"
+--   _  <- insertBy $ User "mario" "mario"
+--   _  <- insertBy $ User "luigi" "luigi"
+--   _  <- insertBy $ User "raoul" "raoul"
+--   return ()
