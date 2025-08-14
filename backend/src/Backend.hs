@@ -38,9 +38,11 @@ backend :: Backend BackendRoute FrontendRoute
 backend = Backend
   { _backend_run = \serve -> do 
       conns <- liftIO $ atomically $ newTVar ([] :: [NamedConn])
-      runSqlite myDB $ do 
+
+      result <- liftIO $ try $ runSqlite "data/mydatabase.db" $ do 
         populateDB
         return ()
+
       serve $ backendHandlers conns
   , _backend_routeEncoder = fullRouteEncoder
   }

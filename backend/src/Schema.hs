@@ -62,7 +62,7 @@ data MessageT f = Message
   } deriving (Generic, Beamable)
 
 type Message = MessageT Identity
-type MessageId = PrimaryKey UserT Identity
+type MessageId = PrimaryKey MessageT Identity
 
 deriving instance Show Message
 deriving instance Eq Message
@@ -75,9 +75,22 @@ instance Table MessageT where
   primaryKey = MessageId . _messageId
 
 data DatabaseSchema f = DatabaseSchema
-  { userTable  :: TableEntity (User f)
-  , messageTable :: TableEntity (Message f)
-  } deriving (Generic, Database Sqlite)
+  { userTable    :: f (TableEntity UserT)
+  , messageTable :: f (TableEntity MessageT)
+  } deriving (Generic)
+-- ^ notice that the wrapper f here is not the same as the one for Columnar
+--   A table is a "row type" with each column wrapped in something 
+--   (Identity for real values, Nullable for optional).
+--   A database is a "schema type" with each table wrapped in something 
+--   (DatabaseEntity be for actual DB metadata, or maybe something else for migrations).
+instance Database be DatabaseSchema
+-- ^ When you write:
+--   instance Database be DatabaseSchema
+--   you’re saying:
+--     For any backend be, my schema type DatabaseSchema is a valid Beam Database schema.
+--     So it works generically for SQLite, Postgres, etc., without you having to make 
+--     separate instances.
+--   The be parameter is tied to the Database typeclass, not to the schema itself.
 
 db :: DatabaseSettings Sqlite DatabaseSchema
 db = defaultDbSettings
