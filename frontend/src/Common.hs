@@ -1,12 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-} 
 {-# LANGUAGE LambdaCase #-} 
-{-# LANGUAGE FlexibleContexts #-} 
+{-# LANGUAGE FlexibleContexts, FlexibleInstances #-} 
 
 module Common where
 
 import Data.Text
 import Reflex.Dom.Core
-import Database.Persist.Class.PersistEntity (Entity)
 import Obelisk.Route
 import Data.Functor.Identity
 import Language.Javascript.JSaddle (MonadJSM)
@@ -38,27 +37,27 @@ feMessage :: Maybe WSMessage -> Text
 feMessage wsm = case wsm of
   Nothing -> "*Non Valid Message*"
   Just m -> case m of
-    NewMessage m -> "TODO: user> " <> messageText m
+    NewMessage m -> "TODO: user> " <> _messageText m
     ConnectedClients _ -> "TODO: List of connections message."
     otherwise -> "TODO: unknown message."
 
 data AppState t = AppState 
   { wsConn :: Maybe (WebSocket t)
-  , loggedAs :: Dynamic t (LoginState User)
-  , loggedTrigger :: LoginState User -> IO ()
+  , loggedAs :: Dynamic t LoginState
+  , loggedTrigger :: LoginState -> IO ()
   }
 
-data LoginState a = LoggedIn a | LoggedOut
+data LoginState = LoggedIn User | LoggedOut
   deriving (Show)
 
-class LikeMaybe f where
-  fromMaybe :: Maybe a -> f a
+class LikeMaybe a where
+  fromMaybe :: Maybe User -> a
 
 instance LikeMaybe LoginState where
   fromMaybe Nothing  = LoggedOut
-  fromMaybe (Just a) = LoggedIn a
+  fromMaybe (Just u) = LoggedIn u
 
-instance LikeMaybe Maybe where
+instance LikeMaybe (Maybe User) where
   fromMaybe = id 
 
 -- | @fullRouteEncoder@ has an `Either Text` as a first (check) argument

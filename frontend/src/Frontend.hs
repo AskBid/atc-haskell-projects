@@ -25,7 +25,6 @@ import Obelisk.Route
 import Obelisk.Route.Frontend
 import Obelisk.Generated.Static
 import Reflex.Dom.Core
-import Database.Persist.Class.PersistEntity (Entity)
 import Reflex.Dom.WebSocket (webSocket, WebSocketConfig(..), WebSocket)
 
 import Common.Api
@@ -106,9 +105,8 @@ requestWithCredentialsAndDecode
   :: ( MonadJSM (Performable m)
      , PerformEvent t m 
      , TriggerEvent t m 
-     , A.FromJSON b
      )
-  => R (FullRoute BackendRoute FrontendRoute) -> Event t a -> m (Event t (LoginState b))
+  => R (FullRoute BackendRoute FrontendRoute) -> Event t a -> m (Event t LoginState)
 requestWithCredentialsAndDecode route event = do 
   let url = getUrl route
       req = xhrRequest "POST" url $ def & xhrRequestConfig_withCredentials .~ True
@@ -132,7 +130,7 @@ logoutButton appState = do
   evMUser <- requestWithCredentialsAndDecode route eClickLogout
   let evSucc = ffor evMUser $ \case 
         LoggedOut           -> ()
-        LoggedIn (User _ _) -> () 
+        LoggedIn (User _ _ _) -> () 
   -- ^ I am here using User solely to be able to reuse @requestWithCredentialsAndDecode@
   --   but we are only interested that the events fires if the statusCheck was filtered
   performEvent_ $ (liftIO $ loggedTrigger appState $ LoggedOut) <$ evSucc
