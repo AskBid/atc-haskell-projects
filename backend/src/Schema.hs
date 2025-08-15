@@ -9,7 +9,7 @@
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE QuasiQuotes                #-}
-{-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE StandaloneDeriving, TypeSynonymInstances #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE DeriveAnyClass             #-}
@@ -17,14 +17,11 @@
 
 module Schema where
 
+import Data.Aeson (FromJSON, ToJSON)
+import Data.Text (Text)
+import Data.Time (LocalTime)
 import Database.Beam
 import Database.Beam.Sqlite
-import Database.Beam.Migrate
-import Data.Text (Text)
-import Data.Aeson (FromJSON(..), ToJSON(..))
-import GHC.Generics (Generic)
-import Data.Time (UTCTime(..), fromGregorian, secondsToDiffTime)
-import Control.Monad.IO.Class (MonadIO)
 
 
 data UserT f = User
@@ -39,7 +36,9 @@ data UserT f = User
 
 type User = UserT Identity
 -- ^ not to use UserT specifick for its true form (Identity) all the time 
---   we shortend the userT Identity to User.
+--   we shortend the userT Identity to User. Notice how User here does not 
+--   collide with User constructor in UserT, cus onw is in the Type world the
+--   other in the values world.. and they actually match as an data User = User {..} 
 type UserId = PrimaryKey UserT Identity
 -- ^ like saying: I want a convenient short name UserId for the concrete 
 --   primary-key type of the UserT table, in its real-data form.”
@@ -59,6 +58,7 @@ instance Table UserT where
 data MessageT f = Message
   { _messageId   :: C f Int 
   , _messageText :: C f Text
+  , _messageTimestamp :: C f (Maybe LocalTime)
   } deriving (Generic, Beamable)
 
 type Message = MessageT Identity
@@ -94,18 +94,7 @@ instance Database be DatabaseSchema
 
 db :: DatabaseSettings Sqlite DatabaseSchema
 db = defaultDbSettings
---   Message
---     timestamp UTCTime Maybe
---     text Text
---     owner UserId Maybe
---     private [UserId] Maybe
---     deriving Show Generic FromJSON ToJSON
--- |]
 
--- | this makes it eprsistent, use :memory: instead of Xs.db otherwise 
--- myDB :: Text
--- myDB = "Xs.db"
---
 -- populateDB :: MonadIO m => SqlPersistT m ()
 -- populateDB = do
 --   runMigration migrateAll

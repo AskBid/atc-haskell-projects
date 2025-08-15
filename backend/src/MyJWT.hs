@@ -35,7 +35,7 @@ verifyJWT = do
 -- | Using JWT library to create an encoded JWT ByteString, the likes of: 
 --  `asxcasas.asdasdasc.aierhuhdf`
 createJWT :: User -> BS.ByteString
-createJWT (User username _) = do
+createJWT (User _ username _) = do
   let expTime = JWT.numericDate 3600
   let claims = JWT.JWTClaimsSet { 
       JWT.iss = Nothing

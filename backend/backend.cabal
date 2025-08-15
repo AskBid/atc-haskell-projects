@@ -21,11 +21,12 @@ library
                , utf8-string
                , containers
                , beam-core == 0.9.*
-               , beam-sqlite == 0.5.*
-               , beam-migrate == 0.5.*
+               , beam-sqlite >= 0.5
+               , beam-migrate >= 0.5
                , aeson >= 0.11 && < 2.1
                , jwt
                , case-insensitive
+               , sqlite-simple
   exposed-modules:
     Backend, Schema, MyJWT
   ghc-options: -Wall -O -fno-show-valid-hole-fits

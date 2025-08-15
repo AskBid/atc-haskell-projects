@@ -19,29 +19,27 @@ import Control.Concurrent.STM
 import Control.Monad.IO.Class (liftIO, MonadIO)
 import Data.ByteString.UTF8 (toString)
 import qualified Data.Map.Strict as M (Map, lookup, toList)
-import Database.Persist
-import Database.Persist.Sqlite
 import qualified Data.Text.Encoding as TE
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy.Char8 as BL
+import Database.Beam
+import Database.Beam.Sqlite
+import Database.SQLite.Simple
 
 import Data.CaseInsensitive (original)
 import Data.Maybe (fromMaybe)
 
-import Schema
+import Schema (DatabaseSchema(..), db, UserT(..), MessageT(..))
 import Common.Api
 import MyJWT
 
-type NamedConn = (Entity User, WS.Connection)
+type NamedConn = (User, WS.Connection)
 
 backend :: Backend BackendRoute FrontendRoute
 backend = Backend
   { _backend_run = \serve -> do 
-      conns <- liftIO $ atomically $ newTVar ([] :: [NamedConn])
 
-      result <- liftIO $ try $ runSqlite "data/mydatabase.db" $ do 
-        populateDB
-        return ()
+      conns <- liftIO $ atomically $ newTVar ([] :: [NamedConn])
 
       serve $ backendHandlers conns
   , _backend_routeEncoder = fullRouteEncoder
@@ -64,7 +62,7 @@ backendHandlers conns = \case
           Nothing -> do 
             liftIO $ putStrLn "User not found or wrong password."
             modifyResponse $ setResponseCode 401
-          Just (Entity e usr) -> do 
+          Just usr -> do 
             let jwt = createJWT $ usr
             modifyResponse $ setContentType "application/json"
             modifyResponse $ addResponseCookie $ mkJWTCookie jwt
@@ -143,7 +141,7 @@ backendHandlers conns = \case
 
 -- | @type ServerApp = PendingConnection -> IO ()@ is a fucntion type, hence why `pending`
 --   appears down here.
-wsHandler :: TVar [NamedConn] -> Entity User -> WS.ServerApp
+wsHandler :: TVar [NamedConn] -> User -> WS.ServerApp
 wsHandler tvarConns eUser pending = do 
   let path = toString $ WS.requestPath $ WS.pendingRequest pending
   let req = WS.pendingRequest pending
@@ -183,13 +181,13 @@ wsHandlerPublic conns pending = do
 
 
 -- | checks if the data in the LoginReq is a valid user in the database.
-sqlUserPwdExist :: MonadIO m => Credentials -> m (Maybe (Entity User))
+sqlUserPwdExist :: MonadIO m => Credentials -> m (Maybe User)
 sqlUserPwdExist cs = do
   liftIO $ runSqlite myDB $ do
     mEUser <- selectFirst [UserName ==. username cs, UserPwd ==. password cs] []
     return mEUser
 
-sqlUserExist :: MonadIO m => Text -> m (Maybe (Entity User))
+sqlUserExist :: MonadIO m => Text -> m (Maybe User)
 sqlUserExist n = do
   liftIO $ runSqlite myDB $ do
     mEUser <- selectFirst [UserName ==. n] []

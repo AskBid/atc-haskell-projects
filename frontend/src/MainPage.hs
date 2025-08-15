@@ -121,7 +121,7 @@ mainPage appState = do
       dErr <- holdDyn "" evErr
       elClass "div" "text-red-500" $ dynText $ dErr
       performEvent_ $ liftIO . loggedTrigger appState <$> LoggedIn <$> evOkUsr
-      setRoute $ (FrontendRoute_User :/ ) <$> userName <$> evOkUsr
+      setRoute $ (FrontendRoute_User :/ ) <$> _userName <$> evOkUsr
 
 buttonStyleDisabled :: T.Text
 buttonStyleDisabled = buttonStyle <> " disabled:bg-grey-200 disabled:opacity-50 disabled:border-grey-300"
