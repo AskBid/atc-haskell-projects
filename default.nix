@@ -8,11 +8,11 @@ with obelisk;
 project ./. ({ pkgs, ... }: {
   overrides = self: super: {  
     beam-core = self.callHackage "beam-core" "0.10.0.0" {};
-    beam-sqlite = self.callHackageDirect {
-      pkg = "beam-sqlite";
-      ver = "0.5.2.0";
-      sha256 = "9lWuaS4NDNB9HJdHLyU5UQrdcrXjwKc+9UPyoALBcH0=";
-    } {};
+    beam-postgres = (self.callHackageDirect {
+      pkg = "beam-postgres";
+      ver = "0.5.3.1";
+      sha256 = "0v3mhhmnw8x5ll463msjfa7q2p6h4zqm7ql14nmhj8fz09a40wwa";
+    } {}).overrideAttrs (oldAttrs: {doCheck = false;});
     beam-automigrate = self.callHackageDirect {
       pkg = "beam-automigrate";
       ver = "0.1.7.0";

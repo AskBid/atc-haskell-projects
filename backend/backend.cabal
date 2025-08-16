@@ -21,7 +21,7 @@ library
                , utf8-string
                , containers
                , beam-core == 0.10.0.0
-               , beam-sqlite >= 0.5
+               , beam-postgres
                , beam-automigrate
                , aeson >= 0.11 && < 2.1
                , jwt
