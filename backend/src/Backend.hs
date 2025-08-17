@@ -24,6 +24,7 @@ import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy.Char8 as BL
 import Database.Beam
 import qualified Database.Beam.Postgres as P
+import qualified Database.Beam.AutoMigrate as AM
 
 import Data.CaseInsensitive (original)
 import Data.Maybe (fromMaybe)
@@ -40,7 +41,10 @@ backend = Backend
 
       conns <- liftIO $ atomically $ newTVar ([] :: [NamedConn])
       pgConn <- P.connect connInfo
-      tryRunMigrationsWithEditUpdate dbSettings pgConn
+      AM.tryRunMigrationsWithEditUpdate dbSettings pgConn
+      populateUsers
+      populateMessages
+
 
       serve $ backendHandlers conns
   , _backend_routeEncoder = fullRouteEncoder

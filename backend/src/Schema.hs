@@ -24,10 +24,11 @@ import Database.Beam
 import qualified Database.Beam.AutoMigrate as AM
 import Database.Beam.Postgres
 import Data.Proxy (Proxy(..))
+import GHC.Int (Int32)
 
 
 data UserT f = User
-  { _userId   :: C f Int
+  { _userId   :: C f Int32
   , _userName :: C f Text
   , _userPwd  :: C f Text
   } deriving (Generic, Beamable)
@@ -51,14 +52,14 @@ deriving instance FromJSON User
 deriving instance ToJSON User
 
 instance Table UserT where
-  data PrimaryKey UserT f = UserId (C f Int) 
+  data PrimaryKey UserT f = UserId (C f Int32) 
     deriving (Generic, Beamable)
   primaryKey = UserId . _userId
 
 
 
 data MessageT f = Message
-  { _messageId   :: C f Int 
+  { _messageId   :: C f Int32
   , _messageText :: C f Text
   , _messageTimestamp :: C f (Maybe LocalTime)
   } deriving (Generic, Beamable)
@@ -72,7 +73,7 @@ deriving instance FromJSON Message
 deriving instance ToJSON Message
 
 instance Table MessageT where
-  data PrimaryKey MessageT f = MessageId (C f Int) 
+  data PrimaryKey MessageT f = MessageId (C f Int32) 
     deriving (Generic, Beamable)
   primaryKey = MessageId . _messageId
 
@@ -112,6 +113,41 @@ connInfo = ConnectInfo
   , connectDatabase = "atc_db" -- :: String	 
   }
 
+populateUsers :: MonadBeam Postgres m => Connection -> m ()
+populateUsers conn = runInsert $ insert (userTable db) $ insertValues 
+  [ User { _userId   = 1 
+         , _userName = "sergio"
+         , _userPwd  = "pwd"
+         }
+  , User { _userId   = 2 
+         , _userName = "alice"
+         , _userPwd  = "alice"
+         } 
+  , User { _userId   = 3 
+         , _userName = "bob"
+         , _userPwd  = "bob"
+         } 
+  , User { _userId   = 4 
+         , _userName = "mario"
+         , _userPwd  = "mario"
+         }
+  , User { _userId   = 5 
+         , _userName = "luigi"
+         , _userPwd  = "luigi"
+         }
+  ]
+
+populateMessages :: MonadBeam Postgres m => Connection -> m ()
+populateMessages conn = runInsert $ insert (messageTable db) $ insertValues 
+  [ Message { _messageId = 1 
+            , _messageText = "Dummy first message."
+            , _messageTimestamp  = Nothing
+            }
+  , Message { _messageId = 2 
+            , _messageText = "Dummy second message."
+            , _messageTimestamp = Nothing
+            } 
+  ]
 
 -- populateDB :: MonadIO m => SqlPersistT m ()
 -- populateDB = do
