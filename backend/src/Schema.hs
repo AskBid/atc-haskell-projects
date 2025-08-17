@@ -21,7 +21,9 @@ import Data.Aeson (FromJSON, ToJSON)
 import Data.Text (Text)
 import Data.Time (LocalTime)
 import Database.Beam
-import Database.Beam.Sqlite
+import qualified Database.Beam.AutoMigrate as AM
+import Database.Beam.Postgres
+import Data.Proxy (Proxy(..))
 
 
 data UserT f = User
@@ -92,8 +94,24 @@ instance Database be DatabaseSchema
 --     separate instances.
 --   The be parameter is tied to the Database typeclass, not to the schema itself.
 
-db :: DatabaseSettings Sqlite DatabaseSchema
+db :: DatabaseSettings Postgres DatabaseSchema
 db = defaultDbSettings
+
+dbSettings :: AM.AnnotatedDatabaseSettings Postgres DatabaseSchema
+dbSettings = (AM.defaultAnnotatedDbSettings db) 
+
+schema :: AM.Schema
+schema = AM.fromAnnotatedDbSettings dbSettings (Proxy :: Proxy ('[] :: [AM.Annotation]))
+
+connInfo :: ConnectInfo
+connInfo = ConnectInfo
+  { connectHost = "localhost" -- :: String	 
+  , connectPort = 5432 -- :: Word16	 
+  , connectUser = "atc_user" -- :: String	 
+  , connectPassword = "atcpassword" -- :: String	 
+  , connectDatabase = "atc_db" -- :: String	 
+  }
+
 
 -- populateDB :: MonadIO m => SqlPersistT m ()
 -- populateDB = do

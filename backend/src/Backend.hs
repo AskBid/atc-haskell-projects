@@ -23,13 +23,12 @@ import qualified Data.Text.Encoding as TE
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy.Char8 as BL
 import Database.Beam
-import Database.Beam.Sqlite
-import Database.SQLite.Simple
+import qualified Database.Beam.Postgres as P
 
 import Data.CaseInsensitive (original)
 import Data.Maybe (fromMaybe)
 
-import Schema (DatabaseSchema(..), db, UserT(..), MessageT(..))
+import Schema 
 import Common.Api
 import MyJWT
 
@@ -40,6 +39,8 @@ backend = Backend
   { _backend_run = \serve -> do 
 
       conns <- liftIO $ atomically $ newTVar ([] :: [NamedConn])
+      pgConn <- P.connect connInfo
+      tryRunMigrationsWithEditUpdate dbSettings pgConn
 
       serve $ backendHandlers conns
   , _backend_routeEncoder = fullRouteEncoder
