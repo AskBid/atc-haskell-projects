@@ -25,6 +25,10 @@ import qualified Data.ByteString.Lazy.Char8 as BL
 import Database.Beam
 import qualified Database.Beam.Postgres as P
 import qualified Database.Beam.AutoMigrate as AM
+import Data.Conduit
+import Database.Beam.Postgres.Conduit
+import qualified Data.Conduit.List as CL
+import Control.Monad.Trans.Resource (runResourceT)
 
 import Data.CaseInsensitive (original)
 import Data.Maybe (fromMaybe)
@@ -39,19 +43,18 @@ backend :: Backend BackendRoute FrontendRoute
 backend = Backend
   { _backend_run = \serve -> do 
 
-      conns <- liftIO $ atomically $ newTVar ([] :: [NamedConn])
+      wsConns <- liftIO $ atomically $ newTVar ([] :: [NamedConn])
       pgConn <- P.connect connInfo
       AM.tryRunMigrationsWithEditUpdate dbSettings pgConn
-      populateUsers
-      populateMessages
+      populateUsers pgConn
+      populateMessages pgConn
 
-
-      serve $ backendHandlers conns
+      serve $ backendHandlers wsConns pgConn
   , _backend_routeEncoder = fullRouteEncoder
   }
 
-backendHandlers :: TVar [NamedConn] -> R BackendRoute -> Snap ()
-backendHandlers conns = \case
+backendHandlers :: TVar [NamedConn] -> P.Connection -> R BackendRoute -> Snap ()
+backendHandlers conns pgConn = \case
   BackendRoute_Missing :/ () -> writeBS "404"
   
   BackendRoute_Login :/ () -> do 
@@ -62,18 +65,18 @@ backendHandlers conns = \case
         liftIO $ putStrLn "Credentials not perceived."
         modifyResponse $ setResponseCode 401
       Just credentials -> do 
-        mEUser <- sqlUserPwdExist credentials
-        case mEUser of 
-          Nothing -> do 
+        users <- liftIO $ conduitQuery pgConn queryUserByName "sergio"
+        case users of
+          [] -> do 
             liftIO $ putStrLn "User not found or wrong password."
             modifyResponse $ setResponseCode 401
-          Just usr -> do 
-            let jwt = createJWT $ usr
+          (u:_) -> do 
+            let jwt = createJWT $ u
             modifyResponse $ setContentType "application/json"
             modifyResponse $ addResponseCookie $ mkJWTCookie jwt
             liftIO $ putStrLn "User Auth success."
             modifyResponse $ setResponseCode 200
-            writeBS $ BL.toStrict $ A.encode usr 
+            writeBS $ BL.toStrict $ A.encode u 
 
   BackendRoute_Logout :/ () -> do 
     modifyResponse $ setContentType "application/json"
@@ -114,26 +117,26 @@ backendHandlers conns = \case
       Nothing -> do
         modifyResponse $ setResponseStatus 401 "unauthorized"
         writeBS "invalid JWT"
-      Just username' -> do
+      Just username -> do
         modifyResponse $ setResponseStatus 200 "OK"
-        mEUser <- liftIO $ runSqlite myDB $ selectFirst [UserName ==. username'] [] 
-        case mEUser of
-          Nothing -> do 
+        users <- liftIO $ conduitQuery pgConn queryUserByName username 
+        case users of
+          [] -> do 
             modifyResponse $ setResponseStatus 401 "unauthorized"
             writeBS "User did not exist."
-          Just entityUser -> writeBS $ BL.toStrict $ A.encode $ entityVal entityUser
+          (u:_) -> writeBS $ BL.toStrict $ A.encode u
 
   BackendRoute_Websocket :/ WebscocketRoute_User :/ user -> do
     -- is user authenticated or visiting?
-    mEUser <- sqlUserExist user
-    case mEUser of
-      Nothing -> do
+    users <- liftIO $ conduitQuery pgConn queryUserByName user 
+    case users of
+      [] -> do
         modifyResponse $ setResponseStatus 401 "Unauthorized"
         liftIO $ putStrLn "nothing happenninng user not found..../////////"
         writeBS "401 - Unauthorized"
-      Just eUser -> do
+      (u:_) -> do
         liftIO $ putStrLn "User found... going to open socket..."
-        WSSnap.runWebSocketsSnap $ wsHandler conns eUser
+        WSSnap.runWebSocketsSnap $ wsHandler conns u
 
   BackendRoute_Websocket :/ WebscocketRoute_Main :/ () -> do 
     writeBS "Connection with no permission to chat."
@@ -178,22 +181,42 @@ wsHandlerPublic conns pending = do
     putStrLn "--------------------"
     msgJSON <- WSC.receiveData conn
     let msg = TE.decodeUtf8 msgJSON
-    mEUser <- sqlUserExist msg
-    case mEUser of 
-      Nothing -> WS.sendTextData conn (A.encode NoUser)
-      Just e -> WS.sendTextData conn (A.encode (UserExist (userName $ entityVal e)))
+    -- mEUser <- sqlUserExist msg
+    -- case mEUser of 
+    --   Nothing -> WS.sendTextData conn (A.encode NoUser)
+    --   Just e -> WS.sendTextData conn (A.encode (UserExist (userName $ entityVal e)))
     return ()
 
 
--- | checks if the data in the LoginReq is a valid user in the database.
-sqlUserPwdExist :: MonadIO m => Credentials -> m (Maybe User)
-sqlUserPwdExist cs = do
-  liftIO $ runSqlite myDB $ do
-    mEUser <- selectFirst [UserName ==. username cs, UserPwd ==. password cs] []
-    return mEUser
+-- | Run a Beam query and collect all results into a list.
+conduitQuery 
+  :: P.Connection 
+  -> (Text -> Q P.Postgres DatabaseSchema s (UserT (QExpr P.Postgres s))) 
+  -> Text 
+  -> IO [User]
+conduitQuery conn query name =
+  runResourceT $
+    runConduit $
+      streamingRunSelect conn (select (query name))
+        -- ^ ConduitT () a m ()
+        -- Think of it like: “Here’s a stream of rows (Users), you can consume 
+        -- them however you like.”
+        .| CL.consume   
+        -- ^ collect all rows into a list.
 
-sqlUserExist :: MonadIO m => Text -> m (Maybe User)
-sqlUserExist n = do
-  liftIO $ runSqlite myDB $ do
-    mEUser <- selectFirst [UserName ==. n] []
-    return mEUser
+queryUserByName :: Text -> Q P.Postgres DatabaseSchema s (UserT (QExpr P.Postgres s))
+-- ^ s is the query scope phantom type. 
+--   to track query scoping at the type level, 
+--   so you don’t accidentally mix rows from different queries or cross scope 
+--   boundaries incorrectly.
+--   Think of s like a unique query id at the type level.
+--   Every time you start a new query (Q … s …), GHC invents a new s.
+--   That way Beam can enforce rules like:
+--     You can join rows from the same scope (s matches).
+--     You cannot directly compare an expression from query A with query B (s ≠ s').
+--   when you “join” two tables in a query, you’re really creating a new derived scope
+--   that contains columns from both tables. Conceptually, it’s like a new intermediate table
+queryUserByName name = do
+  u <- all_ (userTable db)
+  guard_ (_userName u ==. val_ name)
+  pure u

@@ -113,41 +113,43 @@ connInfo = ConnectInfo
   , connectDatabase = "atc_db" -- :: String	 
   }
 
-populateUsers :: MonadBeam Postgres m => Connection -> m ()
-populateUsers conn = runInsert $ insert (userTable db) $ insertValues 
-  [ User { _userId   = 1 
-         , _userName = "sergio"
-         , _userPwd  = "pwd"
-         }
-  , User { _userId   = 2 
-         , _userName = "alice"
-         , _userPwd  = "alice"
-         } 
-  , User { _userId   = 3 
-         , _userName = "bob"
-         , _userPwd  = "bob"
-         } 
-  , User { _userId   = 4 
-         , _userName = "mario"
-         , _userPwd  = "mario"
-         }
-  , User { _userId   = 5 
-         , _userName = "luigi"
-         , _userPwd  = "luigi"
-         }
-  ]
+populateUsers :: Connection -> IO ()
+populateUsers conn = runBeamPostgres conn $ 
+  runInsert $ insert (userTable db) $ insertValues 
+    [ User { _userId   = 1 
+           , _userName = "sergio"
+           , _userPwd  = "pwd"
+           }
+    , User { _userId   = 2 
+           , _userName = "alice"
+           , _userPwd  = "alice"
+           } 
+    , User { _userId   = 3 
+           , _userName = "bob"
+           , _userPwd  = "bob"
+           } 
+    , User { _userId   = 4 
+           , _userName = "mario"
+           , _userPwd  = "mario"
+           }
+    , User { _userId   = 5 
+           , _userName = "luigi"
+           , _userPwd  = "luigi"
+           }
+    ]
 
-populateMessages :: MonadBeam Postgres m => Connection -> m ()
-populateMessages conn = runInsert $ insert (messageTable db) $ insertValues 
-  [ Message { _messageId = 1 
-            , _messageText = "Dummy first message."
-            , _messageTimestamp  = Nothing
-            }
-  , Message { _messageId = 2 
-            , _messageText = "Dummy second message."
-            , _messageTimestamp = Nothing
-            } 
-  ]
+populateMessages :: Connection -> IO ()
+populateMessages conn = runBeamPostgres conn $ 
+  runInsert $ insert (messageTable db) $ insertValues 
+    [ Message { _messageId = 1 
+              , _messageText = "Dummy first message."
+              , _messageTimestamp  = Nothing
+              }
+    , Message { _messageId = 2 
+              , _messageText = "Dummy second message."
+              , _messageTimestamp = Nothing
+              } 
+    ]
 
 -- populateDB :: MonadIO m => SqlPersistT m ()
 -- populateDB = do

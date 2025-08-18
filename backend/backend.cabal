@@ -24,6 +24,8 @@ library
                , beam-postgres
                , beam-automigrate
                , aeson >= 0.11 && < 2.1
+               , conduit
+               , resourcet
                , jwt
                , case-insensitive
                , sqlite-simple
