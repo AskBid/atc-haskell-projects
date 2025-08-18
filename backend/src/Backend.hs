@@ -65,7 +65,7 @@ backendHandlers conns pgConn = \case
         liftIO $ putStrLn "Credentials not perceived."
         modifyResponse $ setResponseCode 401
       Just credentials -> do 
-        users <- liftIO $ conduitQuery pgConn queryUserByName "sergio"
+        users <- liftIO $ conduitQuery pgConn queryUserCredentials credentials
         case users of
           [] -> do 
             liftIO $ putStrLn "User not found or wrong password."
@@ -82,7 +82,7 @@ backendHandlers conns pgConn = \case
     modifyResponse $ setContentType "application/json"
     let expiredJWTCookie = cookieLogout
     modifyResponse $ addResponseCookie $ expiredJWTCookie
-    writeBS $ BL.toStrict $ A.encode $ User "dummy" "dummy"
+    writeBS $ BL.toStrict $ A.encode (User 0 "dummy" "dummy" :: User)
 
   BackendRoute_Signup :/ () -> do 
     req <- getRequest
@@ -140,7 +140,7 @@ backendHandlers conns pgConn = \case
 
   BackendRoute_Websocket :/ WebscocketRoute_Main :/ () -> do 
     writeBS "Connection with no permission to chat."
-    WSSnap.runWebSocketsSnap $ wsHandlerPublic conns
+    WSSnap.runWebSocketsSnap $ wsHandlerPublic conns pgConn
 
   -- ^ runWebSocketsSnap is just a bridge — it hands off the PendingConnection to your wsHandler. 
   -- Everything else is up to you. Broadcast messages to all clients, Count or log active connections,
@@ -173,26 +173,26 @@ wsHandler tvarConns eUser pending = do
         return ()
       otherwise -> putStrLn "TODO case for different type of WSMessage"
 
-wsHandlerPublic :: TVar [NamedConn] -> WS.ServerApp
-wsHandlerPublic conns pending = do
+wsHandlerPublic :: TVar [NamedConn] -> P.Connection -> WS.ServerApp
+wsHandlerPublic conns pgConn pending = do
   -- putStrLn "inside public ws handler..."
   conn <- WS.acceptRequest pending
   forever $ do 
     putStrLn "--------------------"
     msgJSON <- WSC.receiveData conn
-    let msg = TE.decodeUtf8 msgJSON
-    -- mEUser <- sqlUserExist msg
-    -- case mEUser of 
-    --   Nothing -> WS.sendTextData conn (A.encode NoUser)
-    --   Just e -> WS.sendTextData conn (A.encode (UserExist (userName $ entityVal e)))
+    let msgUserName = TE.decodeUtf8 msgJSON
+    users <- liftIO $ conduitQuery pgConn queryUserByName msgUserName
+    case users of 
+      [] -> WS.sendTextData conn (A.encode NoUser)
+      (u:_) -> WS.sendTextData conn (A.encode (UserExist $ _userName u))
     return ()
 
 
 -- | Run a Beam query and collect all results into a list.
 conduitQuery 
   :: P.Connection 
-  -> (Text -> Q P.Postgres DatabaseSchema s (UserT (QExpr P.Postgres s))) 
-  -> Text 
+  -> (a -> Q P.Postgres DatabaseSchema QBaseScope (UserT (QExpr P.Postgres QBaseScope))) 
+  -> a 
   -> IO [User]
 conduitQuery conn query name =
   runResourceT $
@@ -219,4 +219,11 @@ queryUserByName :: Text -> Q P.Postgres DatabaseSchema s (UserT (QExpr P.Postgre
 queryUserByName name = do
   u <- all_ (userTable db)
   guard_ (_userName u ==. val_ name)
+  pure u
+
+queryUserCredentials :: Credentials -> Q P.Postgres DatabaseSchema s (UserT (QExpr P.Postgres s))
+queryUserCredentials (Credentials usr pwd) = do
+  u <- all_ (userTable db)
+  guard_ (_userName u ==. val_ usr)
+  guard_ (_userPwd u ==. val_ pwd)
   pure u

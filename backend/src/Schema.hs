@@ -23,6 +23,7 @@ import Data.Time (LocalTime)
 import Database.Beam
 import qualified Database.Beam.AutoMigrate as AM
 import Database.Beam.Postgres
+import Database.Beam.Postgres.Full
 import Data.Proxy (Proxy(..))
 import GHC.Int (Int32)
 
@@ -60,7 +61,7 @@ instance Table UserT where
 
 data MessageT f = Message
   { _messageId   :: C f Int32
-  , _messageText :: C f Text
+  , _messageBody :: C f Text
   , _messageTimestamp :: C f (Maybe LocalTime)
   } deriving (Generic, Beamable)
 
@@ -96,7 +97,11 @@ instance Database be DatabaseSchema
 --   The be parameter is tied to the Database typeclass, not to the schema itself.
 
 db :: DatabaseSettings Postgres DatabaseSchema
-db = defaultDbSettings
+db = defaultDbSettings `withDbModification`
+    dbModification
+      { userTable    = setEntityName "user" 
+      , messageTable = setEntityName "message"
+      }
 
 dbSettings :: AM.AnnotatedDatabaseSettings Postgres DatabaseSchema
 dbSettings = (AM.defaultAnnotatedDbSettings db) 
@@ -115,7 +120,7 @@ connInfo = ConnectInfo
 
 populateUsers :: Connection -> IO ()
 populateUsers conn = runBeamPostgres conn $ 
-  runInsert $ insert (userTable db) $ insertValues 
+  runInsert $ insertOnConflict (userTable db) (insertValues 
     [ User { _userId   = 1 
            , _userName = "sergio"
            , _userPwd  = "pwd"
@@ -136,20 +141,20 @@ populateUsers conn = runBeamPostgres conn $
            , _userName = "luigi"
            , _userPwd  = "luigi"
            }
-    ]
+    ]) anyConflict onConflictDoNothing
 
 populateMessages :: Connection -> IO ()
 populateMessages conn = runBeamPostgres conn $ 
-  runInsert $ insert (messageTable db) $ insertValues 
+  runInsert $ insertOnConflict (messageTable db) (insertValues 
     [ Message { _messageId = 1 
-              , _messageText = "Dummy first message."
+              , _messageBody = "Dummy first message."
               , _messageTimestamp  = Nothing
               }
     , Message { _messageId = 2 
-              , _messageText = "Dummy second message."
+              , _messageBody = "Dummy second message."
               , _messageTimestamp = Nothing
               } 
-    ]
+    ]) anyConflict onConflictDoNothing
 
 -- populateDB :: MonadIO m => SqlPersistT m ()
 -- populateDB = do

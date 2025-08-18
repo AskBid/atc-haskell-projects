@@ -127,8 +127,8 @@ logoutButton appState = do
   (elBtnLogout, _) <- elClass' "button" buttonStyle $ text "Logout"
   let eClickLogout = domEvent Click elBtnLogout 
       route = FullRoute_Backend BackendRoute_Logout :/ () 
-  evMUser <- requestWithCredentialsAndDecode route eClickLogout
-  let evSucc = ffor evMUser $ \case 
+  eUser <- requestWithCredentialsAndDecode route eClickLogout
+  let evSucc = ffor eUser $ \case 
         LoggedOut           -> ()
         LoggedIn (User _ _ _) -> () 
   -- ^ I am here using User solely to be able to reuse @requestWithCredentialsAndDecode@

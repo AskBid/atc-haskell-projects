@@ -67,7 +67,7 @@ userChat appState = do
 mkMessage :: T.Text -> Message
 mkMessage t = Message 
   { _messageTimestamp = Nothing
-  , _messageText = t
+  , _messageBody = t
   -- , messageOwner = Nothing
   -- , messagePrivate = Nothing
   }

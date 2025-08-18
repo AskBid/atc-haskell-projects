@@ -37,7 +37,7 @@ feMessage :: Maybe WSMessage -> Text
 feMessage wsm = case wsm of
   Nothing -> "*Non Valid Message*"
   Just m -> case m of
-    NewMessage m -> "TODO: user> " <> _messageText m
+    NewMessage m -> "TODO: user> " <> _messageBody m
     ConnectedClients _ -> "TODO: List of connections message."
     otherwise -> "TODO: unknown message."
 
