@@ -21,9 +21,10 @@ import Data.Aeson (FromJSON, ToJSON)
 import Data.Text (Text)
 import Data.Time (LocalTime)
 import Database.Beam
-import qualified Database.Beam.AutoMigrate as AM
+import Database.Beam.Migrate
+import Database.Beam.Migrate.SQL
 import Database.Beam.Postgres
-import Database.Beam.Postgres.Full
+import Database.Beam.Postgres.Migrate
 import Data.Proxy (Proxy(..))
 import GHC.Int (Int32)
 
@@ -57,8 +58,6 @@ instance Table UserT where
     deriving (Generic, Beamable)
   primaryKey = UserId . _userId
 
-
-
 data MessageT f = Message
   { _messageId   :: C f Int32
   , _messageBody :: C f Text
@@ -78,16 +77,16 @@ instance Table MessageT where
     deriving (Generic, Beamable)
   primaryKey = MessageId . _messageId
 
-data DatabaseSchema f = DatabaseSchema
+data ChatDB f = ChatDB
   { userTable    :: f (TableEntity UserT)
-  , messageTable :: f (TableEntity MessageT)
+  -- , messageTable :: f (TableEntity MessageT)
   } deriving (Generic)
 -- ^ notice that the wrapper f here is not the same as the one for Columnar
 --   A table is a "row type" with each column wrapped in something 
 --   (Identity for real values, Nullable for optional).
 --   A database is a "schema type" with each table wrapped in something 
 --   (DatabaseEntity be for actual DB metadata, or maybe something else for migrations).
-instance Database be DatabaseSchema
+instance Database be ChatDB
 -- ^ When you write:
 --   instance Database be DatabaseSchema
 --   you’re saying:
@@ -96,73 +95,54 @@ instance Database be DatabaseSchema
 --     separate instances.
 --   The be parameter is tied to the Database typeclass, not to the schema itself.
 
-db :: DatabaseSettings Postgres DatabaseSchema
-db = defaultDbSettings `withDbModification`
-    dbModification
-      { userTable    = setEntityName "user" 
-      , messageTable = setEntityName "message"
-      }
 
-dbSettings :: AM.AnnotatedDatabaseSettings Postgres DatabaseSchema
-dbSettings = (AM.defaultAnnotatedDbSettings db) 
 
-schema :: AM.Schema
-schema = AM.fromAnnotatedDbSettings dbSettings (Proxy :: Proxy ('[] :: [AM.Annotation]))
 
-connInfo :: ConnectInfo
-connInfo = ConnectInfo
-  { connectHost = "localhost" -- :: String	 
-  , connectPort = 5432 -- :: Word16	 
-  , connectUser = "atc_user" -- :: String	 
-  , connectPassword = "atcpassword" -- :: String	 
-  , connectDatabase = "atc_db" -- :: String	 
-  }
 
-populateUsers :: Connection -> IO ()
-populateUsers conn = runBeamPostgres conn $ 
-  runInsert $ insertOnConflict (userTable db) (insertValues 
-    [ User { _userId   = 1 
-           , _userName = "sergio"
-           , _userPwd  = "pwd"
-           }
-    , User { _userId   = 2 
-           , _userName = "alice"
-           , _userPwd  = "alice"
-           } 
-    , User { _userId   = 3 
-           , _userName = "bob"
-           , _userPwd  = "bob"
-           } 
-    , User { _userId   = 4 
-           , _userName = "mario"
-           , _userPwd  = "mario"
-           }
-    , User { _userId   = 5 
-           , _userName = "luigi"
-           , _userPwd  = "luigi"
-           }
-    ]) anyConflict onConflictDoNothing
 
-populateMessages :: Connection -> IO ()
-populateMessages conn = runBeamPostgres conn $ 
-  runInsert $ insertOnConflict (messageTable db) (insertValues 
-    [ Message { _messageId = 1 
-              , _messageBody = "Dummy first message."
-              , _messageTimestamp  = Nothing
-              }
-    , Message { _messageId = 2 
-              , _messageBody = "Dummy second message."
-              , _messageTimestamp = Nothing
-              } 
-    ]) anyConflict onConflictDoNothing
 
--- populateDB :: MonadIO m => SqlPersistT m ()
--- populateDB = do
---   runMigration migrateAll
---   _  <- insertBy $ User "alice" "alice"
---   _  <- insertBy $ User "bob" "bob"
---   _  <- insertBy $ User "sergio" "pwd"
---   _  <- insertBy $ User "mario" "mario"
---   _  <- insertBy $ User "luigi" "luigi"
---   _  <- insertBy $ User "raoul" "raoul"
---   return ()
+
+-- migration :: Migration Postgres (CheckedDatabaseSettings Postgres DatabaseSchema)
+-- migration = do
+--   user <- createTable "user"
+--     (User
+--       (field "id" int notNull)
+--       (field "name" text notNull unique) 
+--       (field "pwd" text notNull)
+--     )
+--   message <- createTable "message"  
+--     (Message
+--       (field "id" int notNull)
+--       (field "body" text notNull)
+--       (field "timestamp" (maybeType timestamp))
+--     )
+--   pure (DatabaseSchema user message)
+--
+-- dbSettings :: DatabaseSettings Postgres DatabaseSchema
+-- dbSettings = defaultDbSettings
+--   `withDbModification` dbModification
+--       { userTable = setEntityName "user"
+--       , messageTable = setEntityName "message"
+--       }
+--
+-- populateUsers :: Connection -> IO ()
+-- populateUsers conn = runBeamPostgres conn $ 
+--   runInsert $ insertOnConflict (userTable dbSettings)
+--     (insertValues 
+--       [ User 1 "sergio" "pwd"
+--       , User 2 "alice" "alice"
+--       , User 3 "bob" "bob"
+--       , User 4 "mario" "mario"
+--       , User 5 "luigi" "luigi"
+--       ])
+--     anyConflict onConflictDoNothing
+--
+-- populateMessages :: Connection -> IO ()
+-- populateMessages conn = runBeamPostgres conn $ 
+--   runInsert $ insertOnConflict (messageTable dbSettings)
+--     (insertValues 
+--       [ Message 1 "Dummy first message." Nothing
+--       , Message 2 "Dummy second message." Nothing
+--       ])
+--     anyConflict onConflictDoNothing
+--

@@ -24,7 +24,8 @@ import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy.Char8 as BL
 import Database.Beam
 import qualified Database.Beam.Postgres as P
-import qualified Database.Beam.AutoMigrate as AM
+import Database.Beam.Migrate
+import Database.Beam.Migrate.Simple
 import Data.Conduit
 import Database.Beam.Postgres.Conduit
 import qualified Data.Conduit.List as CL
@@ -36,8 +37,18 @@ import Data.Maybe (fromMaybe)
 import Schema 
 import Common.Api
 import MyJWT
+import Migration
 
 type NamedConn = (User, WS.Connection)
+
+connInfo :: P.ConnectInfo
+connInfo = P.ConnectInfo
+  { P.connectHost = "localhost"	 
+  , P.connectPort = 5432 
+  , P.connectUser = "atc_user" 	 
+  , P.connectPassword = "atcpassword" 
+  , P.connectDatabase = "atc_db"
+  }
 
 backend :: Backend BackendRoute FrontendRoute
 backend = Backend
@@ -45,9 +56,10 @@ backend = Backend
 
       wsConns <- liftIO $ atomically $ newTVar ([] :: [NamedConn])
       pgConn <- P.connect connInfo
-      AM.tryRunMigrationsWithEditUpdate dbSettings pgConn
-      populateUsers pgConn
-      populateMessages pgConn
+      -- P.runBeamPostgresDebug putStrLn pgConn $
+      --   autoMigrate defaultPostgresMigrationBackend migration
+      -- populateUsers pgConn
+      -- populateMessages pgConn
 
       serve $ backendHandlers wsConns pgConn
   , _backend_routeEncoder = fullRouteEncoder
@@ -87,12 +99,16 @@ backendHandlers conns pgConn = \case
   BackendRoute_Signup :/ () -> do 
     req <- getRequest
     modifyResponse $ setResponseCode 401
-    -- let auth = join $ A.decodeStrict <$> getHeader "Authorization" req
-    -- case auth of
-    --   Nothing -> do
-    --     liftIO $ putStrLn "Credentials not perceived."
-    --     modifyResponse $ setResponseCode 401
-    --   Just credentials -> do
+    req <- getRequest
+    let auth = join $ A.decodeStrict <$> getHeader "Authorization" req
+    case auth of
+      Nothing -> do
+        liftIO $ putStrLn "Credentials not perceived."
+        modifyResponse $ setResponseCode 401
+      Just credentials -> do 
+        users <- liftIO $ conduitQuery pgConn queryUserCredentials credentials
+        modifyResponse $ setResponseCode 401
+
         -- mEUser <- sqlUserExist credentials
         -- case mEUser of 
         --   Nothing -> do 
@@ -191,7 +207,7 @@ wsHandlerPublic conns pgConn pending = do
 -- | Run a Beam query and collect all results into a list.
 conduitQuery 
   :: P.Connection 
-  -> (a -> Q P.Postgres DatabaseSchema QBaseScope (UserT (QExpr P.Postgres QBaseScope))) 
+  -> (a -> Q P.Postgres ChatDB QBaseScope (UserT (QExpr P.Postgres QBaseScope))) 
   -> a 
   -> IO [User]
 conduitQuery conn query name =
@@ -204,7 +220,7 @@ conduitQuery conn query name =
         .| CL.consume   
         -- ^ collect all rows into a list.
 
-queryUserByName :: Text -> Q P.Postgres DatabaseSchema s (UserT (QExpr P.Postgres s))
+queryUserByName :: Text -> Q P.Postgres ChatDB s (UserT (QExpr P.Postgres s))
 -- ^ s is the query scope phantom type. 
 --   to track query scoping at the type level, 
 --   so you don’t accidentally mix rows from different queries or cross scope 
@@ -217,13 +233,13 @@ queryUserByName :: Text -> Q P.Postgres DatabaseSchema s (UserT (QExpr P.Postgre
 --   when you “join” two tables in a query, you’re really creating a new derived scope
 --   that contains columns from both tables. Conceptually, it’s like a new intermediate table
 queryUserByName name = do
-  u <- all_ (userTable db)
+  u <- all_ (userTable chatDB)
   guard_ (_userName u ==. val_ name)
   pure u
 
-queryUserCredentials :: Credentials -> Q P.Postgres DatabaseSchema s (UserT (QExpr P.Postgres s))
+queryUserCredentials :: Credentials -> Q P.Postgres ChatDB s (UserT (QExpr P.Postgres s))
 queryUserCredentials (Credentials usr pwd) = do
-  u <- all_ (userTable db)
+  u <- all_ (userTable chatDB)
   guard_ (_userName u ==. val_ usr)
   guard_ (_userPwd u ==. val_ pwd)
   pure u

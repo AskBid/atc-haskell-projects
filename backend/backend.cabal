@@ -23,6 +23,7 @@ library
                , beam-core == 0.10.0.0
                , beam-postgres
                , beam-automigrate
+               , beam-migrate
                , aeson >= 0.11 && < 2.1
                , conduit
                , resourcet
@@ -30,7 +31,7 @@ library
                , case-insensitive
                , sqlite-simple
   exposed-modules:
-    Backend, Schema, MyJWT
+    Backend, Schema, MyJWT, Migration
   ghc-options: -Wall -O -fno-show-valid-hole-fits
                -- unsafe code
                -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields
