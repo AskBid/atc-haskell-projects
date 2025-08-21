@@ -98,6 +98,7 @@ instance Table PrivateT where
   primaryKey = PrivateId <$> _privateMessage <*> _privateRecipient
   -- ^ primaryKey :: table column -> PrimaryKey table column
   -- function that extracts the “key fields” from a row.
+  -- like: primaryKey (Private m u) = PrivateId m u
 
 -----------
 -- Database

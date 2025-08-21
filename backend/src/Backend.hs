@@ -56,10 +56,11 @@ backend = Backend
 
       wsConns <- liftIO $ atomically $ newTVar ([] :: [NamedConn])
       pgConn <- P.connect connInfo
+      migrateDB pgConn
       -- P.runBeamPostgresDebug putStrLn pgConn $
       --   autoMigrate defaultPostgresMigrationBackend migration
-      -- populateUsers pgConn
-      -- populateMessages pgConn
+      populateUsers pgConn
+      populateMessages pgConn
 
       serve $ backendHandlers wsConns pgConn
   , _backend_routeEncoder = fullRouteEncoder
