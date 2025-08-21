@@ -28,7 +28,7 @@ import Database.Beam.Postgres.Migrate
 import Data.Proxy (Proxy(..))
 import GHC.Int (Int32)
 
-
+-- User
 data UserT f = User
   { _userId   :: C f Int32
   , _userName :: C f Text
@@ -38,30 +38,35 @@ data UserT f = User
 --   which one argument needs a type to give back a concrete type, so it is a container
 --   (Type -> Type) or (* -> *) like Identity or Nullable (it's Type Constructor)
 --   and @a@ that is the actual values type we want for our Columns.
-
 type User = UserT Identity
 -- ^ not to use UserT specifick for its true form (Identity) all the time 
 --   we shortend the userT Identity to User. Notice how User here does not 
 --   collide with User constructor in UserT, cus onw is in the Type world the
 --   other in the values world.. and they actually match as an data User = User {..} 
-type UserId = PrimaryKey UserT Identity
+type UserId = PrimaryKey UserT Identity 
 -- ^ like saying: I want a convenient short name UserId for the concrete 
 --   primary-key type of the UserT table, in its real-data form.”
-
 deriving instance Show User
 deriving instance Eq User
 deriving instance FromJSON User
 deriving instance ToJSON User
+deriving instance Show (PrimaryKey UserT Identity)
+deriving instance Eq   (PrimaryKey UserT Identity)
+deriving instance FromJSON (PrimaryKey UserT Identity)
+deriving instance ToJSON (PrimaryKey UserT Identity)
 
 instance Table UserT where
   data PrimaryKey UserT f = UserId (C f Int32) 
     deriving (Generic, Beamable)
   primaryKey = UserId . _userId
 
+----------
+-- Message
 data MessageT f = Message
   { _messageId   :: C f Int32
   , _messageBody :: C f Text
   , _messageTimestamp :: C f (Maybe LocalTime)
+  , _messageOwner :: PrimaryKey UserT f
   } deriving (Generic, Beamable)
 
 type Message = MessageT Identity
@@ -77,9 +82,29 @@ instance Table MessageT where
     deriving (Generic, Beamable)
   primaryKey = MessageId . _messageId
 
+----------
+-- Private
+data PrivateT f = Private
+  { _privateMessage :: PrimaryKey MessageT f 
+  , _privateRecipient :: PrimaryKey UserT f 
+  } deriving (Generic, Beamable)
+
+type Private = PrivateT Identity
+type PrivateId = PrimaryKey PrivateT Identity
+
+instance Table PrivateT where
+  data PrimaryKey PrivateT f = PrivateId (PrimaryKey MessageT f) (PrimaryKey UserT f)
+    deriving (Generic, Beamable)
+  primaryKey = PrivateId <$> _privateMessage <*> _privateRecipient
+  -- ^ primaryKey :: table column -> PrimaryKey table column
+  -- function that extracts the “key fields” from a row.
+
+-----------
+-- Database
 data ChatDB f = ChatDB
   { userTable    :: f (TableEntity UserT)
-  -- , messageTable :: f (TableEntity MessageT)
+  , messageTable :: f (TableEntity MessageT)
+  , privateTable :: f (TableEntity PrivateT)
   } deriving (Generic)
 -- ^ notice that the wrapper f here is not the same as the one for Columnar
 --   A table is a "row type" with each column wrapped in something 
@@ -95,54 +120,3 @@ instance Database be ChatDB
 --     separate instances.
 --   The be parameter is tied to the Database typeclass, not to the schema itself.
 
-
-
-
-
-
-
-
--- migration :: Migration Postgres (CheckedDatabaseSettings Postgres DatabaseSchema)
--- migration = do
---   user <- createTable "user"
---     (User
---       (field "id" int notNull)
---       (field "name" text notNull unique) 
---       (field "pwd" text notNull)
---     )
---   message <- createTable "message"  
---     (Message
---       (field "id" int notNull)
---       (field "body" text notNull)
---       (field "timestamp" (maybeType timestamp))
---     )
---   pure (DatabaseSchema user message)
---
--- dbSettings :: DatabaseSettings Postgres DatabaseSchema
--- dbSettings = defaultDbSettings
---   `withDbModification` dbModification
---       { userTable = setEntityName "user"
---       , messageTable = setEntityName "message"
---       }
---
--- populateUsers :: Connection -> IO ()
--- populateUsers conn = runBeamPostgres conn $ 
---   runInsert $ insertOnConflict (userTable dbSettings)
---     (insertValues 
---       [ User 1 "sergio" "pwd"
---       , User 2 "alice" "alice"
---       , User 3 "bob" "bob"
---       , User 4 "mario" "mario"
---       , User 5 "luigi" "luigi"
---       ])
---     anyConflict onConflictDoNothing
---
--- populateMessages :: Connection -> IO ()
--- populateMessages conn = runBeamPostgres conn $ 
---   runInsert $ insertOnConflict (messageTable dbSettings)
---     (insertValues 
---       [ Message 1 "Dummy first message." Nothing
---       , Message 2 "Dummy second message." Nothing
---       ])
---     anyConflict onConflictDoNothing
---
