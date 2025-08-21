@@ -27,7 +27,7 @@ import qualified Database.Beam.Postgres as P
 import Database.Beam.Migrate
 import Database.Beam.Migrate.Simple
 import Data.Conduit
-import Database.Beam.Postgres.Conduit
+import qualified Database.Beam.Postgres.Conduit as PC
 import qualified Data.Conduit.List as CL
 import Control.Monad.Trans.Resource (runResourceT)
 
@@ -99,34 +99,31 @@ backendHandlers conns pgConn = \case
 
   BackendRoute_Signup :/ () -> do 
     req <- getRequest
-    modifyResponse $ setResponseCode 401
-    req <- getRequest
     let auth = join $ A.decodeStrict <$> getHeader "Authorization" req
     case auth of
+
       Nothing -> do
         liftIO $ putStrLn "Credentials not perceived."
         modifyResponse $ setResponseCode 401
-      Just credentials -> do 
-        users <- liftIO $ conduitQuery pgConn queryUserCredentials credentials
-        modifyResponse $ setResponseCode 401
 
-        -- mEUser <- sqlUserExist credentials
-        -- case mEUser of 
-        --   Nothing -> do 
-        --     modifyResponse $ setContentType "application/json"
-        --     modifyResponse $ setResponseCode 200
-        --     writeBS $ username credentials 
-        --   Just (Entity e usr) -> do
-        --     liftIO $ putStrLn $ username credentials <> " already exist. No signup possible."
-            -- modifyResponse $ setResponseCode 401
-            -- writeBS $ 
+      Just credentials -> do
+        let usr = username credentials
+            pwd = password credentials
+        users <- liftIO $ conduitQuery pgConn queryUserByName usr
+        case users of
 
-            -- let jwt = createJWT $ usr
-            -- modifyResponse $ setContentType "application/json"
-            -- modifyResponse $ addResponseCookie $ mkJWTCookie jwt
-            -- liftIO $ putStrLn "User Auth success."
-            -- modifyResponse $ setResponseCode 200
-            -- writeBS $ BL.toStrict $ A.encode usr 
+          [] -> do
+            PC.runInsert pgConn $ 
+              insert (userTable chatDB) $ 
+                insertExpressions [User default_ (val_ usr) (val_ usr)]
+            modifyResponse $ setResponseCode 200
+            liftIO $ putStrLn "User Auth success."
+            writeBS "User was succefully registered. You can now Login."
+
+          (u:_) -> do 
+            liftIO $ putStrLn $ unpack $ username credentials <> " already exist. No signup possible."
+            modifyResponse $ setResponseStatus 401 "unauthorized"
+            writeBS "User already exist."
 
   BackendRoute_Me :/ () -> do
     mUsername <- verifyJWT
@@ -214,10 +211,9 @@ conduitQuery
 conduitQuery conn query name =
   runResourceT $
     runConduit $
-      streamingRunSelect conn (select (query name))
+      PC.streamingRunSelect conn (select (query name))
         -- ^ ConduitT () a m ()
-        -- Think of it like: “Here’s a stream of rows (Users), you can consume 
-        -- them however you like.”
+        -- Think of it like: “Here’s a stream of rows (Users), you can consume them however you like.”
         .| CL.consume   
         -- ^ collect all rows into a list.
 
