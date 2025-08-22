@@ -27,10 +27,11 @@ import Database.Beam.Postgres
 import Database.Beam.Postgres.Migrate
 import Data.Proxy (Proxy(..))
 import GHC.Int (Int32)
+import Database.Beam.Backend.SQL.BeamExtensions (SqlSerial)
 
 -- User
 data UserT f = User
-  { _userId   :: C f Int32
+  { _userId   :: C f (SqlSerial Int32)
   , _userName :: C f Text
   , _userPwd  :: C f Text
   } deriving (Generic, Beamable)
@@ -56,14 +57,14 @@ deriving instance FromJSON (PrimaryKey UserT Identity)
 deriving instance ToJSON (PrimaryKey UserT Identity)
 
 instance Table UserT where
-  data PrimaryKey UserT f = UserId (C f Int32) 
+  data PrimaryKey UserT f = UserId (C f (SqlSerial Int32)) 
     deriving (Generic, Beamable)
   primaryKey = UserId . _userId
 
 ----------
 -- Message
 data MessageT f = Message
-  { _messageId   :: C f Int32
+  { _messageId   :: C f (SqlSerial Int32)
   , _messageBody :: C f Text
   , _messageTimestamp :: C f (Maybe LocalTime)
   , _messageOwner :: PrimaryKey UserT f
@@ -78,7 +79,7 @@ deriving instance FromJSON Message
 deriving instance ToJSON Message
 
 instance Table MessageT where
-  data PrimaryKey MessageT f = MessageId (C f Int32) 
+  data PrimaryKey MessageT f = MessageId (C f (SqlSerial Int32)) 
     deriving (Generic, Beamable)
   primaryKey = MessageId . _messageId
 

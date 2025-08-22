@@ -17,12 +17,12 @@ import Schema
 initialSetup :: Migration Postgres (CheckedDatabaseSettings Postgres ChatDB)
 initialSetup = ChatDB 
   <$> (createTable "users" $ User
-         { _userId = field "id" int notNull unique
+         { _userId = field "id" serial notNull
          , _userName = field "name" (varchar (Just 20)) notNull unique
          , _userPwd = field "password" (varchar (Just 20)) notNull 
          }) 
   <*> (createTable "messages" $ Message
-         { _messageId = field "id" int notNull unique
+         { _messageId = field "id" serial notNull 
          , _messageBody = field "body" (varchar (Just 200))
          , _messageTimestamp = field "timestamp" (maybeType timestamp)
          , _messageOwner = UserId (field "owner_id" int notNull)
@@ -60,27 +60,24 @@ migrateDB conn = runBeamPostgresDebug putStrLn conn $
 chatDB :: DatabaseSettings Postgres ChatDB
 chatDB = unCheckDatabase $ evaluateDatabase initialSetupStep
 
--- exampleQuery :: Connection -> IO [UserT Identity]
--- exampleQuery conn = runBeamPostgres conn $
---   runSelectReturningList $
---     select (all_ (dbFlowers flowerDB))
+
 populateUsers :: Connection -> IO ()
 populateUsers conn = runBeamPostgres conn $ 
   runInsert $ insertOnConflict (userTable chatDB)
-    (insertValues 
-      [ User 1 "sergio" "pwd"
-      , User 2 "alice" "alice"
-      , User 3 "bob" "bob"
-      , User 4 "mario" "mario"
-      , User 5 "luigi" "luigi"
+    (insertExpressions 
+      [ User default_ (val_ "sergio") (val_ "pwd")
+      , User default_ (val_ "alice") (val_ "alice")
+      , User default_ (val_ "bob") (val_ "bob")
+      , User default_ (val_ "mario") (val_ "mario")
+      , User default_ (val_ "luigi") (val_ "luigi")
       ])
     anyConflict onConflictDoNothing
 
 populateMessages :: Connection -> IO ()
 populateMessages conn = runBeamPostgres conn $ 
   runInsert $ insertOnConflict (messageTable chatDB)
-    (insertValues 
-      [ Message 1 "Dummy first message." Nothing (UserId 1)
-      , Message 2 "Dummy second message." Nothing (UserId 2)
+    (insertExpressions 
+      [ Message default_ (val_ "Dummy first message.") nothing_ (UserId (val_ 1))
+      , Message default_ (val_ "Dummy second message.") nothing_ (UserId (val_ 2))
       ])
     anyConflict onConflictDoNothing

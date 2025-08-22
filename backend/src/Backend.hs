@@ -115,7 +115,7 @@ backendHandlers conns pgConn = \case
           [] -> do
             PC.runInsert pgConn $ 
               insert (userTable chatDB) $ 
-                insertExpressions [User default_ (val_ usr) (val_ usr)]
+                insertExpressions [User default_ (val_ usr) (val_ pwd)]
             modifyResponse $ setResponseCode 200
             liftIO $ putStrLn "User Auth success."
             writeBS "User was succefully registered. You can now Login."
