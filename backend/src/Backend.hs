@@ -117,7 +117,7 @@ backendHandlers conns pgConn = \case
               insert (userTable chatDB) $ 
                 insertExpressions [User default_ (val_ usr) (val_ pwd)]
             modifyResponse $ setResponseCode 200
-            let msg = pack "User was succefully registered. You can now Login."
+            let msg = pack "User was succefully registered. You can now Login. \x2705"
             liftIO $ putStrLn $ unpack msg
             writeBS $ BL.toStrict $ A.encode $ BackendResponse {textOnly = msg}
 

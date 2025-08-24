@@ -52,16 +52,18 @@ mainPage
      ) 
   => AppState t -> m ()
 mainPage appState = do
-  prerender_ blank $ mdo
-    elClass "div" divVerticalStyle $ do
+  prerender_ blank $ do
+    elClass "div" divVerticalStyle $ mdo
 
       elClass "label" labelStyle $ text "Username:"
       elInpName <- inputElement $ def 
         & initialAttributes .~ ("class" =: inputStyle)
+        & inputElementConfig_setValue .~ evEmptyInput
 
       elClass "label" labelStyle $ text "Password:"
       elInpPwd <- inputElement $ def 
         & initialAttributes .~ ("class" =: inputStyle <> "type" =: "password")
+        & inputElementConfig_setValue .~ evEmptyInput
 
       let eInput = domEvent Input elInpName
           dPwd = _inputElement_value elInpPwd
@@ -118,13 +120,14 @@ mainPage appState = do
       let evEitherResp = decodeResponse "Invalid username or password." evLoginRes
           evErr = either id (const "Login success.") <$> evEitherResp
           evOkUsr = fmapMaybe (either (const Nothing) id) evEitherResp
-          -- evEitherResp' :: Event t (Either String (Maybe User))
+
           evEitherResp' = decodeResponse "401: Could not signup." evSignupRes 
           evMsx = either id 
                          (\case 
                              Nothing -> "Singup response msg not decoded."
                              Just beResp -> textOnly beResp
                          ) <$> evEitherResp'
+          evEmptyInput = "" <$ evMsx
       dErr <- holdDyn "" $ leftmost [evErr, evMsx]
       elClass "div" "text-red-500" $ dynText $ dErr
       performEvent_ $ liftIO . loggedTrigger appState <$> LoggedIn <$> evOkUsr
