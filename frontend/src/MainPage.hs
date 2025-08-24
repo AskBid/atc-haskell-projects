@@ -108,7 +108,7 @@ mainPage appState = do
             ]
       
       let initialText = "Connect to chat with existing credentials or signup with new ones."
-      dresult <- holdDyn initialText eUserExistence
+      dresult <- holdDyn initialText $ leftmost [eUserExistence, initialText <$ evEmptyInput]
       elClass "div" "flex items-center justify-center text-blue-500" $ dynText dresult
 
       evLoginRes <- sendButton dCredentials dLoginConditions "Connect" $ 

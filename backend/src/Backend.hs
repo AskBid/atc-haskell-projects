@@ -117,14 +117,15 @@ backendHandlers conns pgConn = \case
               insert (userTable chatDB) $ 
                 insertExpressions [User default_ (val_ usr) (val_ pwd)]
             modifyResponse $ setResponseCode 200
-            let msg = pack "User was succefully registered. You can now Login. \x2705"
+            let msg = "User `"<> usr <>"` was succefully registered. You can now Login. \x2705"
             liftIO $ putStrLn $ unpack msg
             writeBS $ BL.toStrict $ A.encode $ BackendResponse {textOnly = msg}
 
           (u:_) -> do 
-            liftIO $ putStrLn $ unpack $ username credentials <> " already exist. No signup possible."
+            let msg = usr <> " already exist. No signup possible. \x1F6AB"
+            liftIO $ putStrLn $ unpack msg     
             modifyResponse $ setResponseStatus 401 "unauthorized"
-            writeBS "User already exist."
+            writeBS $ BL.toStrict $ A.encode $ BackendResponse {textOnly = msg}
 
   BackendRoute_Me :/ () -> do
     mUsername <- verifyJWT
