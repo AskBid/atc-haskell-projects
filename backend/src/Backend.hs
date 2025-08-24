@@ -117,8 +117,9 @@ backendHandlers conns pgConn = \case
               insert (userTable chatDB) $ 
                 insertExpressions [User default_ (val_ usr) (val_ pwd)]
             modifyResponse $ setResponseCode 200
-            liftIO $ putStrLn "User Auth success."
-            writeBS "User was succefully registered. You can now Login."
+            let msg = pack "User was succefully registered. You can now Login."
+            liftIO $ putStrLn $ unpack msg
+            writeBS $ BL.toStrict $ A.encode $ BackendResponse {textOnly = msg}
 
           (u:_) -> do 
             liftIO $ putStrLn $ unpack $ username credentials <> " already exist. No signup possible."

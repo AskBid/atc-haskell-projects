@@ -118,7 +118,14 @@ mainPage appState = do
       let evEitherResp = decodeResponse "Invalid username or password." evLoginRes
           evErr = either id (const "Login success.") <$> evEitherResp
           evOkUsr = fmapMaybe (either (const Nothing) id) evEitherResp
-      dErr <- holdDyn "" evErr
+          -- evEitherResp' :: Event t (Either String (Maybe User))
+          evEitherResp' = decodeResponse "401: Could not signup." evSignupRes 
+          evMsx = either id 
+                         (\case 
+                             Nothing -> "Singup response msg not decoded."
+                             Just beResp -> textOnly beResp
+                         ) <$> evEitherResp'
+      dErr <- holdDyn "" $ leftmost [evErr, evMsx]
       elClass "div" "text-red-500" $ dynText $ dErr
       performEvent_ $ liftIO . loggedTrigger appState <$> LoggedIn <$> evOkUsr
       setRoute $ (FrontendRoute_User :/ ) <$> _userName <$> evOkUsr

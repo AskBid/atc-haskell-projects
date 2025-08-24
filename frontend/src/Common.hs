@@ -91,6 +91,7 @@ statusCheck min max xhr
 decodeResponse :: (A.FromJSON a, Reflex t)
   =>  b -> Event t XhrResponse -> Event t (Either b (Maybe a))
 decodeResponse err evRes = do 
-  ffor evRes $ \res -> if statusCheck 200 300 res
-    then Right $ decodeXhrResponse res
-    else Left err
+  ffor evRes $ \res -> 
+    if statusCheck 200 300 res
+      then Right $ decodeXhrResponse res
+      else Left err

@@ -22,3 +22,10 @@ data Credentials = Credentials
   { username :: Text
   , password :: Text
   } deriving (Show, Generic, ToJSON, FromJSON)
+
+-- | need this to be able to send only text messages from backend while
+--   using common Aeson methods that process responses with actual types.
+--   in other words it makes Text encodable with Aeson.
+data BackendResponse = BackendResponse
+  { textOnly :: Text
+  } deriving (Show, Generic, ToJSON, FromJSON)
