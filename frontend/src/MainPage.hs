@@ -99,12 +99,12 @@ mainPage appState = do
           
           dLoginConditions = fmap and $ sequence 
             [ dNameLenght
-            , join $ ffor dWSMessage $ wsMessage2equalName dName
+            , join $ ffor dWSMessage $ wsMessageEqualName dName
             ]
           
           dSignupConditions = fmap and $ sequence
             [ dNameLenght
-            , not <$> (join $ ffor dWSMessage $ (wsMessage2equalName dName))
+            , not <$> (join $ ffor dWSMessage $ (wsMessageEqualName dName))
             ]
       
       let initialText = "Connect to chat with existing credentials or signup with new ones."
@@ -119,7 +119,7 @@ mainPage appState = do
       
       let evEitherResp = decodeResponse "Invalid username or password." evLoginRes
           evErr = either id (const "Login success.") <$> evEitherResp
-          evOkUsr = fmapMaybe (either (const Nothing) id) evEitherResp
+          evOkUsr = fmapMaybe (either (const Nothing) id) evEitherResp 
 
           evEitherResp' = decodeResponse "401: Could not signup." evSignupRes 
           evMsx = either id 
@@ -130,16 +130,24 @@ mainPage appState = do
           evEmptyInput = "" <$ evMsx
       dErr <- holdDyn "" $ leftmost [evErr, evMsx]
       elClass "div" "text-red-500" $ dynText $ dErr
-      performEvent_ $ liftIO . loggedTrigger appState <$> LoggedIn <$> evOkUsr
-      setRoute $ (FrontendRoute_User :/ ) <$> _userName <$> evOkUsr
+
+      evName <- performEvent $ ffor evOkUsr $ \u -> do
+        -- update app state
+        liftIO $ loggedTrigger appState (LoggedIn u)
+        -- return the name for routing
+        pure (_userName u)
+
+      liftIO $ putStrLn "daFucks"
+      performEvent_ $ ffor (updated (loggedAs appState)) $ \name -> liftIO $ putStrLn $ show name
+      setRoute $ (FrontendRoute_User :/ ) <$> evName
 
 buttonStyleDisabled :: T.Text
 buttonStyleDisabled = buttonStyle <> " disabled:bg-grey-200 disabled:opacity-50 disabled:border-grey-300"
 
-wsMessage2equalName 
+wsMessageEqualName 
   :: (Reflex t, Functor (Dynamic t)) 
   => Dynamic t T.Text -> WSMessage -> Dynamic t Bool
-wsMessage2equalName dName wsm = 
+wsMessageEqualName dName wsm = 
   case wsm of
     UserExist nameuser -> (nameuser ==) <$> dName
     otherwise          -> False <$ dName

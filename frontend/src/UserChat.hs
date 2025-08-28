@@ -33,9 +33,13 @@ userChat appState = do
   prerender_ blank $ do  
     dName <- askRoute 
     el "h1" $ dynText dName
+    liftIO $ putStrLn "inside userChat"
+    performEvent_ $ ffor (updated (loggedAs appState)) $ \name -> liftIO $ putStrLn $ show name
     dyn_ $ ffor (loggedAs appState) $ \case
-      LoggedIn u  -> chatPanel dName
-      LoggedOut   -> redirectToAuth 
+      LoggedIn u  -> chatPanel dName u
+      LoggedOut   -> do 
+        liftIO $ putStrLn "LoggedOut"
+        redirectToAuth 
       -- ^ TODO could send attempted name with parameter to set as value
       --   in the login input element.
     return ()
@@ -65,8 +69,8 @@ chatPanel
      , Adjustable t m
      , DomBuilder t m
      ) 
-  => Dynamic t T.Text -> m ()
-chatPanel dName = do
+  => Dynamic t T.Text -> User -> m ()
+chatPanel dName user = do
   -- user == userRoute -> public chat
   -- user /= userRoute -> private chat
   elClass "div" divVerticalStyle $ do
@@ -74,11 +78,15 @@ chatPanel dName = do
     ePostBuild <- getPostBuild
     let eName = tagPromptlyDyn dName ePostBuild
         eUrl = ("ws://localhost:8000/ws/user/" <>) <$> eName
+        dButtonText = ffor dName $ \name ->  
+          if _userName user == name 
+          then "Send >"
+          else "Send Private to " <> name
 
     let eSocket = ffor eUrl $ \url -> do 
           elClass "label" labelStyle $ text "Message:"
           elInpMess <- inputElement $ def & initialAttributes .~ ("class" =: inputStyle)
-          (elBtnSend, _) <- elClass' "button" buttonStyle $ text "Send >"
+          (elBtnSend, _) <- elClass' "button" buttonStyle $ dynText dButtonText
 
           let eSend = domEvent Click elBtnSend
               dMessText = _inputElement_value elInpMess

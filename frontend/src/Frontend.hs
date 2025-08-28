@@ -47,6 +47,7 @@ frontend = Frontend
   , _frontend_body = do
 
       prerender_ blank $ do
+
         (evLoggedByTrigger, loggedTrigger) <- newTriggerEvent
         ePostBuild <- getPostBuild
         let route = FullRoute_Backend BackendRoute_Me :/ () 
