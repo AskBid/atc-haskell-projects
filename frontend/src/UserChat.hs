@@ -10,8 +10,10 @@ import qualified Data.Text as T
 import Reflex.Dom.Core
 import Obelisk.Route
 import Obelisk.Route.Frontend
-import Control.Monad.IO.Class (liftIO)
+import Control.Monad.IO.Class (liftIO, MonadIO)
 import Control.Monad (void)
+import Language.Javascript.JSaddle (MonadJSM)
+import Control.Monad.Fix (MonadFix)
 
 import Common
 import Common.Api
@@ -23,39 +25,50 @@ userChat
      , Monad m
      , Routed t T.Text m
      , Routed t T.Text (Client m)
+     , SetRoute t (R FrontendRoute) (Client m)
      ) 
   => AppState t -> m ()
 userChat appState = do
-  -- let url = getUrl $ FullRoute_Backend BackendRoute_Me :/ ()
-  --     reqVerification = \credentials -> xhrRequest "GET" url $ def
-  --       & xhrRequestConfig_withCredentials .~ True
-  -- ePostBuild <- getPostBuild
-  -- evRes <- performRequestAsync $ reqVerification <$> ePostBuild
-  -- decodeResponse "401: Not Authorised." evRes 
+
   prerender_ blank $ do  
     dName <- askRoute 
     el "h1" $ dynText dName
     dyn_ $ ffor (loggedAs appState) $ \case
-      LoggedIn u  -> do 
-        undefined
-        -- user == userRoute -> public chat
-        -- user /= userRoute -> private chat
-      LoggedOut   -> do 
-        undefined
-        -- send to mainPage
-
+      LoggedIn u  -> chatPanel dName
+      LoggedOut   -> redirectToAuth 
+      -- ^ TODO could send attempted name with parameter to set as value
+      --   in the login input element.
     return ()
 
-mkMessage :: T.Text -> Message
-mkMessage t = Message 
-  { _messageTimestamp = Nothing
-  , _messageBody = t
-  -- , messageOwner = Nothing
-  -- , messagePrivate = Nothing
-  }
+redirectToAuth 
+  :: ( SetRoute t (R FrontendRoute) (Client m)
+     , Monad m
+     , PostBuild t m 
+     , SetRoute t (R FrontendRoute) m
+     )
+  => m ()
+redirectToAuth = do 
+  ePostbuild <- getPostBuild
+  setRoute $ FrontendRoute_Main :/ () <$ ePostbuild
 
-chat :: Dynamic t T.Text -> m (Dynamic t ())
-chat dName = do
+chatPanel 
+  :: ( Monad m
+     , MonadIO m
+     , PostBuild t m 
+     , DomSpace (DomBuilderSpace m)
+     , TriggerEvent t m
+     , PerformEvent t m
+     , MonadJSM (Performable m)
+     , MonadJSM m
+     , MonadHold t m
+     , MonadFix m
+     , Adjustable t m
+     , DomBuilder t m
+     ) 
+  => Dynamic t T.Text -> m ()
+chatPanel dName = do
+  -- user == userRoute -> public chat
+  -- user /= userRoute -> private chat
   elClass "div" divVerticalStyle $ do
 
     ePostBuild <- getPostBuild
@@ -88,5 +101,14 @@ chat dName = do
           elClass "div" "flex flex-col gap-0 p-4" $ void $ do
             simpleList dChatMessages $ \dMsg -> elClass "div" "p-0 " $ dynText dMsg
 
-    widgetHold (el "div" $ text "No connection.") eSocket 
+    void $ widgetHold (el "div" $ text "No connection.") eSocket 
+
+mkMessage :: T.Text -> Message
+mkMessage t = Message 
+  { _messageTimestamp = Nothing
+  , _messageBody = t
+  -- , messageOwner = Nothing
+  -- , messagePrivate = Nothing
+  }
+
 
