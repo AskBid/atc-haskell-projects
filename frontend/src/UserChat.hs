@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts  #-} 
+{-# LANGUAGE LambdaCase        #-}
 
 module UserChat where
 
@@ -25,42 +26,23 @@ userChat
      ) 
   => AppState t -> m ()
 userChat appState = do
+  -- let url = getUrl $ FullRoute_Backend BackendRoute_Me :/ ()
+  --     reqVerification = \credentials -> xhrRequest "GET" url $ def
+  --       & xhrRequestConfig_withCredentials .~ True
+  -- ePostBuild <- getPostBuild
+  -- evRes <- performRequestAsync $ reqVerification <$> ePostBuild
+  -- decodeResponse "401: Not Authorised." evRes 
   prerender_ blank $ do  
-    dName <- askRoute
+    dName <- askRoute 
     el "h1" $ dynText dName
-    elClass "div" divVerticalStyle $ do
-
-      ePostBuild <- getPostBuild
-      let eName = tagPromptlyDyn dName ePostBuild
-          eUrl = ("ws://localhost:8000/ws/user/" <>) <$> eName
-
-      let eSocket = ffor eUrl $ \url -> do 
-            elClass "label" labelStyle $ text "Message:"
-            elInpMess <- inputElement $ def & initialAttributes .~ ("class" =: inputStyle)
-            (elBtnSend, _) <- elClass' "button" buttonStyle $ text "Send >"
-
-            let eSend = domEvent Click elBtnSend
-                dMessText = _inputElement_value elInpMess
-                eMessText = tagPromptlyDyn dMessText eSend
-                eWSMess = NewMessage <$> mkMessage <$> eMessText 
-            
-            let wsConfig = def & webSocketConfig_reconnect .~ False
-                               & webSocketConfig_send .~ ((:[]) <$> A.encode <$> eWSMess)
-
-            liftIO $ putStrLn $ "Opening WebSocket at: " ++ T.unpack url
-            ws <- webSocket url wsConfig
-            -- ^ Event keep on triggering when new message comes from WS backend
-
-            let evmWSMessage = A.decode . BSL.fromStrict <$> _webSocket_recv ws
-
-            performEvent_ $ liftIO . putStrLn . T.unpack . feMessage <$> evmWSMessage
-
-            dChatMessages <- foldDyn (:) [] $ feMessage <$> evmWSMessage 
-
-            elClass "div" "flex flex-col gap-0 p-4" $ void $ do
-              simpleList dChatMessages $ \dMsg -> elClass "div" "p-0 " $ dynText dMsg
-
-      widgetHold (el "div" $ text "No connection.") eSocket 
+    dyn_ $ ffor (loggedAs appState) $ \case
+      LoggedIn u  -> do 
+        undefined
+        -- user == userRoute -> public chat
+        -- user /= userRoute -> private chat
+      LoggedOut   -> do 
+        undefined
+        -- send to mainPage
 
     return ()
 
@@ -71,3 +53,40 @@ mkMessage t = Message
   -- , messageOwner = Nothing
   -- , messagePrivate = Nothing
   }
+
+chat :: Dynamic t T.Text -> m (Dynamic t ())
+chat dName = do
+  elClass "div" divVerticalStyle $ do
+
+    ePostBuild <- getPostBuild
+    let eName = tagPromptlyDyn dName ePostBuild
+        eUrl = ("ws://localhost:8000/ws/user/" <>) <$> eName
+
+    let eSocket = ffor eUrl $ \url -> do 
+          elClass "label" labelStyle $ text "Message:"
+          elInpMess <- inputElement $ def & initialAttributes .~ ("class" =: inputStyle)
+          (elBtnSend, _) <- elClass' "button" buttonStyle $ text "Send >"
+
+          let eSend = domEvent Click elBtnSend
+              dMessText = _inputElement_value elInpMess
+              eMessText = tagPromptlyDyn dMessText eSend
+              eWSMess = NewMessage <$> mkMessage <$> eMessText 
+          
+          let wsConfig = def & webSocketConfig_reconnect .~ False
+                             & webSocketConfig_send .~ ((:[]) <$> A.encode <$> eWSMess)
+
+          liftIO $ putStrLn $ "Opening WebSocket at: " ++ T.unpack url
+          ws <- webSocket url wsConfig
+          -- ^ Event keep on triggering when new message comes from WS backend
+
+          let evmWSMessage = A.decode . BSL.fromStrict <$> _webSocket_recv ws
+
+          performEvent_ $ liftIO . putStrLn . T.unpack . feMessage <$> evmWSMessage
+
+          dChatMessages <- foldDyn (:) [] $ feMessage <$> evmWSMessage 
+
+          elClass "div" "flex flex-col gap-0 p-4" $ void $ do
+            simpleList dChatMessages $ \dMsg -> elClass "div" "p-0 " $ dynText dMsg
+
+    widgetHold (el "div" $ text "No connection.") eSocket 
+
