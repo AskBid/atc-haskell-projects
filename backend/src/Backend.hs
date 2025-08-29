@@ -151,20 +151,23 @@ backendHandlers conns pgConn = \case
         liftIO $ putStrLn "nothing happenninng user not found..../////////"
         writeBS "401 - Unauthorized"
       (u:_) -> do
-        liftIO $ putStrLn "User found... going to open socket..."
+        liftIO $ putStrLn "Route's User (receiver if private) found... going to Auth sender..."
         -- is user authenticated or visiting?
         mUsername <- verifyJWT
         case mUsername of
           Nothing -> do
             modifyResponse $ setResponseStatus 401 "unauthorized"
+            liftIO $ putStrLn $ "JWT not perceived. Socket not opening."
             writeBS "invalid JWT"
-          Just username -> do
-            users <- liftIO $ conduitQuery pgConn queryUserByName username 
+          Just userAuth -> do
+            users <- liftIO $ conduitQuery pgConn queryUserByName userAuth 
             case users of
               [] -> do 
                 modifyResponse $ setResponseStatus 401 "unauthorized"
+                liftIO $ putStrLn $ "Auth not succesful. Socket not opening."
                 writeBS "User did not exist."
               (u:_) -> do 
+                liftIO $ putStrLn $ "Auth successful, opening socket for: " <>  (unpack $ _userName u)
                 modifyResponse $ setResponseStatus 200 "OK"
                 writeBS $ BL.toStrict $ A.encode u
         WSSnap.runWebSocketsSnap $ wsHandler conns u
@@ -194,8 +197,9 @@ wsHandler tvarConns eUser pending = do
   liftIO $ atomically $ writeTVar tvarConns connsPlusThis
 
   forever $ do
-    putStrLn $ "--------------------"
+    putStrLn $ "-------------------- Socket cycle start ..."
     msgJSON <- WSC.receiveData conn
+    putStrLn "WSMessage received."
     let msg = A.decode msgJSON :: Maybe WSMessage
     case msg of 
       Just (NewMessage msg') -> do
