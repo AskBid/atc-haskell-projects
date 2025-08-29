@@ -132,14 +132,14 @@ mainPage appState = do
       elClass "div" "text-red-500" $ dynText $ dErr
 
       performEvent_ $ ffor evOkUsr $ \u -> do
-        -- update app state
         liftIO $ loggedTrigger appState (LoggedIn u)
-        -- return the name for routing
-        -- pure (_userName u)
 
       setRoute $ fforMaybe (updated (loggedAs appState)) $ \case
         LoggedIn u -> Just (FrontendRoute_User :/ _userName u)
         LoggedOut -> Nothing
+      -- ^ this is important to check that setRoute isn't fired without the
+      --   loggedTrigger function being completed yet. It was abug toke me a
+      --   while to figure out.
 
 buttonStyleDisabled :: T.Text
 buttonStyleDisabled = buttonStyle <> " disabled:bg-grey-200 disabled:opacity-50 disabled:border-grey-300"
