@@ -131,15 +131,15 @@ mainPage appState = do
       dErr <- holdDyn "" $ leftmost [evErr, evMsx]
       elClass "div" "text-red-500" $ dynText $ dErr
 
-      evName <- performEvent $ ffor evOkUsr $ \u -> do
+      performEvent_ $ ffor evOkUsr $ \u -> do
         -- update app state
         liftIO $ loggedTrigger appState (LoggedIn u)
         -- return the name for routing
-        pure (_userName u)
+        -- pure (_userName u)
 
-      liftIO $ putStrLn "daFucks"
-      performEvent_ $ ffor (updated (loggedAs appState)) $ \name -> liftIO $ putStrLn $ show name
-      setRoute $ (FrontendRoute_User :/ ) <$> evName
+      setRoute $ fforMaybe (updated (loggedAs appState)) $ \case
+        LoggedIn u -> Just (FrontendRoute_User :/ _userName u)
+        LoggedOut -> Nothing
 
 buttonStyleDisabled :: T.Text
 buttonStyleDisabled = buttonStyle <> " disabled:bg-grey-200 disabled:opacity-50 disabled:border-grey-300"
