@@ -29,3 +29,11 @@ data Credentials = Credentials
 data BackendResponse = BackendResponse
   { textOnly :: Text
   } deriving (Show, Generic, ToJSON, FromJSON)
+
+data FEMessage = FEMessage
+  { wmpId        :: Maybe Int
+  , wmpBody      :: Text
+  , wmpTimestamp :: Maybe LocalTime
+  , wmpOwner     :: Text
+  , wmpTarget    :: Maybe Text
+  } deriving (Show, Eq, Generic, ToJSON, FromJSON)
