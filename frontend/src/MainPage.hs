@@ -28,8 +28,8 @@ import Common.Route
 mainPageLogged 
   :: ( Prerender t m
      , Monad m
-     , Routed t () m
-     , Routed t () (Client m)
+     , Routed t r m
+     , Routed t r (Client m)
      , DomSpace (DomBuilderSpace m)
      , DomBuilder t m
      , SetRoute t (R FrontendRoute) (Client m)
@@ -43,8 +43,8 @@ mainPageLogged appState = do
 mainPage 
   :: ( Prerender t m
      , Monad m
-     , Routed t () m
-     , Routed t () (Client m)
+     , Routed t r m
+     , Routed t r (Client m)
      , DomSpace (DomBuilderSpace m)
      , DomBuilder t m
      , SetRoute t (R FrontendRoute) (Client m)
@@ -135,8 +135,8 @@ mainPage appState = do
         liftIO $ loggedTrigger appState (LoggedIn u)
       liftIO $ putStrLn "inside mainPage>>>>>>>>>"
       setRoute $ fforMaybe (updated (loggedAs appState)) $ \case
-        Just (LoggedIn u) -> Just (FrontendRoute_User :/ _userName u)
-        Just LoggedOut    -> Nothing
+        LoggedIn u -> Just (FrontendRoute_User :/ _userName u)
+        LoggedOut  -> Nothing
       -- ^ this is important to check that setRoute isn't fired without the
       --   loggedTrigger function being completed yet. It was abug toke me a
       --   while to figure out.

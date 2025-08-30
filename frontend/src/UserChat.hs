@@ -36,9 +36,9 @@ userChat appState = do
     liftIO $ putStrLn "inside userChat"
     performEvent_ $ ffor (updated (loggedAs appState)) $ \name -> liftIO $ putStrLn $ show name
     dyn_ $ ffor (loggedAs appState) $ \case
-      Nothing            -> el "div" $ text "loading..."
-      Just (LoggedIn u)  -> chatPanel dName u
-      Just LoggedOut     -> do 
+      Loading    -> el "div" $ text "loading..."
+      LoggedIn u -> chatPanel dName u
+      LoggedOut  -> do 
         liftIO $ putStrLn "LoggedOut"
         redirectToAuth 
       -- ^ TODO could send attempted name with parameter to set as value

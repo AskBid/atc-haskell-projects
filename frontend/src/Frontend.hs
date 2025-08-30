@@ -52,8 +52,8 @@ frontend = Frontend
         ePostBuild <- getPostBuild
         let route = FullRoute_Backend BackendRoute_Me :/ () 
         evLoggedMUser <- requestWithCredentialsAndDecode route ePostBuild
-        let evLogged = leftmost [(Just (LoggedIn)) <$> evLoggedMUser, evLoggedByTrigger]
-        dLogged <- holdDyn Nothing (Just <$> evLogged)
+        let evLogged = leftmost [evLoggedMUser, evLoggedByTrigger]
+        dLogged <- holdDyn Loading evLogged
         -- ^ without Maybe we would run straight into the redirection
         --   while requestWithCredentialsAndDecode is still running and the
         --   FRP diagram would flow in LoggedOut
@@ -67,7 +67,7 @@ frontend = Frontend
         elClass "div" "flex flex-col h-screen w-screen" $ do
           elClass "div" ("bg-white w-full p-0 " <> divHorizontalStyle) $ do
             dyn_ $ ffor (loggedAs appState) $ \case
-              Just (LoggedIn _)  -> logoutButton appState 
+              LoggedIn _  -> logoutButton appState 
               otherwise          -> el "div" $ text "Welcome to Chat!"
 
           elClass "div" ("flex flex-1 w-full") $ do
@@ -76,7 +76,7 @@ frontend = Frontend
               subRoute_ $ \case
                 FrontendRoute_Main -> do 
                   dyn_ $ ffor (loggedAs appState) $ \case
-                    Just (LoggedIn _)  -> do 
+                    LoggedIn _  -> do 
                       liftIO $ putStrLn "appState reckognised as LoggedIn in frontEndd"
                       mainPageLogged appState
                     otherwise          -> do 
@@ -84,10 +84,10 @@ frontend = Frontend
                       mainPage appState
                 FrontendRoute_User -> do 
                   dyn_ $ ffor (loggedAs appState) $ \case
-                    Just (LoggedIn _)  -> do 
+                    LoggedIn _ -> do 
                       liftIO $ putStrLn "appState reckognised as LoggedIn in frontEndd"
                       userChat appState
-                    otherwise          -> do 
+                    otherwise  -> do 
                       liftIO $ putStrLn "appState reckognised as LoggedOut in frontEndd"
                       mainPage appState
                   
@@ -123,13 +123,18 @@ requestWithCredentialsAndDecode
      , PerformEvent t m 
      , TriggerEvent t m 
      )
-  => R (FullRoute BackendRoute FrontendRoute) -> Event t a -> m (Event t LoginState)
+  => R (FullRoute BackendRoute FrontendRoute) 
+  -> Event t a 
+  -> m (Event t LoginState)
 requestWithCredentialsAndDecode route event = do 
   let url = getUrl route
       req = xhrRequest "POST" url $ def & xhrRequestConfig_withCredentials .~ True
   evRes <- performRequestAsync $ req <$ event
   let evEMDecoded = decodeResponse "Error." evRes
-  pure $ fromMaybe <$> (fmapMaybe (either (const Nothing) id)) evEMDecoded
+  pure $ ffor evEMDecoded $ \case
+    Left _         -> LoggedOut
+    Right Nothing  -> LoggedOut
+    Right (Just u) -> LoggedIn u
 
 logoutButton 
   :: ( Monad m

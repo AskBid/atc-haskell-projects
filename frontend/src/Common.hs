@@ -43,11 +43,11 @@ feMessage wsm = case wsm of
 
 data AppState t = AppState 
   { wsConn :: Maybe (WebSocket t)
-  , loggedAs :: Dynamic t (Maybe LoginState)
+  , loggedAs :: Dynamic t LoginState
   , loggedTrigger :: LoginState -> IO ()
   }
 
-data LoginState = LoggedIn User | LoggedOut
+data LoginState = LoggedIn User | LoggedOut | Loading
   deriving (Show)
 
 class LikeMaybe a where
