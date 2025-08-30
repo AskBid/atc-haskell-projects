@@ -76,18 +76,20 @@ frontend = Frontend
               subRoute_ $ \case
                 FrontendRoute_Main -> do 
                   dyn_ $ ffor (loggedAs appState) $ \case
+                    Loading     -> el "div" $ text "Loading in Frontend - Main Route"
                     LoggedIn _  -> do 
                       liftIO $ putStrLn "appState reckognised as LoggedIn in frontEndd"
                       mainPageLogged appState
-                    otherwise          -> do 
+                    LoggedOut   -> do 
                       liftIO $ putStrLn "appState reckognised as LoggedOut in frontEndd"
                       mainPage appState
                 FrontendRoute_User -> do 
                   dyn_ $ ffor (loggedAs appState) $ \case
+                    Loading    -> el "div" $ text "Loading in Frontend - User Route"
                     LoggedIn _ -> do 
                       liftIO $ putStrLn "appState reckognised as LoggedIn in frontEndd"
                       userChat appState
-                    otherwise  -> do 
+                    LoggedOut  -> do 
                       liftIO $ putStrLn "appState reckognised as LoggedOut in frontEndd"
                       mainPage appState
                   
