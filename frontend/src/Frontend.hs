@@ -52,8 +52,11 @@ frontend = Frontend
         ePostBuild <- getPostBuild
         let route = FullRoute_Backend BackendRoute_Me :/ () 
         evLoggedMUser <- requestWithCredentialsAndDecode route ePostBuild
-        let evLogged = leftmost [evLoggedMUser, evLoggedByTrigger]
-        dLogged <- holdDyn LoggedOut evLogged
+        let evLogged = leftmost [(Just (LoggedIn)) <$> evLoggedMUser, evLoggedByTrigger]
+        dLogged <- holdDyn Nothing (Just <$> evLogged)
+        -- ^ without Maybe we would run straight into the redirection
+        --   while requestWithCredentialsAndDecode is still running and the
+        --   FRP diagram would flow in LoggedOut
         
         let appState = AppState 
               { wsConn = Nothing 
@@ -64,17 +67,30 @@ frontend = Frontend
         elClass "div" "flex flex-col h-screen w-screen" $ do
           elClass "div" ("bg-white w-full p-0 " <> divHorizontalStyle) $ do
             dyn_ $ ffor (loggedAs appState) $ \case
-              LoggedIn _  -> logoutButton appState 
-              LoggedOut   -> el "div" $ text "Welcome to Chat!"
+              Just (LoggedIn _)  -> logoutButton appState 
+              otherwise          -> el "div" $ text "Welcome to Chat!"
 
           elClass "div" ("flex flex-1 w-full") $ do
             elClass "div" "flex-1 bg-gray-100 p-4" $ do
+              liftIO $ putStrLn "inside Frontend just before setRoute..+++++"
               subRoute_ $ \case
                 FrontendRoute_Main -> do 
                   dyn_ $ ffor (loggedAs appState) $ \case
-                    LoggedOut   -> mainPage appState
-                    LoggedIn _  -> mainPageLogged appState
-                FrontendRoute_User -> userChat appState
+                    Just (LoggedIn _)  -> do 
+                      liftIO $ putStrLn "appState reckognised as LoggedIn in frontEndd"
+                      mainPageLogged appState
+                    otherwise          -> do 
+                      liftIO $ putStrLn "appState reckognised as LoggedOut in frontEndd"
+                      mainPage appState
+                FrontendRoute_User -> do 
+                  dyn_ $ ffor (loggedAs appState) $ \case
+                    Just (LoggedIn _)  -> do 
+                      liftIO $ putStrLn "appState reckognised as LoggedIn in frontEndd"
+                      userChat appState
+                    otherwise          -> do 
+                      liftIO $ putStrLn "appState reckognised as LoggedOut in frontEndd"
+                      mainPage appState
+                  
 
             elClass "div" "w-[clamp(100px,20%,999px)] bg-gray-200 p-4" $ do 
 

@@ -36,8 +36,9 @@ userChat appState = do
     liftIO $ putStrLn "inside userChat"
     performEvent_ $ ffor (updated (loggedAs appState)) $ \name -> liftIO $ putStrLn $ show name
     dyn_ $ ffor (loggedAs appState) $ \case
-      LoggedIn u  -> chatPanel dName u
-      LoggedOut   -> do 
+      Nothing            -> el "div" $ text "loading..."
+      Just (LoggedIn u)  -> chatPanel dName u
+      Just LoggedOut     -> do 
         liftIO $ putStrLn "LoggedOut"
         redirectToAuth 
       -- ^ TODO could send attempted name with parameter to set as value
@@ -76,8 +77,7 @@ chatPanel dName user = do
   elClass "div" divVerticalStyle $ do
 
     ePostBuild <- getPostBuild
-    let eName = tagPromptlyDyn dName ePostBuild
-        eUrl = ("ws://localhost:8000/ws/user/" <>) <$> eName
+    let eUrl = ("ws://localhost:8000/ws/user/" <> (_userName user)) <$ ePostBuild
         dButtonText = ffor dName $ \name ->  
           if _userName user == name 
           then "Send >"

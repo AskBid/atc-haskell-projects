@@ -133,10 +133,10 @@ mainPage appState = do
 
       performEvent_ $ ffor evOkUsr $ \u -> do
         liftIO $ loggedTrigger appState (LoggedIn u)
-
+      liftIO $ putStrLn "inside mainPage>>>>>>>>>"
       setRoute $ fforMaybe (updated (loggedAs appState)) $ \case
-        LoggedIn u -> Just (FrontendRoute_User :/ _userName u)
-        LoggedOut -> Nothing
+        Just (LoggedIn u) -> Just (FrontendRoute_User :/ _userName u)
+        Just LoggedOut    -> Nothing
       -- ^ this is important to check that setRoute isn't fired without the
       --   loggedTrigger function being completed yet. It was abug toke me a
       --   while to figure out.

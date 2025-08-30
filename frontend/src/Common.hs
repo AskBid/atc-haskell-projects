@@ -43,7 +43,7 @@ feMessage wsm = case wsm of
 
 data AppState t = AppState 
   { wsConn :: Maybe (WebSocket t)
-  , loggedAs :: Dynamic t LoginState
+  , loggedAs :: Dynamic t (Maybe LoginState)
   , loggedTrigger :: LoginState -> IO ()
   }
 
