@@ -28,12 +28,18 @@ wsHandler tvarConns eUser pgConn pending = do
   wsConns <- liftIO $ atomically $ readTVar tvarConns
   let wsConnsPlusThis = (eUser, wsConn) : wsConns
   liftIO $ atomically $ writeTVar tvarConns wsConnsPlusThis
+
+  putStrLn $ "-------------------- broadcastConnectedUsers"
+  broadcastConnectedUsers tvarConns
+
   putStrLn $ "-------------------- Socket cycle start ..."
   forever $ do
     putStrLn $ "-------------------- Socket cycle new round ..."
     msgJSON <- WSC.receiveData wsConn
     let msg = A.decode msgJSON :: Maybe WSMessage
+
     case msg of 
+
       Just (NewMessage msg') -> do
         putStrLn "WSMessage received."
         wsConns' <- atomically $ readTVar tvarConns
@@ -43,6 +49,7 @@ wsHandler tvarConns eUser pgConn pending = do
         insertFromFEMessage msg' pgConn 
         putStrLn "WSMessage saved on DB."
         return ()
+
       otherwise -> putStrLn "TODO case for different type of WSMessage"
 
 wsHandlerPublic :: TVar [NamedConn] -> P.Connection -> WS.ServerApp
@@ -58,3 +65,11 @@ wsHandlerPublic conns pgConn pending = do
       [] -> WS.sendTextData conn (A.encode NoUser)
       (u:_) -> WS.sendTextData conn (A.encode (UserExist $ _userName u))
     return ()
+
+broadcastConnectedUsers :: TVar [NamedConn] -> IO ()
+broadcastConnectedUsers tvarConns = do
+  conns <- atomically $ readTVar tvarConns
+  let connectedUsers = fst <$> conns
+  forM_ conns $ 
+    \(eUser, wsConn) -> WS.sendTextData wsConn (A.encode (ConnectedClients connectedUsers))
+  return ()
