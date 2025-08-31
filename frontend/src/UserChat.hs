@@ -111,12 +111,13 @@ chatPanel dName user = do
 
     void $ widgetHold (el "div" $ text "No connection.") eSocket 
 
-mkMessage :: T.Text -> Message
-mkMessage t = Message 
-  { _messageTimestamp = Nothing
-  , _messageBody = t
-  -- , messageOwner = Nothing
-  -- , messagePrivate = Nothing
+mkMessage :: T.Text -> FEMessage
+mkMessage t = FEMessage 
+  { femId        = Nothing
+  , femBody      = t
+  , femTimestamp = Nothing
+  , femOwner     = "bob"
+  , femTarget    = Nothing
   }
 
 

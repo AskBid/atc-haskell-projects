@@ -26,15 +26,18 @@ initialSetup = ChatDB
          , _messageBody = field "body" (varchar (Just 200))
          , _messageTimestamp = field "timestamp" (maybeType timestamp)
          , _messageOwner = UserId (field "owner_id" int notNull)
-         -- ^ beam keeps the concept of a primary key separate from the definition of a column.
+         -- ^ beam keeps the concept of a primary key separate from the definition 
+         --   of a column.
          })
   <*> (createTable "privates" $ Private
          { _privateMessage = MessageId (field "message_id" int notNull)
          , _privateRecipient = UserId (field "user_id" int notNull)  
-         -- ^ beam keeps the concept of a primary key separate from the definition of a column.
+         -- ^ beam keeps the concept of a primary key separate from the definition 
+         --   of a column.
          })
-  -- ^ createTable :: Text -> TableSchema be table ->
-  --   -> Migration be (CheckedDatabaseEntity be db (TableEntity table))
+  -- ^ createTable :: Text 
+  --               -> TableSchema be table 
+  --               -> Migration be (CheckedDatabaseEntity be db (TableEntity table))
 
 initialSetupStep :: MigrationSteps Postgres () (CheckedDatabaseSettings Postgres ChatDB)
 initialSetupStep = migrationStep "initial_setup" (const initialSetup)

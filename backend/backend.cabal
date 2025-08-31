@@ -31,7 +31,7 @@ library
                , case-insensitive
                , sqlite-simple
   exposed-modules:
-    Backend, Schema, MyJWT, Migration, Query, Websocket
+    Backend, Schema, MyJWT, Migration, Query, Websocket, DatabaseFrontendBridge
   ghc-options: -Wall -O -fno-show-valid-hole-fits
                -- unsafe code
                -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields

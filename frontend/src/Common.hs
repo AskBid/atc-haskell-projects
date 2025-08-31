@@ -35,9 +35,9 @@ divHorizontalStyle = "flex flex-row gap-4 p-4 items-center justify-center"
 -- | translates websocket messages into Frontend messages, @Text@s ready for the chat.
 feMessage :: Maybe WSMessage -> Text
 feMessage wsm = case wsm of
-  Nothing -> "*Non Valid Message*"
+  Nothing -> "*** Non Valid Message ***"
   Just m -> case m of
-    NewMessage m -> "TODO: user> " <> _messageBody m
+    NewMessage m -> "TODO: user> " <> femBody m
     ConnectedClients _ -> "TODO: List of connections message."
     otherwise -> "TODO: unknown message."
 
