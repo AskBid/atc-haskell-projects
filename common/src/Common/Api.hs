@@ -7,11 +7,12 @@ import Data.Text
 import Data.Time
 import Data.Aeson
 import GHC.Generics (Generic)
+import qualified Network.WebSockets as WS
 
 import Schema
 
 data WSMessage 
-  = NewMessage Message
+  = NewMessage FEMessage
   | ConnectedClients [User]
   | UserExist Text
   | NoUser
@@ -31,9 +32,11 @@ data BackendResponse = BackendResponse
   } deriving (Show, Generic, ToJSON, FromJSON)
 
 data FEMessage = FEMessage
-  { wmpId        :: Maybe Int
-  , wmpBody      :: Text
-  , wmpTimestamp :: Maybe LocalTime
-  , wmpOwner     :: Text
-  , wmpTarget    :: Maybe Text
+  { femId        :: Maybe Int
+  , femBody      :: Text
+  , femTimestamp :: Maybe LocalTime
+  , femOwner     :: Text
+  , femTarget    :: Maybe Text
   } deriving (Show, Eq, Generic, ToJSON, FromJSON)
+
+type NamedConn = (User, WS.Connection)
