@@ -59,7 +59,8 @@ queryUserCredentials (Credentials usr pwd) = do
   guard_ (_userPwd u ==. val_ pwd)
   pure u
 
--- | we need to use @insertExpression@ because we don't know the IDs as 
+-- | Insert Message to DB giving attributes.
+--   we need to use @insertExpression@ because we don't know the IDs as 
 --   we are using serial IDs, therefore we can't use concrete Haskell Values.
 insertMessage :: Connection -> Text -> UserId -> IO ()
 insertMessage conn body ownerId =
@@ -68,9 +69,21 @@ insertMessage conn body ownerId =
       insertExpressions
         [ Message default_ (val_ body) nothing_ (val_ ownerId) ]
 
+-- | to insert in database from a frontend message, in which we won't have
+--   IDs information on user.
 insertFromFEMessage :: FEMessage -> Connection -> IO ()
 insertFromFEMessage fem conn = do 
   users <- conduitQuery conn queryUserByName (femOwner fem)
   case users of
-    []     -> undefined
-    (u:_) -> insertMessage conn (femBody fem) (UserId $ _userId u)
+    []    -> return ()
+    (u:_) -> do 
+      insertMessage conn (femBody fem) (primaryKey u)
+      -- ^ data PrimaryKey UserT f = UserId (C f (SqlSerial Int32))
+      --   A UserId is not just the integer, it’s a wrapper around _userId.
+      --   Whenever Beam expects a UserId, you must wrap _userId inside UserId.
+      --   or use the primaryKey method coming from Table instance
+      case femPrivate fem of
+        Nothing         -> return ()
+        Just recipients -> do 
+          -- insert `Private`s 
+          return ()

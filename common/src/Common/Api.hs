@@ -36,7 +36,7 @@ data FEMessage = FEMessage
   , femBody      :: Text
   , femTimestamp :: Maybe LocalTime
   , femOwner     :: Text
-  , femTarget    :: Maybe Text
+  , femPrivate   :: Maybe [Text]
   } deriving (Show, Eq, Generic, ToJSON, FromJSON)
 
 type NamedConn = (User, WS.Connection)

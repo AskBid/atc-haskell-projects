@@ -16,28 +16,32 @@ import Query
 
 -- | @type ServerApp = PendingConnection -> IO ()@ is a fucntion type, hence why `pending`
 --   appears down here.
-wsHandler :: TVar [NamedConn] -> User -> WS.ServerApp
-wsHandler tvarConns eUser pending = do 
+wsHandler :: TVar [NamedConn] -> User -> P.Connection -> WS.ServerApp
+wsHandler tvarConns eUser pgConn pending = do 
   let path = toString $ WS.requestPath $ WS.pendingRequest pending
   let req = WS.pendingRequest pending
       path = WS.requestPath req
 
   putStrLn $ "Request path: " <> show path
-  conn <- WS.acceptRequest pending
+  wsConn <- WS.acceptRequest pending
 
-  conns <- liftIO $ atomically $ readTVar tvarConns
-  let connsPlusThis = (eUser, conn) : conns
-  liftIO $ atomically $ writeTVar tvarConns connsPlusThis
-
+  wsConns <- liftIO $ atomically $ readTVar tvarConns
+  let wsConnsPlusThis = (eUser, wsConn) : wsConns
+  liftIO $ atomically $ writeTVar tvarConns wsConnsPlusThis
+  putStrLn $ "-------------------- Socket cycle start ..."
   forever $ do
-    putStrLn $ "-------------------- Socket cycle start ..."
-    msgJSON <- WSC.receiveData conn
-    putStrLn "WSMessage received."
+    putStrLn $ "-------------------- Socket cycle new round ..."
+    msgJSON <- WSC.receiveData wsConn
     let msg = A.decode msgJSON :: Maybe WSMessage
     case msg of 
       Just (NewMessage msg') -> do
-        conns <- atomically $ readTVar tvarConns
-        forM_ conns $ \(eUser, conn) -> WS.sendTextData conn (A.encode (NewMessage msg'))
+        putStrLn "WSMessage received."
+        wsConns' <- atomically $ readTVar tvarConns
+        forM_ wsConns' $ 
+          \(eUser, wsConn) -> WS.sendTextData wsConn (A.encode (NewMessage msg'))
+        putStrLn "WSMessage broadcastes."
+        insertFromFEMessage msg' pgConn 
+        putStrLn "WSMessage saved on DB."
         return ()
       otherwise -> putStrLn "TODO case for different type of WSMessage"
 

@@ -14,6 +14,7 @@ import Control.Monad.IO.Class (liftIO, MonadIO)
 import Control.Monad (void)
 import Language.Javascript.JSaddle (MonadJSM)
 import Control.Monad.Fix (MonadFix)
+import Control.Applicative (liftA2)
 
 import Common
 import Common.Api
@@ -34,15 +35,16 @@ userChat appState = do
     dName <- askRoute 
     el "h1" $ dynText dName
     liftIO $ putStrLn "inside userChat"
-    performEvent_ $ ffor (updated (loggedAs appState)) $ \name -> liftIO $ putStrLn $ show name
+    performEvent_ $ ffor (updated (loggedAs appState)) $
+      \name -> liftIO $ putStrLn $ show name
     dyn_ $ ffor (loggedAs appState) $ \case
       Loading    -> el "div" $ text "loading..."
       LoggedIn u -> chatPanel dName u
       LoggedOut  -> do 
         liftIO $ putStrLn "LoggedOut"
         redirectToAuth 
-      -- ^ TODO could send attempted name with parameter to set as value
-      --   in the login input element.
+      -- ^ TODO could send attempted name with parameter to set as 
+      --   value in the login input element.
     return ()
 
 redirectToAuth 
@@ -71,14 +73,14 @@ chatPanel
      , DomBuilder t m
      ) 
   => Dynamic t T.Text -> User -> m ()
-chatPanel dName user = do
+chatPanel dRouteUserName user = do
   -- user == userRoute -> public chat
   -- user /= userRoute -> private chat
   elClass "div" divVerticalStyle $ do
 
     ePostBuild <- getPostBuild
     let eUrl = ("ws://localhost:8000/ws/user/" <> (_userName user)) <$ ePostBuild
-        dButtonText = ffor dName $ \name ->  
+        dButtonText = ffor dRouteUserName $ \name ->  
           if _userName user == name 
           then "Send >"
           else "Send Private to " <> name
@@ -90,8 +92,11 @@ chatPanel dName user = do
 
           let eSend = domEvent Click elBtnSend
               dMessText = _inputElement_value elInpMess
+              dPrivate = (Just . (:[])) <$> dRouteUserName
               eMessText = tagPromptlyDyn dMessText eSend
-              eWSMess = NewMessage <$> mkMessage <$> eMessText 
+              dWSMess = NewMessage <$> (mkFEMessage <$> dMessText <*> dPrivate)
+              -- ^ Event does not have Applicative, but Dynamic does.
+              eWSMess = tagPromptlyDyn dWSMess eSend
           
           let wsConfig = def & webSocketConfig_reconnect .~ False
                              & webSocketConfig_send .~ ((:[]) <$> A.encode <$> eWSMess)
@@ -111,13 +116,13 @@ chatPanel dName user = do
 
     void $ widgetHold (el "div" $ text "No connection.") eSocket 
 
-mkMessage :: T.Text -> FEMessage
-mkMessage t = FEMessage 
+mkFEMessage :: T.Text -> Maybe [T.Text] -> FEMessage
+mkFEMessage mess pRecipient = FEMessage 
   { femId        = Nothing
-  , femBody      = t
+  , femBody      = mess
   , femTimestamp = Nothing
   , femOwner     = "bob"
-  , femTarget    = Nothing
+  , femPrivate   = pRecipient
   }
 
 

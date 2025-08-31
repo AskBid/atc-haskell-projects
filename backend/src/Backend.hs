@@ -172,7 +172,7 @@ backendHandlers conns pgConn = \case
                 liftIO $ putStrLn $ "Auth successful, opening socket for: " <>  (unpack $ _userName u)
                 modifyResponse $ setResponseStatus 200 "OK"
                 writeBS $ BL.toStrict $ A.encode u
-        WSSnap.runWebSocketsSnap $ wsHandler conns u
+        WSSnap.runWebSocketsSnap $ wsHandler conns u pgConn
 
   BackendRoute_Websocket :/ WebscocketRoute_Main :/ () -> do 
     writeBS "Connection with no permission to chat."
