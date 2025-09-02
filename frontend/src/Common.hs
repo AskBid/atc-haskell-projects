@@ -32,33 +32,35 @@ divVerticalStyle = "flex flex-col gap-4 p-4"
 divHorizontalStyle :: Text
 divHorizontalStyle = "flex flex-row gap-4 p-4 items-center justify-center"
 
+divConnectedUsers :: Text
+divConnectedUsers = "flex flex-col gap-0 p-2"
+
 -- | translates websocket messages into Frontend messages, @Text@s ready for the chat.
 feMessage :: Maybe WSMessage -> Text
 feMessage wsm = case wsm of
   Nothing -> "*** Non Valid Message ***"
   Just m -> case m of
     NewMessage m -> "TODO: user> " <> femBody m
-    ConnectedClients _ -> "TODO: List of connections message."
+    ConnectedClients _ -> "Client connection event."
     otherwise -> "TODO: unknown message."
 
 data AppState t = AppState 
-  { wsConn :: Maybe (WebSocket t)
+  { wsConn :: Dynamic t (WebsocketState t)
+  , webSocketSwitch :: WebsocketState t -> IO ()
   , loggedAs :: Dynamic t LoginState
   , loggedTrigger :: LoginState -> IO ()
   }
 
-data LoginState = LoggedIn User | LoggedOut | Loading
+data LoginState 
+  = LoggedIn User 
+  | LoggedOut 
+  | Loading
   deriving (Show)
 
-class LikeMaybe a where
-  fromMaybe :: Maybe User -> a
-
-instance LikeMaybe LoginState where
-  fromMaybe Nothing  = LoggedOut
-  fromMaybe (Just u) = LoggedIn u
-
-instance LikeMaybe (Maybe User) where
-  fromMaybe = id 
+data WebsocketState t
+  = NoConnection 
+  | PublicConnection (WebSocket t)
+  | AuthConnection (WebSocket t)
 
 -- | @fullRouteEncoder@ has an `Either Text` as a first (check) argument
 --   to make it Identity as required from the use of @encode@, we need first to pass

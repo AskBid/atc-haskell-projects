@@ -46,10 +46,12 @@ frontend = Frontend
       elAttr "script" ("src" =: "https://cdn.tailwindcss.com") blank
   , _frontend_body = do
 
-      prerender_ blank $ do
-
-        (evLoggedByTrigger, loggedTrigger) <- newTriggerEvent
+      prerender_ blank $ do 
         ePostBuild <- getPostBuild
+        -------------------------------------
+        -- setting up Dynamic for LogingState
+        --
+        (evLoggedByTrigger, loggedTrigger) <- newTriggerEvent
         let route = FullRoute_Backend BackendRoute_Me :/ () 
         evLoggedMUser <- requestWithCredentialsAndDecode route ePostBuild
         let evLogged = leftmost [evLoggedMUser, evLoggedByTrigger]
@@ -58,12 +60,22 @@ frontend = Frontend
         --   while requestWithCredentialsAndDecode is still running and the
         --   FRP diagram would flow in LoggedOut
         
+        -------------------------------------
+        -- setting up Dynamic for WebscoketState
+        --
+        (evWebsocketChangeByTrigger, webSocketSwitch) <- newTriggerEvent
+        dWebsocket <- holdDyn NoConnection evWebsocketChangeByTrigger
+        --
+        
         let appState = AppState 
-              { wsConn = Nothing 
+              { wsConn = dWebsocket
+              , webSocketSwitch = webSocketSwitch
               , loggedAs = dLogged
               , loggedTrigger = loggedTrigger
               }
         
+        -----------
+        -- Page
         elClass "div" "flex flex-col h-screen w-screen" $ do
           elClass "div" ("bg-white w-full p-0 " <> divHorizontalStyle) $ do
             dyn_ $ ffor (loggedAs appState) $ \case
@@ -97,12 +109,8 @@ frontend = Frontend
             elClass "div" "w-[clamp(100px,20%,999px)] bg-gray-200 p-4" $ do 
 
               elClass "h1" "text-green-500 font-bold" $ text "Connected Users"
-              elClass "div" divVerticalStyle $ do 
+              elClass "div" divConnectedUsers $ do 
                 listUsers ["sergio", "mario"] ePostBuild
-
-              elClass "h1" "text-red-500 font-bold" $ text "Offline Users"
-              elClass "div" divVerticalStyle $ do
-                listUsers ["bob", "alice"] ePostBuild
         return ()
       return ()
   }

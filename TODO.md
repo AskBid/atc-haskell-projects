@@ -1,21 +1,20 @@
-- [ ] HomePage / signin
-  - [ ] Username and Password
-    - [ ] send only user
-      - [ ] already exist, ask for password
-      - [ ] does not exist create anouthrised user chat
-    - [ ] send user + pwd
-      - [ ] exist
-        - [ ] pwd correct -> jwt -> opens user's chat
-        - [ ] pwd wrong -> ask again
-  - [ ] list of online, offline users, clickable to fill username login input 
-  - [ ] signout / disconnect button, if logged
-  - [ ] only view Chat
-- [ ] delete user page
-- [ ] Chat Page - Url User param based
+- [x] HomePage / signin
+  - [x] Username and Password
+    - ~~[x] send only user
+      - [x] ~~already exist, ask for password
+      - [x] does not exist create anouthrised user chat~~
+    - [x] send user + pwd
+      - [x] exist
+        - [x] pwd correct -> jwt -> opens user's chat
+        - [x] pwd wrong -> ask again
+  - [ ] list of online, ~~offline users~~, 
+    - [ ] clickable to fill username login input 
+  - [x] signout / disconnect button, if logged
+  - ~~[ ] only view Chat~~
+- ~~[ ] delete user page~~
+- [x] Chat Page - Url User param based
   - [ ] shows button to go to profile or profile shown on page
   - [ ] if accessed from other auth user, sends private messages only showing each other messages
   - [ ] if accessed from auth user: standard public Chat you can send auth messages from
-  - [ ] if UnAuth access public Chat no ability to send 
-  - [ ] add list of online, offline users, click on user to send private message/visit user page
-
+  - ~~[x] if UnAuth access public Chat no ability to send~~
 - [ ] Socket URL should use Routes types and Document.Local to find protocol and host address.

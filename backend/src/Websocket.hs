@@ -30,7 +30,9 @@ wsHandler tvarConns eUser pgConn pending = do
   liftIO $ atomically $ writeTVar tvarConns wsConnsPlusThis
 
   putStrLn $ "-------------------- broadcastConnectedUsers"
-  broadcastConnectedUsers tvarConns
+  _ <- broadcastConnectedUsers tvarConns
+
+  -- TODO send public DataBase Messages
 
   putStrLn $ "-------------------- Socket cycle start ..."
   forever $ do
@@ -41,13 +43,13 @@ wsHandler tvarConns eUser pgConn pending = do
     case msg of 
 
       Just (NewMessage msg') -> do
-        putStrLn "WSMessage received."
+        putStrLn "Message received."
         wsConns' <- atomically $ readTVar tvarConns
         forM_ wsConns' $ 
           \(eUser, wsConn) -> WS.sendTextData wsConn (A.encode (NewMessage msg'))
-        putStrLn "WSMessage broadcastes."
+        putStrLn "Message broadcastes."
         insertFromFEMessage msg' pgConn 
-        putStrLn "WSMessage saved on DB."
+        putStrLn "Message saved on DB."
         return ()
 
       otherwise -> putStrLn "TODO case for different type of WSMessage"
