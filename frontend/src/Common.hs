@@ -32,8 +32,14 @@ divVerticalStyle = "flex flex-col gap-4 p-4"
 divHorizontalStyle :: Text
 divHorizontalStyle = "flex flex-row gap-4 p-4 items-center justify-center"
 
+divHorizontalStyleNoGap :: Text
+divHorizontalStyleNoGap = "flex flex-row gap-0 p-0 items-center justify-center"
+
 divConnectedUsers :: Text
 divConnectedUsers = "flex flex-col gap-0 p-2"
+
+linkStyle :: Text
+linkStyle = "underline text-blue-600 hover:text-blue-800"
 
 -- | translates websocket messages into Frontend messages, @Text@s ready for the chat.
 feMessage :: Maybe WSMessage -> Text

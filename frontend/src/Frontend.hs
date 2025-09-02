@@ -73,44 +73,58 @@ frontend = Frontend
               , loggedAs = dLogged
               , loggedTrigger = loggedTrigger
               }
-        
+              
         -----------
         -- Page
         elClass "div" "flex flex-col h-screen w-screen" $ do
-          elClass "div" ("bg-white w-full p-0 " <> divHorizontalStyle) $ do
-            dyn_ $ ffor (loggedAs appState) $ \case
-              LoggedIn _  -> logoutButton appState 
-              otherwise          -> el "div" $ text "Welcome to Chat!"
+          -----------
+          -- HEADER 
+          elClass "div" ("bg-white w-full " <> divHorizontalStyle) $ do
 
+            dyn_ $ ffor (loggedAs appState) $ \case
+              LoggedIn u  -> do 
+                elClass "div" divHorizontalStyleNoGap $ do 
+                  logoutButton appState 
+                  let username = _userName u
+                  let userUrl = getUrl (FullRoute_Frontend 
+                                  (ObeliskRoute_App FrontendRoute_User) :/ username)
+                  elAttr "a" 
+                    (  "class" =: ("px-4 " <> linkStyle) 
+                    <> "href" =: userUrl
+                    ) $ text username
+              otherwise   -> el "div" $ text "Welcome to Chat!"
+          -- HEADER
+          -----------
+          
           elClass "div" ("flex flex-1 w-full") $ do
+            ------------
+            -- CHAT/AUTH
             elClass "div" "flex-1 bg-gray-100 p-4" $ do
               liftIO $ putStrLn "inside Frontend just before setRoute..+++++"
+
               subRoute_ $ \case
                 FrontendRoute_Main -> do 
                   dyn_ $ ffor (loggedAs appState) $ \case
                     Loading     -> el "div" $ text "Loading in Frontend - Main Route"
-                    LoggedIn _  -> do 
-                      liftIO $ putStrLn "appState reckognised as LoggedIn in frontEndd"
-                      mainPageLogged appState
-                    LoggedOut   -> do 
-                      liftIO $ putStrLn "appState reckognised as LoggedOut in frontEndd"
-                      mainPage appState
+                    LoggedIn _  -> mainPageLogged appState
+                    LoggedOut   -> mainPage appState
                 FrontendRoute_User -> do 
                   dyn_ $ ffor (loggedAs appState) $ \case
                     Loading    -> el "div" $ text "Loading in Frontend - User Route"
-                    LoggedIn _ -> do 
-                      liftIO $ putStrLn "appState reckognised as LoggedIn in frontEndd"
-                      userChat appState
-                    LoggedOut  -> do 
-                      liftIO $ putStrLn "appState reckognised as LoggedOut in frontEndd"
-                      mainPage appState
-                  
+                    LoggedIn _ -> userChat appState
+                    LoggedOut  -> mainPage appState
+            -- CHAT/AUTH
+            ------------
 
+            -----------------------------
+            -- CONNECTED CLIENTS SIDE BAR
             elClass "div" "w-[clamp(100px,20%,999px)] bg-gray-200 p-4" $ do 
 
               elClass "h1" "text-green-500 font-bold" $ text "Connected Users"
               elClass "div" divConnectedUsers $ do 
                 listUsers ["sergio", "mario"] ePostBuild
+            -- CONNECTED CLIENTS SIDE BAR
+            -----------------------------
         return ()
       return ()
   }
@@ -156,7 +170,7 @@ logoutButton
      ) 
   => AppState t -> m ()
 logoutButton appState = do 
-  (elBtnLogout, _) <- elClass' "button" buttonStyle $ text "Logout"
+  (elBtnLogout, _) <- elClass' "button" buttonStyle $ text "Disconnect/Logout"
   let eClickLogout = domEvent Click elBtnLogout 
       route = FullRoute_Backend BackendRoute_Logout :/ () 
   eUser <- requestWithCredentialsAndDecode route eClickLogout

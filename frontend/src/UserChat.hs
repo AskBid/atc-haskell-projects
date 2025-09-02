@@ -33,7 +33,6 @@ userChat appState = do
 
   prerender_ blank $ do  
     dName <- askRoute 
-    el "h1" $ dynText dName
     liftIO $ putStrLn "inside userChat"
     performEvent_ $ ffor (updated (loggedAs appState)) $
       \name -> liftIO $ putStrLn $ show name
