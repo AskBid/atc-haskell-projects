@@ -59,6 +59,8 @@ feMessage wsm = case wsm of
 data AppState t = AppState 
   { wsConn :: Dynamic t (WebsocketState t)
   , webSocketSwitch :: WebsocketState t -> IO ()
+  , evWsSend :: Event t BSL.ByteString
+  , wsSendTrigger :: BSL.ByteString -> IO ()
   , loggedAs :: Dynamic t LoginState
   , loggedTrigger :: LoginState -> IO ()
   }

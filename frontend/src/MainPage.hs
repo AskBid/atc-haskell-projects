@@ -81,11 +81,6 @@ mainPage appState = do
             <$> _webSocket_recv ws
       dWSMessage <- holdDyn NoMessage eWSMessage 
 
-      -- let eConnections = flip ffilter eWSMessage $ 
-      --       \case 
-      --         ConnectedClients _ -> True
-      --         otherwise          -> False
-
       let eUserResult = flip ffilter eWSMessage $ 
             \case
               UserExist name -> True
