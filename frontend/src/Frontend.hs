@@ -152,7 +152,8 @@ requestWithCredentialsAndDecode
   -> m (Event t LoginState)
 requestWithCredentialsAndDecode route event = do 
   let url = getUrl route
-      req = xhrRequest "POST" url $ def & xhrRequestConfig_withCredentials .~ True
+      req = xhrRequest "POST" url $ def 
+        & xhrRequestConfig_withCredentials .~ True
   evRes <- performRequestAsync $ req <$ event
   let evEMDecoded = decodeResponse "Error." evRes
   pure $ ffor evEMDecoded $ \case

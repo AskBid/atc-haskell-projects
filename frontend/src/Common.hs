@@ -17,8 +17,14 @@ import Common.Api
 import Schema
 import Common.Route
 
+buttonPrivateStyle :: Text
+buttonPrivateStyle = buttonNoColor <> " bg-fuchsia-600 hover:bg-fuchsia-700"
+
 buttonStyle :: Text  
-buttonStyle = "px-4 py-3 text-sm leading-tight bg-blue-600 text-white rounded hover:bg-blue-700"
+buttonStyle = buttonNoColor <> " bg-blue-600 hover:bg-blue-700"
+  
+buttonNoColor :: Text  
+buttonNoColor = "px-4 py-3 text-sm leading-tight text-white rounded"
 
 inputStyle :: Text  
 inputStyle = "border border-gray-300 rounded px-3 py-2"

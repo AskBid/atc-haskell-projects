@@ -83,11 +83,16 @@ chatPanel dRouteUserName user = do
           if _userName user == name 
           then "Send >"
           else "Send Private to " <> name
+        dButtonStyle = ffor dRouteUserName $ \name ->  
+          if _userName user == name 
+          then "class" =: buttonStyle
+          else "class" =: buttonPrivateStyle
+
 
     let eSocket = ffor eUrl $ \url -> do 
           elClass "label" labelStyle $ text "Message:"
           elInpMess <- inputElement $ def & initialAttributes .~ ("class" =: inputStyle)
-          (elBtnSend, _) <- elClass' "button" buttonStyle $ dynText dButtonText
+          (elBtnSend, _) <- elDynAttr' "button" dButtonStyle $ dynText dButtonText
 
           let eSend = domEvent Click elBtnSend
               dMessText = _inputElement_value elInpMess

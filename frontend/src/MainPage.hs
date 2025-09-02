@@ -75,15 +75,18 @@ mainPage appState = do
       ws <- webSocket "ws://localhost:8000/ws" $ def 
               & webSocketConfig_reconnect .~ False
               & webSocketConfig_send .~ ((:[]) <$> eName)
-      let eWSMessage = DM.fromMaybe NoMessage <$> A.decode . BSL.fromStrict <$> _webSocket_recv ws
+
+      let eWSMessage = DM.fromMaybe NoMessage 
+            <$> A.decode . BSL.fromStrict 
+            <$> _webSocket_recv ws
       dWSMessage <- holdDyn NoMessage eWSMessage 
 
-      let eConnections = flip ffilter eWSMessage $ 
-            \case 
-              ConnectedClients _ -> True
-              otherwise          -> False
+      -- let eConnections = flip ffilter eWSMessage $ 
+      --       \case 
+      --         ConnectedClients _ -> True
+      --         otherwise          -> False
 
-          eUserResult = flip ffilter eWSMessage $ 
+      let eUserResult = flip ffilter eWSMessage $ 
             \case
               UserExist name -> True
               NoUser         -> True
@@ -133,7 +136,6 @@ mainPage appState = do
 
       performEvent_ $ ffor evOkUsr $ \u -> do
         liftIO $ loggedTrigger appState (LoggedIn u)
-      liftIO $ putStrLn "inside mainPage>>>>>>>>>"
       setRoute $ fforMaybe (updated (loggedAs appState)) $ \case
         LoggedIn u -> Just (FrontendRoute_User :/ _userName u)
         LoggedOut  -> Nothing
