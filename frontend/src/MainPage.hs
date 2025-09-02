@@ -49,94 +49,122 @@ mainPage
      , DomBuilder t m
      , SetRoute t (R FrontendRoute) (Client m)
      , MonadFix m
+     , PostBuild t m
+     , TriggerEvent t m
+     , MonadHold t m
+     , PerformEvent t m
      ) 
   => AppState t -> m ()
 mainPage appState = do
-  prerender_ blank $ do
-    elClass "div" divVerticalStyle $ mdo
+    elClass "div" divVerticalStyle $ do
+      -- the whole login interface depends on the dynamic wesocket.
+      dyn_ $ ffor (wsConn appState) $ \wsState -> 
+        case getWS wsState of
+          Nothing -> el "div" $ text "Loading… (waiting for WebSocket)"
+          Just ws -> loginInterface ws appState
+          -- we are not sure if when LoginState changed if the 
+          -- webSocketSwitch already completed to create and place
+          -- the new socket in appState, therefore we need this check
 
-      elClass "label" labelStyle $ text "Username:"
-      elInpName <- inputElement $ def 
-        & initialAttributes .~ ("class" =: inputStyle)
-        & inputElementConfig_setValue .~ evEmptyInput
+loginInterface 
+  :: ( Monad m
+     , DomBuilder t m 
+     , TriggerEvent t m
+     , MonadFix m
+     , MonadHold t m 
+     , PerformEvent t m
+     , Prerender t m
+     , SetRoute t (R FrontendRoute) (Client m)
+     )
+  => WebSocket t -> AppState t -> m ()
+loginInterface ws appState = do
+          -- let ws = wsConn appState
+          -- ws <- webSocket "ws://localhost:8000/ws" $ def 
+          --         & webSocketConfig_reconnect .~ False
+          --         & webSocketConfig_send .~ ((:[]) <$> eName)
+  prerender_ blank $ mdo
+    elClass "label" labelStyle $ text "Username:"
+    elInpName <- inputElement $ def 
+      & initialAttributes .~ ("class" =: inputStyle)
+      & inputElementConfig_setValue .~ evEmptyInput
 
-      elClass "label" labelStyle $ text "Password:"
-      elInpPwd <- inputElement $ def 
-        & initialAttributes .~ ("class" =: inputStyle <> "type" =: "password")
-        & inputElementConfig_setValue .~ evEmptyInput
+    elClass "label" labelStyle $ text "Password:"
+    elInpPwd <- inputElement $ def 
+      & initialAttributes .~ ("class" =: inputStyle <> "type" =: "password")
+      & inputElementConfig_setValue .~ evEmptyInput
 
-      let eInput = domEvent Input elInpName
-          dPwd = _inputElement_value elInpPwd
-          dName = _inputElement_value elInpName 
-      eDebounced <- debounce 0.8 eInput
-      let eName = tagPromptlyDyn dName eDebounced
-          dCredentials = Credentials <$> dName <*> dPwd
-      
-      ws <- webSocket "ws://localhost:8000/ws" $ def 
-              & webSocketConfig_reconnect .~ False
-              & webSocketConfig_send .~ ((:[]) <$> eName)
+    let eInput = domEvent Input elInpName
+        dPwd = _inputElement_value elInpPwd
+        dName = _inputElement_value elInpName 
+    eDebounced <- debounce 0.8 eInput
+    let eName = tagPromptlyDyn dName eDebounced
+        dCredentials = Credentials <$> dName <*> dPwd
 
-      let eWSMessage = DM.fromMaybe NoMessage 
-            <$> A.decode . BSL.fromStrict 
-            <$> _webSocket_recv ws
-      dWSMessage <- holdDyn NoMessage eWSMessage 
+    performEvent_ $ ffor eName $ \typedSoFar -> 
+      liftIO $ (wsSendTrigger appState) $ (BSL.fromStrict . ET.encodeUtf8) typedSoFar
 
-      let eUserResult = flip ffilter eWSMessage $ 
-            \case
-              UserExist name -> True
-              NoUser         -> True
-              otherwise      -> False
-          
-          eUserExistence = ffor eUserResult $ 
-            \case 
-              UserExist name -> "User `" <> name <> "` already exist. Connect to the chat with a password."
-              NoUser         -> "No user found, Register as new one?"
-              otherwise      -> "Error!"
-      
-          dNameLenght = ffor dName $ \name -> T.length name > 2
-          
-          dLoginConditions = fmap and $ sequence 
-            [ dNameLenght
-            , join $ ffor dWSMessage $ wsMessageEqualName dName
-            ]
-          
-          dSignupConditions = fmap and $ sequence
-            [ dNameLenght
-            , not <$> (join $ ffor dWSMessage $ (wsMessageEqualName dName))
-            ]
-      
-      let initialText = "Connect to chat with existing credentials or signup with new ones."
-      dresult <- holdDyn initialText $ leftmost [eUserExistence, initialText <$ evEmptyInput]
-      elClass "div" "flex items-center justify-center text-blue-500" $ dynText dresult
+    let eWSMessage = DM.fromMaybe NoMessage <$> A.decode . BSL.fromStrict 
+          <$> _webSocket_recv ws
 
-      evLoginRes <- sendButton dCredentials dLoginConditions "Connect" $ 
-        FullRoute_Backend BackendRoute_Login :/ ()
+    dWSMessage <- holdDyn NoMessage eWSMessage 
 
-      evSignupRes <- sendButton dCredentials dSignupConditions "Signup" $ 
-        FullRoute_Backend BackendRoute_Signup :/ ()
-      
-      let evEitherResp = decodeResponse "Invalid username or password." evLoginRes
-          evErr = either id (const "Login success.") <$> evEitherResp
-          evOkUsr = fmapMaybe (either (const Nothing) id) evEitherResp 
+    let eUserResult = flip ffilter eWSMessage $ 
+          \case
+            UserExist name -> True
+            NoUser         -> True
+            otherwise      -> False
+        
+        eUserExistence = ffor eUserResult $ 
+          \case 
+            UserExist name -> "User `" <> name <> "` already exist. Connect to the chat with a password."
+            NoUser         -> "No user found, Register as new one?"
+            otherwise      -> "Error!"
+    
+        dNameLenght = ffor dName $ \name -> T.length name > 2
+        
+        dLoginConditions = fmap and $ sequence 
+          [ dNameLenght
+          , join $ ffor dWSMessage $ wsMessageEqualName dName
+          ]
+        
+        dSignupConditions = fmap and $ sequence
+          [ dNameLenght
+          , not <$> (join $ ffor dWSMessage $ (wsMessageEqualName dName))
+          ]
 
-          evEitherResp' = decodeResponse "401: Could not signup." evSignupRes 
-          evMsx = either id 
-                         (\case 
-                             Nothing -> "Singup response msg not decoded."
-                             Just beResp -> textOnly beResp
-                         ) <$> evEitherResp'
-          evEmptyInput = "" <$ evMsx
-      dErr <- holdDyn "" $ leftmost [evErr, evMsx]
-      elClass "div" "text-red-500" $ dynText $ dErr
+    let initialText = "Connect to chat with existing credentials or signup with new ones."
+    dresult <- holdDyn initialText $ leftmost [eUserExistence, initialText <$ evEmptyInput]
+    elClass "div" "flex items-center justify-center text-blue-500" $ dynText dresult
 
-      performEvent_ $ ffor evOkUsr $ \u -> do
-        liftIO $ loggedTrigger appState (LoggedIn u)
-      setRoute $ fforMaybe (updated (loggedAs appState)) $ \case
-        LoggedIn u -> Just (FrontendRoute_User :/ _userName u)
-        LoggedOut  -> Nothing
+    evLoginRes <- sendButton dCredentials dLoginConditions "Connect" $ 
+      FullRoute_Backend BackendRoute_Login :/ ()
+
+    evSignupRes <- sendButton dCredentials dSignupConditions "Signup" $ 
+      FullRoute_Backend BackendRoute_Signup :/ ()
+
+    let evEitherResp = decodeResponse "Invalid username or password." evLoginRes
+        evErr = either id (const "Login success.") <$> evEitherResp
+        evOkUsr = fmapMaybe (either (const Nothing) id) evEitherResp 
+
+        evEitherResp' = decodeResponse "401: Could not signup." evSignupRes 
+        evMsx = either id 
+                       (\case 
+                           Nothing -> "Singup response msg not decoded."
+                           Just beResp -> textOnly beResp
+                       ) <$> evEitherResp'
+        evEmptyInput = "" <$ evMsx
+    dErr <- holdDyn "" $ leftmost [evErr, evMsx]
+    elClass "div" "text-red-500" $ dynText $ dErr
+
+    performEvent_ $ ffor evOkUsr $ \u -> do
+      liftIO $ loggedTrigger appState (LoggedIn u)
+    setRoute $ fforMaybe (updated (loggedAs appState)) $ \case
+      LoggedIn u -> Just (FrontendRoute_User :/ _userName u)
+      LoggedOut  -> Nothing
       -- ^ this is important to check that setRoute isn't fired without the
       --   loggedTrigger function being completed yet. It was abug toke me a
       --   while to figure out.
+    return ()
 
 buttonStyleDisabled :: T.Text
 buttonStyleDisabled = buttonStyle <> " disabled:bg-grey-200 disabled:opacity-50 disabled:border-grey-300"

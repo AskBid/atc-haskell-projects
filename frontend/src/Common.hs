@@ -76,6 +76,15 @@ data WebsocketState t
   | PublicConnection (WebSocket t)
   | AuthConnection (WebSocket t)
 
+-- | as in the case of the login page, we don't care of what type
+--   of socket we are getting, we just need a socket, this gets rid
+--   of the differentiation between the two.
+getWS :: WebsocketState t -> Maybe (WebSocket t)
+getWS = \case
+  PublicConnection ws -> Just ws
+  AuthConnection ws   -> Just ws
+  NoConnection        -> Nothing
+
 -- | @fullRouteEncoder@ has an `Either Text` as a first (check) argument
 --   to make it Identity as required from the use of @encode@, we need first to pass
 --   it under the check of @checkEncoder@ which gets rid off the uncertainty if we receive text

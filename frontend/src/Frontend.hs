@@ -86,10 +86,10 @@ frontend = Frontend
           \tup -> case tup of
             (LoggedIn u, NoConnection) -> do
               let url = "ws://localhost:8000/ws/user/" <> (_userName u) 
-                -- TODO add close event
               ws <- webSocket url $ def 
                 & webSocketConfig_reconnect .~ False
                 & webSocketConfig_send .~ ((:[]) <$> evWsSend appState)
+                -- TODO add close event
               liftIO $ webSocketSwitch $ AuthConnection ws
               return ()
             (LoggedIn u, PublicConnection ws) -> do 
@@ -102,7 +102,7 @@ frontend = Frontend
                   & webSocketConfig_reconnect .~ False
                   & webSocketConfig_send .~ ((:[]) <$> evWsSend appState)
                   -- TODO add close event
-                liftIO $ webSocketSwitch $ AuthConnection ws
+                liftIO $ webSocketSwitch $ PublicConnection ws
                 return ()
             _ -> return ()
         --
