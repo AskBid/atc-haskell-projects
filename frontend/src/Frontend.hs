@@ -46,7 +46,7 @@ frontend = Frontend
       elAttr "script" ("src" =: "https://cdn.tailwindcss.com") blank
   , _frontend_body = do
 
-      prerender_ blank $ do 
+      prerender_ blank $ mdo 
         ePostBuild <- getPostBuild
         -------------------------------------
         -- setting up Dynamic for LogingState
@@ -61,18 +61,12 @@ frontend = Frontend
         --   FRP diagram would flow in LoggedOut
         
         -------------------------------------
-        -- setting up Dynamic for WebscoketState
+        -- setting up Event for send WebscoketState
         --
-        (evWebsocketChangeByTrigger, webSocketSwitch) <- newTriggerEvent
-        dWebsocket <- holdDyn NoConnection evWebsocketChangeByTrigger
-
         (evWsSend', wsSendTrigger') <- newTriggerEvent
 
-        --
-        
         let appState = AppState 
-              { wsConn = dWebsocket
-              , webSocketSwitch = webSocketSwitch
+              { wsConn = dConn
               , evWsSend = evWsSend'
               , wsSendTrigger = wsSendTrigger'
               , loggedAs = dLogged
@@ -82,30 +76,31 @@ frontend = Frontend
         ---------------------------------------------
         -- Dynamically setting the AppState WebSocket
         --
-        dyn_ $ ffor ((,) <$> loggedAs appState <*> wsConn appState) $ 
-          \tup -> case tup of
-            (LoggedIn u, NoConnection) -> do
-              let url = "ws://localhost:8000/ws/user/" <> (_userName u) 
-              ws <- webSocket url $ def 
-                & webSocketConfig_reconnect .~ False
-                & webSocketConfig_send .~ ((:[]) <$> evWsSend appState)
-                -- TODO add close event
-              liftIO $ webSocketSwitch $ AuthConnection ws
-              return ()
-            (LoggedIn u, PublicConnection ws) -> do 
-                -- close Public Connection
-                -- open Auth Connection
-                return ()
-            (LoggedOut, NoConnection) -> do
-                let url = "ws://localhost:8000/ws"
-                ws <- webSocket url $ def 
-                  & webSocketConfig_reconnect .~ False
-                  & webSocketConfig_send .~ ((:[]) <$> evWsSend appState)
-                  -- TODO add close event
-                liftIO $ webSocketSwitch $ PublicConnection ws
-                return ()
-            _ -> return ()
-        --
+        -- dConn important to nnot end the ws cycle
+        dConn <- widgetHold (pure NoConnection) $ 
+          ffor (updated (loggedAs appState)) $ \case
+            LoggedIn u -> do
+              let url = "ws://localhost:8000/ws/user/" <> _userName u
+              ws <- webSocket url $ def
+                      & webSocketConfig_reconnect .~ False
+                      & webSocketConfig_send .~ ((:[]) <$> evWsSend appState)
+
+              performEvent_ $ ffor (_webSocket_recv ws) $ \msg ->
+                liftIO $ putStrLn ("WS recv (Auth): " <> show msg)
+
+              pure (AuthConnection ws)
+
+            LoggedOut -> do
+              let url = "ws://localhost:8000/ws"
+              ws <- webSocket url $ def
+                      & webSocketConfig_reconnect .~ False
+                      & webSocketConfig_send .~ ((:[]) <$> evWsSend appState)
+
+              performEvent_ $ ffor (_webSocket_recv ws) $ \msg ->
+                liftIO $ putStrLn ("WS recv (Public): " <> show msg)
+
+              pure (PublicConnection ws)
+        -- --
         -- Dynamically setting the AppState WebSocket
         ---------------------------------------------
 

@@ -9,6 +9,7 @@ import qualified Database.Beam.Postgres as P
 import qualified Data.Text.Encoding as TE
 import Data.ByteString.UTF8 (toString)
 import Control.Monad.IO.Class (liftIO)
+import Control.Exception (finally)
 
 import Schema
 import Common.Api
@@ -58,15 +59,16 @@ wsHandlerPublic :: TVar [NamedConn] -> P.Connection -> WS.ServerApp
 wsHandlerPublic conns pgConn pending = do
   -- putStrLn "inside public ws handler..."
   conn <- WS.acceptRequest pending
-  forever $ do 
-    putStrLn "--------------------"
-    msgJSON <- WSC.receiveData conn
-    let msgUserName = TE.decodeUtf8 msgJSON
-    users <- liftIO $ conduitQuery pgConn queryUserByName msgUserName
-    case users of 
-      [] -> WS.sendTextData conn (A.encode NoUser)
-      (u:_) -> WS.sendTextData conn (A.encode (UserExist $ _userName u))
-    return ()
+  let loop = forever $ do
+      putStrLn "-------------------- public socket"
+      msgJSON <- WS.receiveData conn
+      let msgUserName = TE.decodeUtf8 msgJSON
+      users <- liftIO $ conduitQuery pgConn queryUserByName msgUserName
+      case users of
+        [] -> WS.sendTextData conn (A.encode NoUser)
+        (u:_) -> WS.sendTextData conn (A.encode (UserExist $ _userName u))
+  
+  loop `finally` putStrLn "Public WebSocket connection closed"
 
 broadcastConnectedUsers :: TVar [NamedConn] -> IO ()
 broadcastConnectedUsers tvarConns = do
