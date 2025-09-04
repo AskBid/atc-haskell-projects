@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Websocket where 
 
 import qualified Data.Aeson as A
@@ -11,6 +13,7 @@ import Data.ByteString.UTF8 (toString)
 import Control.Monad.IO.Class (liftIO)
 import Control.Exception (finally)
 import Network.WebSockets (Connection)
+import Data.Text as T
 
 import Schema
 import Common.Api
@@ -23,41 +26,43 @@ wsHandler :: TVar [NamedConn]
           -> User 
           -> P.Connection 
           -> WS.ServerApp
-wsHandler tvarConns tvarConnsPub eUser pgConn pending = do 
+wsHandler tvarConns tvarConnsPub user pgConn pending = do 
   let path = toString $ WS.requestPath $ WS.pendingRequest pending
   let req = WS.pendingRequest pending
       path = WS.requestPath req
 
-  putStrLn $ "Request path: " <> show path
+  putStrLn $ "BE: Request path: " <> show path
   wsConn <- WS.acceptRequest pending
 
   wsConns <- liftIO $ atomically $ readTVar tvarConns
-  let wsConnsPlusThis = (eUser, wsConn) : wsConns
+  let newNamedConn = (user, wsConn)
+  let wsConnsPlusThis = case elem user (fst <$> wsConns) of
+        True  -> wsConns
+        False -> newNamedConn : wsConns
   liftIO $ atomically $ writeTVar tvarConns wsConnsPlusThis
 
-  putStrLn $ "-------------------- broadcastConnectedUsers"
+  putStrLn $ "BE: -------------------- broadcastConnectedUsers"
   _ <- broadcastConnectedUsers tvarConns tvarConnsPub
 
-  putStrLn $ "-------------------- Socket cycle start ..."
-  forever $ do
-    putStrLn $ "-------------------- Socket cycle new round ..."
-    msgJSON <- WSC.receiveData wsConn
-    let msg = A.decode msgJSON :: Maybe WSMessage
+  putStrLn $ "BE: -------------------- Socket cycle start ..."
+  let loop = forever $ do
+        putStrLn $ "BE: -------------------- Socket cycle new round ..."
+        msgJSON <- WSC.receiveData wsConn
+        let msg = A.decode msgJSON :: Maybe WSMessage
 
-    case msg of 
-
-      Just (NewMessage msg') -> do
-        putStrLn "Message received."
-        wsConns' <- atomically $ readTVar tvarConns
-        forM_ wsConns' $ 
-          \(eUser, wsConn) -> 
-            WS.sendTextData wsConn (A.encode (NewMessage msg'))
-        putStrLn "Message broadcastes."
-        insertFromFEMessage msg' pgConn 
-        putStrLn "Message saved on DB."
-        return ()
-
-      otherwise -> putStrLn "TODO case for different type of WSMessage"
+        case msg of 
+          Just (NewMessage msg') -> do
+            putStrLn "BE: Message received."
+            wsConns' <- atomically $ readTVar tvarConns
+            forM_ wsConns' $ 
+              \(eUser, wsConn) -> 
+                WS.sendTextData wsConn (A.encode (NewMessage msg'))
+            putStrLn "BE: Message broadcastes."
+            insertFromFEMessage msg' pgConn 
+            putStrLn "BE: Message saved on DB."
+            return ()
+          otherwise -> putStrLn "BE: TODO case for different type of WSMessage"
+  finally loop $ putStrLn $ "BE: " <> T.unpack (_userName user) <> " WebSocket connection closed"
 
 wsHandlerPublic :: TVar [NamedConn] 
                 -> TVar [Connection]
@@ -67,15 +72,14 @@ wsHandlerPublic conns pubConns pgConn pending = do
   -- putStrLn "inside public ws handler..."
   conn <- WS.acceptRequest pending 
   let loop = forever $ do
-      putStrLn "-------------------- public socket"
+      putStrLn "BE: -------------------- public socket"
       msgJSON <- WS.receiveData conn
       let msgUserName = TE.decodeUtf8 msgJSON
       users <- liftIO $ conduitQuery pgConn queryUserByName msgUserName
       case users of
         [] -> WS.sendTextData conn (A.encode NoUser)
         (u:_) -> WS.sendTextData conn (A.encode (UserExist $ _userName u))
-  
-  loop `finally` putStrLn "Public WebSocket connection closed"
+  finally loop $ putStrLn "BE: Public WebSocket connection closed"
 
 broadcastConnectedUsers :: TVar [NamedConn] 
                         -> TVar [Connection]

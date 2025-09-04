@@ -6,6 +6,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Frontend where
 
@@ -78,6 +79,9 @@ frontend = Frontend
         -- Dynamically setting the AppState WebSocket
         --
         -- dConn important to nnot end the ws cycle
+        -- When your widget is torn down (because LoggedIn switched to 
+        -- LoggedOut or you navigate away), Reflex disposes of the 
+        -- webSocket resource. No neec to add a webSocket_close Event.
         dConn <- widgetHold (pure NoConnection) $ 
           ffor (updated (loggedAs appState)) $ \case
             LoggedIn u -> do

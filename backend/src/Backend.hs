@@ -84,19 +84,19 @@ backendHandlers conns pubConns pgConn = \case
     let auth = join $ A.decodeStrict <$> getHeader "Authorization" req
     case auth of
       Nothing -> do
-        liftIO $ putStrLn "Credentials not perceived."
+        liftIO $ putStrLn "BE: Credentials not perceived."
         modifyResponse $ setResponseCode 401
       Just credentials -> do 
         users <- liftIO $ conduitQuery pgConn queryUserCredentials credentials
         case users of
           [] -> do 
-            liftIO $ putStrLn "User not found or wrong password."
+            liftIO $ putStrLn "BE: User not found or wrong password."
             modifyResponse $ setResponseCode 401
           (u:_) -> do 
             let jwt = createJWT $ u
             modifyResponse $ setContentType "application/json"
             modifyResponse $ addResponseCookie $ mkJWTCookie jwt
-            liftIO $ putStrLn "User Auth success."
+            liftIO $ putStrLn "BE: User Auth success."
             modifyResponse $ setResponseCode 200
             writeBS $ BL.toStrict $ A.encode u 
 
@@ -112,7 +112,7 @@ backendHandlers conns pubConns pgConn = \case
     case auth of
 
       Nothing -> do
-        liftIO $ putStrLn "Credentials not perceived."
+        liftIO $ putStrLn "BE: Credentials not perceived."
         modifyResponse $ setResponseCode 401
 
       Just credentials -> do
@@ -141,13 +141,13 @@ backendHandlers conns pubConns pgConn = \case
     case mUsername of
       Nothing -> do
         modifyResponse $ setResponseStatus 401 "unauthorized"
-        liftIO $ putStrLn "Not Authorised. Please login or signup."
+        liftIO $ putStrLn "BE: Not Authorised. Please login or signup."
       Just username -> do
         users <- liftIO $ conduitQuery pgConn queryUserByName username 
         case users of
           [] -> do 
             modifyResponse $ setResponseStatus 401 "unauthorized"
-            liftIO $ putStrLn "User did not exist."
+            liftIO $ putStrLn "BE: User did not exist."
           (u:_) -> do 
             modifyResponse $ setResponseStatus 200 "OK"
             writeBS $ BL.toStrict $ A.encode u
@@ -157,7 +157,7 @@ backendHandlers conns pubConns pgConn = \case
     case users of
       [] -> do
         modifyResponse $ setResponseStatus 401 "Unauthorized"
-        liftIO $ putStrLn "nothing happenninng user not found..../////////"
+        liftIO $ putStrLn "BE: nothing happenninng user not found..../////////"
         writeBS "401 - Unauthorized"
       (u:_) -> do
         liftIO $ putStrLn "Route's User found... going to sender's Auth..."
@@ -166,17 +166,17 @@ backendHandlers conns pubConns pgConn = \case
         case mUsername of
           Nothing -> do
             modifyResponse $ setResponseStatus 401 "unauthorized"
-            liftIO $ putStrLn $ "JWT not perceived. Socket not opening."
+            liftIO $ putStrLn $ "BE: JWT not perceived. Socket not opening."
             writeBS "invalid JWT"
           Just userAuth -> do
             users <- liftIO $ conduitQuery pgConn queryUserByName userAuth 
             case users of
               [] -> do 
                 modifyResponse $ setResponseStatus 401 "unauthorized"
-                liftIO $ putStrLn $ "Auth not succesful. Socket not opening."
+                liftIO $ putStrLn $ "BE: Auth not succesful. Socket not opening."
                 writeBS "User did not exist."
               (u:_) -> do 
-                liftIO $ putStrLn $ "Auth successful, opening socket for: " <>  (unpack $ _userName u)
+                liftIO $ putStrLn $ "BE: Auth successful, opening socket for: " <>  (unpack $ _userName u)
                 modifyResponse $ setResponseStatus 200 "OK"
                 writeBS $ BL.toStrict $ A.encode u
         WSSnap.runWebSocketsSnap $ wsHandler conns pubConns u pgConn
