@@ -29,6 +29,7 @@ import Data.Conduit
 import qualified Database.Beam.Postgres.Conduit as PC
 import qualified Data.Conduit.List as CL
 import qualified Network.WebSockets.Snap as WSSnap
+import Network.WebSockets (Connection)
 
 import Data.CaseInsensitive (original)
 import Data.Maybe (fromMaybe)
@@ -55,6 +56,7 @@ backend = Backend
   { _backend_run = \serve -> do 
 
       wsConns <- liftIO $ atomically $ newTVar ([] :: [NamedConn])
+      wsConnsPublic <- liftIO $ atomically $ newTVar ([] :: [Connection])
       pgConn <- P.connect connInfo
       migrateDB pgConn
       -- P.runBeamPostgresDebug putStrLn pgConn $
@@ -62,13 +64,18 @@ backend = Backend
       populateUsers pgConn
       populateMessages pgConn
 
-      serve $ backendHandlers wsConns pgConn
+      serve $ backendHandlers wsConns wsConnsPublic pgConn
   , _backend_routeEncoder = fullRouteEncoder
   }
 
 -- | routes
-backendHandlers :: TVar [NamedConn] -> P.Connection -> R BackendRoute -> Snap ()
-backendHandlers conns pgConn = \case
+backendHandlers 
+  :: TVar [NamedConn] 
+  -> TVar [Connection] 
+  -> P.Connection 
+  -> R BackendRoute 
+  -> Snap ()
+backendHandlers conns pubConns pgConn = \case
 
   BackendRoute_Missing :/ () -> writeBS "404"
   
@@ -172,11 +179,11 @@ backendHandlers conns pgConn = \case
                 liftIO $ putStrLn $ "Auth successful, opening socket for: " <>  (unpack $ _userName u)
                 modifyResponse $ setResponseStatus 200 "OK"
                 writeBS $ BL.toStrict $ A.encode u
-        WSSnap.runWebSocketsSnap $ wsHandler conns u pgConn
+        WSSnap.runWebSocketsSnap $ wsHandler conns pubConns u pgConn
 
   BackendRoute_Websocket :/ WebscocketRoute_Main :/ () -> do 
     writeBS "Connection with no permission to chat."
-    WSSnap.runWebSocketsSnap $ wsHandlerPublic conns pgConn
+    WSSnap.runWebSocketsSnap $ wsHandlerPublic conns pubConns pgConn
 
   -- ^ runWebSocketsSnap is just a bridge — it hands off the PendingConnection to your wsHandler. 
   -- Everything else is up to you. Broadcast messages to all clients, Count or log active connections,

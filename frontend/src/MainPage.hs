@@ -103,10 +103,9 @@ loginInterface ws appState = do
     performEvent_ $ ffor eName $ \typedSoFar -> 
       liftIO $ (wsSendTrigger appState) $ (BSL.fromStrict . ET.encodeUtf8) typedSoFar
 
-    -- Print every incoming message to console and decodes it after
+    -- Receive ws messages.
     let eRecvRaw = _webSocket_recv ws
         eWSMessage = DM.fromMaybe NoMessage <$> A.decode . BSL.fromStrict <$> eRecvRaw
-    performEvent_ $ ffor eRecvRaw $ \msg -> liftIO $ putStrLn ("WS recv: " <> show msg)
     dWSMessage <- holdDyn NoMessage eWSMessage 
 
     let eUserResult = flip ffilter eWSMessage $ 

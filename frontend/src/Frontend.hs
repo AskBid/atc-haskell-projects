@@ -18,6 +18,7 @@ import Control.Monad.IO.Class (liftIO)
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BSL 
 import Control.Monad.Fix (MonadFix)
+import qualified Data.Maybe as DM (fromMaybe)
 
 import Obelisk.Frontend
 import Obelisk.Configs
@@ -84,6 +85,8 @@ frontend = Frontend
               ws <- webSocket url $ def
                       & webSocketConfig_reconnect .~ False
                       & webSocketConfig_send .~ ((:[]) <$> evWsSend appState)
+                      -- ^ evWsSend will then be triggered in the interface location
+                      --   where we need it.
 
               performEvent_ $ ffor (_webSocket_recv ws) $ \msg ->
                 liftIO $ putStrLn ("WS recv (Auth): " <> show msg)
@@ -117,7 +120,8 @@ frontend = Frontend
                   logoutButton appState 
                   let username = _userName u
                   let userUrl = getUrl (FullRoute_Frontend 
-                                  (ObeliskRoute_App FrontendRoute_User) :/ username)
+                                       (ObeliskRoute_App FrontendRoute_User) 
+                                       :/ username)
                   elAttr "a" 
                     (  "class" =: ("px-4 " <> linkStyle) 
                     <> "href" =: userUrl
@@ -135,12 +139,12 @@ frontend = Frontend
               subRoute_ $ \case
                 FrontendRoute_Main -> do 
                   dyn_ $ ffor (loggedAs appState) $ \case
-                    Loading     -> el "div" $ text "Loading in Frontend - Main Route"
+                    Loading     -> el "div" $ text "Loading... MainRoute"
                     LoggedIn _  -> mainPageLogged appState
                     LoggedOut   -> mainPage appState
                 FrontendRoute_User -> do 
                   dyn_ $ ffor (loggedAs appState) $ \case
-                    Loading    -> el "div" $ text "Loading in Frontend - User Route"
+                    Loading    -> el "div" $ text "Loading... UserRoute"
                     LoggedIn _ -> userChat appState
                     LoggedOut  -> mainPage appState
             -- CHAT/AUTH
@@ -152,7 +156,17 @@ frontend = Frontend
 
               elClass "h1" "text-green-500 font-bold" $ text "Connected Users"
               elClass "div" divConnectedUsers $ do 
-                listUsers ["sergio", "mario"] ePostBuild
+                dyn_ $ ffor (wsConn appState) $ \ws -> case getWS ws of
+                  Nothing -> pure ()
+                  Just ws -> do 
+                    let eRecvRaw = _webSocket_recv ws
+                        eWSMessage = DM.fromMaybe NoMessage 
+                                     <$> A.decode . BSL.fromStrict 
+                                     <$> eRecvRaw
+                        eUsersConnected = flip fmapMaybe eWSMessage $ \case 
+                          ConnectedClients users -> Just users 
+                          otherwise              -> Nothing
+                    void $ listUsers eUsersConnected 
             -- CONNECTED CLIENTS SIDE BAR
             -----------------------------
         return ()
@@ -167,9 +181,9 @@ listUsers
      , PostBuild t m
      , Adjustable t m
      , DomBuilder t m ) 
-  => [T.Text] -> Event t a -> m (Dynamic t [()])
-listUsers names event = do 
-  dUsrList <- holdDyn [] $ names <$ event
+  => Event t [User] -> m (Dynamic t [()])
+listUsers eNames = do 
+  dUsrList <- holdDyn [] $ (_userName <$>) <$> eNames
   simpleList dUsrList (\dText -> el "div" $ dynText dText)
 
 requestWithCredentialsAndDecode 

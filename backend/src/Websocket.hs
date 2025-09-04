@@ -10,6 +10,7 @@ import qualified Data.Text.Encoding as TE
 import Data.ByteString.UTF8 (toString)
 import Control.Monad.IO.Class (liftIO)
 import Control.Exception (finally)
+import Network.WebSockets (Connection)
 
 import Schema
 import Common.Api
@@ -17,8 +18,12 @@ import Query
 
 -- | @type ServerApp = PendingConnection -> IO ()@ is a fucntion type, hence why `pending`
 --   appears down here.
-wsHandler :: TVar [NamedConn] -> User -> P.Connection -> WS.ServerApp
-wsHandler tvarConns eUser pgConn pending = do 
+wsHandler :: TVar [NamedConn] 
+          -> TVar [Connection]
+          -> User 
+          -> P.Connection 
+          -> WS.ServerApp
+wsHandler tvarConns tvarConnsPub eUser pgConn pending = do 
   let path = toString $ WS.requestPath $ WS.pendingRequest pending
   let req = WS.pendingRequest pending
       path = WS.requestPath req
@@ -31,9 +36,7 @@ wsHandler tvarConns eUser pgConn pending = do
   liftIO $ atomically $ writeTVar tvarConns wsConnsPlusThis
 
   putStrLn $ "-------------------- broadcastConnectedUsers"
-  _ <- broadcastConnectedUsers tvarConns
-
-  -- TODO send public DataBase Messages
+  _ <- broadcastConnectedUsers tvarConns tvarConnsPub
 
   putStrLn $ "-------------------- Socket cycle start ..."
   forever $ do
@@ -47,7 +50,8 @@ wsHandler tvarConns eUser pgConn pending = do
         putStrLn "Message received."
         wsConns' <- atomically $ readTVar tvarConns
         forM_ wsConns' $ 
-          \(eUser, wsConn) -> WS.sendTextData wsConn (A.encode (NewMessage msg'))
+          \(eUser, wsConn) -> 
+            WS.sendTextData wsConn (A.encode (NewMessage msg'))
         putStrLn "Message broadcastes."
         insertFromFEMessage msg' pgConn 
         putStrLn "Message saved on DB."
@@ -55,10 +59,13 @@ wsHandler tvarConns eUser pgConn pending = do
 
       otherwise -> putStrLn "TODO case for different type of WSMessage"
 
-wsHandlerPublic :: TVar [NamedConn] -> P.Connection -> WS.ServerApp
-wsHandlerPublic conns pgConn pending = do
+wsHandlerPublic :: TVar [NamedConn] 
+                -> TVar [Connection]
+                -> P.Connection 
+                -> WS.ServerApp
+wsHandlerPublic conns pubConns pgConn pending = do
   -- putStrLn "inside public ws handler..."
-  conn <- WS.acceptRequest pending
+  conn <- WS.acceptRequest pending 
   let loop = forever $ do
       putStrLn "-------------------- public socket"
       msgJSON <- WS.receiveData conn
@@ -70,10 +77,17 @@ wsHandlerPublic conns pgConn pending = do
   
   loop `finally` putStrLn "Public WebSocket connection closed"
 
-broadcastConnectedUsers :: TVar [NamedConn] -> IO ()
-broadcastConnectedUsers tvarConns = do
+broadcastConnectedUsers :: TVar [NamedConn] 
+                        -> TVar [Connection]
+                        -> IO ()
+broadcastConnectedUsers tvarConns tvarConnsPub = do
   conns <- atomically $ readTVar tvarConns
+  connsPublic <- atomically $ readTVar tvarConnsPub
   let connectedUsers = fst <$> conns
   forM_ conns $ 
-    \(eUser, wsConn) -> WS.sendTextData wsConn (A.encode (ConnectedClients connectedUsers))
+    \(eUser, wsConn) -> 
+      WS.sendTextData wsConn (A.encode (ConnectedClients connectedUsers))
+  forM_ connsPublic $ 
+    \wsConn -> 
+      WS.sendTextData wsConn (A.encode (ConnectedClients connectedUsers))
   return ()

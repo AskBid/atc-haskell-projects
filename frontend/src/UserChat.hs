@@ -88,7 +88,6 @@ chatPanel dRouteUserName user = do
           then "class" =: buttonStyle
           else "class" =: buttonPrivateStyle
 
-
     let eSocket = ffor eUrl $ \url -> do 
           elClass "label" labelStyle $ text "Message:"
           elInpMess <- inputElement $ def & initialAttributes .~ ("class" =: inputStyle)
