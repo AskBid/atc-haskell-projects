@@ -40,3 +40,4 @@ data FEMessage = FEMessage
   } deriving (Show, Eq, Generic, ToJSON, FromJSON)
 
 type NamedConn = (User, WS.Connection)
+type AnonConn  = (Int, WS.Connection)

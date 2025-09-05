@@ -33,14 +33,14 @@ userChat appState = do
 
   prerender_ blank $ do  
     dName <- askRoute 
-    liftIO $ putStrLn "inside userChat"
+    liftIO $ putStrLn "FE: inside userChat"
     performEvent_ $ ffor (updated (loggedAs appState)) $
       \name -> liftIO $ putStrLn $ show name
     dyn_ $ ffor (loggedAs appState) $ \case
       Loading    -> el "div" $ text "loading..."
       LoggedIn u -> chatPanel dName u
       LoggedOut  -> do 
-        liftIO $ putStrLn "LoggedOut"
+        liftIO $ putStrLn "FE: LoggedOut"
         redirectToAuth 
       -- ^ TODO could send attempted name with parameter to set as 
       --   value in the login input element.
@@ -104,7 +104,7 @@ chatPanel dRouteUserName user = do
           let wsConfig = def & webSocketConfig_reconnect .~ False
                              & webSocketConfig_send .~ ((:[]) <$> A.encode <$> eWSMess)
 
-          liftIO $ putStrLn $ "Opening WebSocket at: " ++ T.unpack url
+          liftIO $ putStrLn $ "FE: Opening WebSocket at: " ++ T.unpack url
           ws <- webSocket url wsConfig
           -- ^ Event keep on triggering when new message comes from WS backend
 
@@ -125,7 +125,7 @@ mkFEMessage mess pRecipient = FEMessage
   , femBody      = mess
   , femTimestamp = Nothing
   , femOwner     = "bob"
-  , femPrivate   = pRecipient
+  , femPrivate   = Nothing -- pRecipient
   }
 
 

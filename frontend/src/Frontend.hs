@@ -93,7 +93,7 @@ frontend = Frontend
                       --   where we need it.
 
               performEvent_ $ ffor (_webSocket_recv ws) $ \msg ->
-                liftIO $ putStrLn ("WS recv (Auth): " <> show msg)
+                liftIO $ putStrLn ("FE: WS recv (Auth): " <> show msg)
 
               pure (AuthConnection ws)
 
@@ -104,7 +104,7 @@ frontend = Frontend
                       & webSocketConfig_send .~ ((:[]) <$> evWsSend appState)
 
               performEvent_ $ ffor (_webSocket_recv ws) $ \msg ->
-                liftIO $ putStrLn ("WS recv (Public): " <> show msg)
+                liftIO $ putStrLn ("FE: WS recv (Public): " <> show msg)
 
               pure (PublicConnection ws)
         -- --
@@ -138,7 +138,7 @@ frontend = Frontend
             ------------
             -- CHAT/AUTH
             elClass "div" "flex-1 bg-gray-100 p-4" $ do
-              liftIO $ putStrLn "inside Frontend just before setRoute..+++++"
+              liftIO $ putStrLn "FE: inside Frontend just before setRoute..+++++"
 
               subRoute_ $ \case
                 FrontendRoute_Main -> do 

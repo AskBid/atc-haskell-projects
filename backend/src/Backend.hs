@@ -56,7 +56,7 @@ backend = Backend
   { _backend_run = \serve -> do 
 
       wsConns <- liftIO $ atomically $ newTVar ([] :: [NamedConn])
-      wsConnsPublic <- liftIO $ atomically $ newTVar ([] :: [Connection])
+      wsConnsPublic <- liftIO $ atomically $ newTVar ([] :: [AnonConn])
       pgConn <- P.connect connInfo
       migrateDB pgConn
       -- P.runBeamPostgresDebug putStrLn pgConn $
@@ -71,7 +71,7 @@ backend = Backend
 -- | routes
 backendHandlers 
   :: TVar [NamedConn] 
-  -> TVar [Connection] 
+  -> TVar [AnonConn] 
   -> P.Connection 
   -> R BackendRoute 
   -> Snap ()
@@ -126,7 +126,9 @@ backendHandlers conns pubConns pgConn = \case
               insert (userTable chatDB) $ 
                 insertExpressions [User default_ (val_ usr) (val_ pwd)]
             modifyResponse $ setResponseCode 200
-            let msg = "User `"<> usr <>"` was succefully registered. You can now Login. \x2705"
+            let msg = "User `" 
+                      <> usr 
+                      <> "` was succefully registered. You can now Login. \x2705"
             liftIO $ putStrLn $ unpack msg
             writeBS $ BL.toStrict $ A.encode $ BackendResponse {textOnly = msg}
 
@@ -176,7 +178,9 @@ backendHandlers conns pubConns pgConn = \case
                 liftIO $ putStrLn $ "BE: Auth not succesful. Socket not opening."
                 writeBS "User did not exist."
               (u:_) -> do 
-                liftIO $ putStrLn $ "BE: Auth successful, opening socket for: " <>  (unpack $ _userName u)
+                liftIO $ putStrLn 
+                       $ "BE: Auth successful, opening socket for: " 
+                       <> (unpack $ _userName u)
                 modifyResponse $ setResponseStatus 200 "OK"
                 writeBS $ BL.toStrict $ A.encode u
         WSSnap.runWebSocketsSnap $ wsHandler conns pubConns u pgConn
@@ -185,6 +189,8 @@ backendHandlers conns pubConns pgConn = \case
     writeBS "Connection with no permission to chat."
     WSSnap.runWebSocketsSnap $ wsHandlerPublic conns pubConns pgConn
 
-  -- ^ runWebSocketsSnap is just a bridge — it hands off the PendingConnection to your wsHandler. 
-  -- Everything else is up to you. Broadcast messages to all clients, Count or log active connections,
+  -- ^ runWebSocketsSnap is just a bridge — it hands off the PendingConnection 
+  -- to your wsHandler. 
+  -- Everything else is up to you. Broadcast messages to all clients, Count or
+  -- log active connections,
   -- Assign client IDs or session tokens, Or keep chat history...
