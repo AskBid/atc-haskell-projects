@@ -27,14 +27,12 @@ wsHandler :: TVar [NamedConn]
           -> P.Connection 
           -> WS.ServerApp
 wsHandler tvarConns tvarConnsPub user pgConn pending = do 
-  let path = toString $ WS.requestPath $ WS.pendingRequest pending
   let req = WS.pendingRequest pending
       path = WS.requestPath req
 
   putStrLn $ "BE: Request path: " <> show path
   wsConn <- WS.acceptRequest pending
-  _ <- broadcastConnectedUsers tvarConns tvarConnsPub
-
+  -- TODO send tvarConns to this wsConn only.
   wsConns <- liftIO $ atomically $ readTVar tvarConns
   let newNamedConn = (user, wsConn)
   let wsConnsPlusThis = case elem user (fst <$> wsConns) of
@@ -58,16 +56,15 @@ wsHandler tvarConns tvarConnsPub user pgConn pending = do
               \(eUser, wsConn) -> 
                 WS.sendTextData wsConn (A.encode (NewMessage msg'))
             putStrLn "BE: Message broadcastes."
-            insertFromFEMessage msg' pgConn 
+            -- insertFromFEMessage msg' pgConn 
             putStrLn "BE: Message saved on DB."
             return ()
           otherwise -> putStrLn "BE: TODO case for different type of WSMessage"
   finally loop $ do 
-    connsNow' <- liftIO $ atomically $ readTVar tvarConns
-    let connsNowLessThis = Prelude.filter ((/= user) . fst) connsNow'
-    liftIO $ atomically $ writeTVar tvarConns connsNowLessThis
+    atomically $ modifyTVar' tvarConns (Prelude.filter ((/= user) . fst))
     _ <- broadcastConnectedUsers tvarConns tvarConnsPub
     putStrLn $ "BE: " <> T.unpack (_userName user) <> " WebSocket connection closed"
+    WS.sendClose wsConn ("BE: " <> _userName user <> " WebSocket closed")
 
 -- | WebSocket solely used for the login/signup forms to give
 --   feedback on user existance and online users (the other websocket)
@@ -77,28 +74,30 @@ wsHandlerPublic :: TVar [NamedConn]
                 -> WS.ServerApp
 wsHandlerPublic tvarConns tvarConnsPub pgConn pending = do
   wsConn <- WS.acceptRequest pending 
-  _ <- broadcastConnectedUsers tvarConns tvarConnsPub
-
+  -- TODO send tvarConns to this wsConn only.
   connsNow <- liftIO $ atomically $ readTVar tvarConnsPub
+
   let wsConnId = case connsNow of
         [] -> 1
         _  -> 1 + Prelude.maximum (fst <$> connsNow)
       connsNowPlusThis = (wsConnId, wsConn) : connsNow
+
   liftIO $ atomically $ writeTVar tvarConnsPub connsNowPlusThis
-  _ <- broadcastConnectedUsers tvarConns tvarConnsPub
+  -- _ <- broadcastConnectedUsers tvarConns tvarConnsPub
+  conns <- atomically $ readTVar tvarConns
+  let connectedUsers = fst <$> conns
+  WS.sendTextData wsConn (A.encode (ConnectedClients connectedUsers))
 
   let loop = forever $ do
-      putStrLn "BE: -------------------- public socket"
-      msgJSON <- WS.receiveData wsConn
-      let msgUserName = TE.decodeUtf8 msgJSON
-      users <- liftIO $ conduitQuery pgConn queryUserByName msgUserName
-      case users of
-        []    -> WS.sendTextData wsConn (A.encode NoUser)
-        (u:_) -> WS.sendTextData wsConn (A.encode (UserExist $ _userName u))
+        putStrLn "BE: -------------------- public socket"
+        msgJSON <- WS.receiveData wsConn
+        let msgUserName = TE.decodeUtf8 msgJSON
+        users <- liftIO $ conduitQuery pgConn queryUserByName msgUserName
+        case users of
+          []    -> WS.sendTextData wsConn (A.encode NoUser)
+          (u:_) -> WS.sendTextData wsConn (A.encode (UserExist $ _userName u))
   finally loop $ do 
-    connsNow' <- liftIO $ atomically $ readTVar tvarConnsPub
-    let connsNowLessThis = Prelude.filter ((/= wsConnId) . fst) connsNow'
-    liftIO $ atomically $ writeTVar tvarConnsPub connsNowLessThis
+    atomically $ modifyTVar' tvarConnsPub (Prelude.filter ((/= wsConnId) . fst))
     _ <- broadcastConnectedUsers tvarConns tvarConnsPub
     putStrLn "BE: Public WebSocket connection closed"
 

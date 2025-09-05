@@ -61,6 +61,8 @@ data AppState t = AppState
   , webSocketSwitch :: WebsocketState t -> IO ()
   , evWsSend :: Event t BSL.ByteString
   , wsSendTrigger :: BSL.ByteString -> IO ()
+  , evWsClose :: Event t ()
+  , wsCloseTrigger :: () -> IO ()
   , loggedAs :: Dynamic t LoginState
   , loggedTrigger :: LoginState -> IO ()
   }

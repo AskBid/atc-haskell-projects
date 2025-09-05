@@ -66,11 +66,14 @@ frontend = Frontend
         -- setting up Event for send WebscoketState
         --
         (evWsSend', wsSendTrigger') <- newTriggerEvent
+        (evWsClose', wsCloseTrigger') <- newTriggerEvent
 
         let appState = AppState 
               { wsConn = dConn
               , evWsSend = evWsSend'
               , wsSendTrigger = wsSendTrigger'
+              , evWsClose = evWsClose'
+              , wsCloseTrigger = wsCloseTrigger'
               , loggedAs = dLogged
               , loggedTrigger = loggedTrigger'
               }
@@ -91,6 +94,7 @@ frontend = Frontend
                       & webSocketConfig_send .~ ((:[]) <$> evWsSend appState)
                       -- ^ evWsSend will then be triggered in the interface location
                       --   where we need it.
+                      & webSocketConfig_close .~ ((1000, "User closed WebSocket.") <$ evWsClose appState)
 
               performEvent_ $ ffor (_webSocket_recv ws) $ \msg ->
                 liftIO $ putStrLn ("FE: WS recv (Auth): " <> show msg)
@@ -229,3 +233,4 @@ logoutButton appState = do
   -- ^ I am here using User solely to be able to reuse @requestWithCredentialsAndDecode@
   --   but we are only interested that the events fires if the statusCheck was filtered
   performEvent_ $ (liftIO $ loggedTrigger appState $ LoggedOut) <$ evSucc
+  performEvent_ $ (liftIO $ wsCloseTrigger appState $ ()) <$ evSucc
