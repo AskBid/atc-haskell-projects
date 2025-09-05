@@ -38,7 +38,7 @@ userChat appState = do
       \name -> liftIO $ putStrLn $ show name
     dyn_ $ ffor (loggedAs appState) $ \case
       Loading    -> el "div" $ text "loading..."
-      LoggedIn u -> chatPanel dName u
+      LoggedIn u -> chatPanel dName u appState
       LoggedOut  -> do 
         liftIO $ putStrLn "FE: LoggedOut"
         redirectToAuth 
@@ -71,15 +71,12 @@ chatPanel
      , Adjustable t m
      , DomBuilder t m
      ) 
-  => Dynamic t T.Text -> User -> m ()
-chatPanel dRouteUserName user = do
-  -- user == userRoute -> public chat
-  -- user /= userRoute -> private chat
+  => Dynamic t T.Text -> User -> AppState t -> m ()
+chatPanel dRouteUserName user appState = do
   elClass "div" divVerticalStyle $ do
-
-    ePostBuild <- getPostBuild
-    let eUrl = ("ws://localhost:8000/ws/user/" <> (_userName user)) <$ ePostBuild
-        dButtonText = ffor dRouteUserName $ \name ->  
+    -- ePostBuild <- getPostBuild
+    -- let eUrl = ("ws://localhost:8000/ws/user/" <> (_userName user)) <$ ePostBuild
+    let dButtonText = ffor dRouteUserName $ \name ->  
           if _userName user == name 
           then "Send >"
           else "Send Private to " <> name
@@ -87,40 +84,30 @@ chatPanel dRouteUserName user = do
           if _userName user == name 
           then "class" =: buttonStyle
           else "class" =: buttonPrivateStyle
+        eWsConn = updated (wsConn appState)
 
-    let eSocket = ffor eUrl $ \url -> do 
-          elClass "label" labelStyle $ text "Message:"
-          elInpMess <- inputElement $ def & initialAttributes .~ ("class" =: inputStyle)
-          (elBtnSend, _) <- elDynAttr' "button" dButtonStyle $ dynText dButtonText
+    dyn_ $ ffor (wsConn appState) $ \case 
+      NoConnection        -> el "div" $ text "No connection."
+      PublicConnection ws -> el "div" $ text "Loading..."
+      AuthConnection ws   -> do 
+        elClass "label" labelStyle $ text "Message:"
+        elInpMess <- inputElement $ def & initialAttributes .~ ("class" =: inputStyle)
+        (elBtnSend, _) <- elDynAttr' "button" dButtonStyle $ dynText dButtonText
+        let eSend = domEvent Click elBtnSend
+            dMessText = _inputElement_value elInpMess
+            dWSMess = NewMessage <$> (mkFEMessage <$> dMessText)
+            -- ^ Event does not have Applicative, but Dynamic does.
+            eWSMess = tagPromptlyDyn dWSMess eSend
+            -- dPrivate = (Just . (:[])) <$> dRouteUserName
+            -- dWSMess = NewMessage <$> (mkFEMessage <$> dMessText <*> dPrivate)
+        performEvent_ $ (liftIO . wsSendTrigger appState . A.encode) <$> eWSMess
+        let evmWSMessage = A.decode . BSL.fromStrict <$> _webSocket_recv ws
+        dChatMessages <- foldDyn (:) [] $ feMessage <$> evmWSMessage 
+        elClass "div" "flex flex-col gap-0 p-4" $ void $ do
+          simpleList dChatMessages $ \dMsg -> elClass "div" "p-0 " $ dynText dMsg
 
-          let eSend = domEvent Click elBtnSend
-              dMessText = _inputElement_value elInpMess
-              dPrivate = (Just . (:[])) <$> dRouteUserName
-              eMessText = tagPromptlyDyn dMessText eSend
-              dWSMess = NewMessage <$> (mkFEMessage <$> dMessText <*> dPrivate)
-              -- ^ Event does not have Applicative, but Dynamic does.
-              eWSMess = tagPromptlyDyn dWSMess eSend
-          
-          let wsConfig = def & webSocketConfig_reconnect .~ False
-                             & webSocketConfig_send .~ ((:[]) <$> A.encode <$> eWSMess)
-
-          liftIO $ putStrLn $ "FE: Opening WebSocket at: " ++ T.unpack url
-          ws <- webSocket url wsConfig
-          -- ^ Event keep on triggering when new message comes from WS backend
-
-          let evmWSMessage = A.decode . BSL.fromStrict <$> _webSocket_recv ws
-
-          performEvent_ $ liftIO . putStrLn . T.unpack . feMessage <$> evmWSMessage
-
-          dChatMessages <- foldDyn (:) [] $ feMessage <$> evmWSMessage 
-
-          elClass "div" "flex flex-col gap-0 p-4" $ void $ do
-            simpleList dChatMessages $ \dMsg -> elClass "div" "p-0 " $ dynText dMsg
-
-    void $ widgetHold (el "div" $ text "No connection.") eSocket 
-
-mkFEMessage :: T.Text -> Maybe [T.Text] -> FEMessage
-mkFEMessage mess pRecipient = FEMessage 
+mkFEMessage :: T.Text -> FEMessage
+mkFEMessage mess = FEMessage 
   { femId        = Nothing
   , femBody      = mess
   , femTimestamp = Nothing
