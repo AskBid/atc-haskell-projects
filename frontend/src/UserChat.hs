@@ -134,7 +134,8 @@ feMessage wsm = case wsm of
   Nothing -> "*** Non Valid Message ***"
   Just m  -> case m of
     NewMessage m       -> (_userName $ femOwner m) <> "> " <> femBody m
-    NewPrivate m       -> (_userName $ femOwner m) <> "> " <> femBody m
+    NewPrivate (FEMessage _ body _ owner (Just (x:xs))) ->
+      (_userName owner) <> "(@" <> x <> ")> " <> body
     ConnectedClients _ -> "Client connection event."
     otherwise          -> "TODO: unknown message."
 
