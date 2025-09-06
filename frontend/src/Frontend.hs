@@ -88,8 +88,12 @@ frontend = Frontend
         dConn <- widgetHold (pure NoConnection) $ 
           ffor (updated (loggedAs appState)) $ \case
             LoggedIn u -> do
-              let url = "ws://localhost:8000/ws/user/" <> _userName u
-              ws <- webSocket url $ def
+              let url = getUrl $ FullRoute_Backend 
+                                 BackendRoute_Websocket :/ 
+                                 WebscocketRoute_User :/ (_userName u)
+                  fullUrl = "ws://localhost:8000/" <> url
+                  -- TODO use Document.Local to find protocol and host address.
+              ws <- webSocket fullUrl $ def
                       & webSocketConfig_reconnect .~ False
                       & webSocketConfig_send .~ ((:[]) <$> evWsSend appState)
                       -- ^ evWsSend will then be triggered in the interface location
@@ -102,8 +106,12 @@ frontend = Frontend
               pure (AuthConnection ws)
 
             LoggedOut -> do
-              let url = "ws://localhost:8000/ws"
-              ws <- webSocket url $ def
+              let url = getUrl $ FullRoute_Backend 
+                                 BackendRoute_Websocket :/ 
+                                 WebscocketRoute_Main :/ ()
+                  fullUrl = "ws://localhost:8000/" <> url
+                  -- TODO use Document.Local to find protocol and host address.
+              ws <- webSocket fullUrl $ def
                       & webSocketConfig_reconnect .~ False
                       & webSocketConfig_send .~ ((:[]) <$> evWsSend appState)
 

@@ -14,14 +14,14 @@
 - ~~[ ] delete user page~~
 - [x] Chat Page - Url User param based
   - ~~[ ] shows button to go to profile or profile shown on page~~
-  - [ ] if accessed from other auth user, sends private messages only showing each other messages
+  - [x] if accessed from other auth user, sends private messages only showing each other messages
   - [x] if accessed from auth user: standard public Chat you can send auth messages from
   - ~~[x] if UnAuth access public Chat no ability to send~~
 - [ ] Socket URL should use Routes types and Document.Local to find protocol and host address.
 - [ ] Create better rendering for chat feMessages using a type {user:, mess:} and relative rendering in simpleList
-- [ ] Rethink how we broadcast messages
-  - [ ] if User /= UserRoute we send only relative Private messages
-  - [ ] if User == User we send all public messages and all Private with User as recipient
+- [x] Rethink how we broadcast messages
+  - [x] if User /= UserRoute we send only relative Private messages
+  - [x] if User == User we send all public messages and all Private with User as recipient
 - [ ] Send DB historical messages when backend route for user is reached
   - [ ] At the moment @insertFromFEMessage@ does not account for Private recipient owners. Need to add that to progress with DB historical messages capabilities.
 - [ ] If UserRoute with no existing User is reached, interface should block sending messages
