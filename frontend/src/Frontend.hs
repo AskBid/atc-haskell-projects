@@ -91,7 +91,7 @@ frontend = Frontend
               let url = getUrl $ FullRoute_Backend 
                                  BackendRoute_Websocket :/ 
                                  WebscocketRoute_User :/ (_userName u)
-                  fullUrl = "ws://localhost:8000/" <> url
+                  fullUrl = "ws://localhost:8000" <> url
                   -- TODO use Document.Local to find protocol and host address.
               ws <- webSocket fullUrl $ def
                       & webSocketConfig_reconnect .~ False
@@ -109,7 +109,7 @@ frontend = Frontend
               let url = getUrl $ FullRoute_Backend 
                                  BackendRoute_Websocket :/ 
                                  WebscocketRoute_Main :/ ()
-                  fullUrl = "ws://localhost:8000/" <> url
+                  fullUrl = "ws://localhost:8000" <> url
                   -- TODO use Document.Local to find protocol and host address.
               ws <- webSocket fullUrl $ def
                       & webSocketConfig_reconnect .~ False
@@ -196,11 +196,24 @@ listUsers
      , MonadFix m
      , PostBuild t m
      , Adjustable t m
-     , DomBuilder t m ) 
+     , DomBuilder t m 
+     , RouteToUrl (R FrontendRoute) m 
+     , SetRoute t (R FrontendRoute) m
+     , Prerender t m
+     ) 
   => Event t [User] -> m (Dynamic t [()])
 listUsers eNames = do 
-  dUsrList <- holdDyn [] $ (_userName <$>) <$> eNames
-  simpleList dUsrList (\dText -> el "div" $ dynText dText)
+  dUserList <- holdDyn [] $ (_userName <$>) <$> eNames
+  simpleList dUserList $ \dUsername -> 
+    el "div" $ do
+      dyn_ $ ffor dUsername $ \username ->
+        routeLink (FrontendRoute_User :/ username) $
+          elAttr "div"
+            ( "class" =:
+              "block cursor-pointer py-0 p-1 \
+              \bg-white hover:bg-fuchsia-400 hover:text-white \
+              \transition-colors duration-100"
+            ) $ text username
 
 requestWithCredentialsAndDecode 
   :: ( MonadJSM (Performable m)

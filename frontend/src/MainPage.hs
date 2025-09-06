@@ -78,10 +78,7 @@ loginInterface
      )
   => WebSocket t -> AppState t -> m ()
 loginInterface ws appState = do
-          -- let ws = wsConn appState
-          -- ws <- webSocket "ws://localhost:8000/ws" $ def 
-          --         & webSocketConfig_reconnect .~ False
-          --         & webSocketConfig_send .~ ((:[]) <$> eName)
+
   prerender_ blank $ mdo
     elClass "label" labelStyle $ text "Username:"
     elInpName <- inputElement $ def 
