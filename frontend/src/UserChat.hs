@@ -97,7 +97,7 @@ chatPanel dRouteUserName user appState = do
             dMessText = _inputElement_value elInpMess
             dWSMess = join $ ffor dIsPrivate $ \isPrivate -> 
               if isPrivate 
-              then NewMessage <$> (mkPrivateFEMessage user <$> dMessText <*> dRouteUserName)
+              then NewMessage <$> (mkPrivateFEMessage user <$> dRouteUserName <*> dMessText)
               else NewMessage <$> (mkPublicFEMessage user <$> dMessText)
             -- ^ Event does not have Applicative, but Dynamic does.
             eWSMess = tagPromptlyDyn dWSMess eSend
@@ -105,7 +105,8 @@ chatPanel dRouteUserName user appState = do
         let evmWSMessage = A.decode . BSL.fromStrict <$> _webSocket_recv ws
         dChatMessages <- foldDyn (:) [] $ feMessage <$> evmWSMessage 
         elClass "div" "flex flex-col gap-0 p-4" $ void $ do
-          simpleList dChatMessages $ \dMsg -> elClass "div" "p-0 " $ dynText dMsg
+          simpleList dChatMessages $ \dMsg -> 
+            elClass "div" "flex items-start p-0 " $ dynText dMsg
 
 
 mkPublicFEMessage :: User -> T.Text  -> FEMessage
@@ -132,7 +133,7 @@ feMessage :: Maybe WSMessage -> T.Text
 feMessage wsm = case wsm of
   Nothing -> "*** Non Valid Message ***"
   Just m  -> case m of
-    NewMessage m       -> "TODO: user> " <> femBody m
+    NewMessage m       -> (_userName $ femOwner m) <> "> " <> femBody m
     ConnectedClients _ -> "Client connection event."
     otherwise          -> "TODO: unknown message."
 

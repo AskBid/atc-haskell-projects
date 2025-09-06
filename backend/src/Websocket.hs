@@ -113,7 +113,8 @@ broadcastConnectedUsers tvarConns tvarConnsPub = do
   let connectedUsers = fst <$> conns
   forM_ conns $ 
     \(user, wsConn) -> do
-      liftIO $ putStrLn $ T.unpack (_userName user) <> " sending users: " <> show connectedUsers
+      liftIO $ putStrLn $ T.unpack "BE: broadcasting users connections to: " <> (T.unpack $ _userName user)
+      liftIO $ putStrLn $ T.unpack "BE: sent connected users: " <> show connectedUsers  
       WS.sendTextData wsConn (A.encode (ConnectedClients connectedUsers))
   forM_ connsPublic $ 
     \(_, wsConn) -> 
