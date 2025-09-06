@@ -23,5 +23,6 @@
   - [ ] if User /= UserRoute we send only relative Private messages
   - [ ] if User == User we send all public messages and all Private with User as recipient
 - [ ] Send DB historical messages when backend route for user is reached
+  - [ ] At the moment @insertFromFEMessage@ does not account for Private recipient owners. Need to add that to progress with DB historical messages capabilities.
 - [ ] If UserRoute with no existing User is reached, interface should block sending messages
 

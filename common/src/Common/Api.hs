@@ -13,6 +13,7 @@ import Schema
 
 data WSMessage 
   = NewMessage FEMessage
+  | NewPrivate FEMessage
   | ConnectedClients [User]
   | UserExist Text
   | NoUser

@@ -26,10 +26,10 @@ conduitQuery
   -> (a -> Q Postgres ChatDB QBaseScope (table (QExpr Postgres QBaseScope))) 
   -> a 
   -> IO [table Identity]
-conduitQuery conn query value =
+conduitQuery conn query qValue =
   runResourceT $
     runConduit $
-      PC.streamingRunSelect conn (select (query value))
+      PC.streamingRunSelect conn (select (query qValue))
         -- ^ ConduitT () a m ()
         -- Think of it like: “Here’s a stream of rows (Users), you can consume them however you like.”
         .| CL.consume   
@@ -52,6 +52,12 @@ queryUserByName name = do
   guard_ (_userName u ==. val_ name)
   pure u
 
+queryUsersByNames :: [Text] -> Q Postgres ChatDB s (UserT (QExpr Postgres s))
+queryUsersByNames names = do
+  u <- all_ (userTable chatDB)
+  guard_ (_userName u `in_` Prelude.map val_ names)
+  pure u
+
 queryUserCredentials :: Credentials -> Q Postgres ChatDB s (UserT (QExpr Postgres s))
 queryUserCredentials (Credentials usr pwd) = do
   u <- all_ (userTable chatDB)
@@ -68,6 +74,7 @@ insertMessage conn body ownerId =
     runInsert $ insert (messageTable chatDB) $
       insertExpressions
         [ Message default_ (val_ body) nothing_ (val_ ownerId) ]
+      -- TODO account for private recipients too.
 
 -- | to insert in database from a frontend message.
 insertFromFEMessage :: FEMessage -> Connection -> IO ()
@@ -85,7 +92,7 @@ insertFromFEMessage fem conn = do
       case femPrivate fem of
         Nothing         -> return ()
         Just recipients -> do 
-          -- insert `Private`s 
+          -- TODO insert `Private`s 
           return ()
 
 queryUserById :: UserId -> Q Postgres ChatDB s (UserT (QExpr Postgres s))

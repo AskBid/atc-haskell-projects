@@ -50,15 +50,17 @@ wsHandler tvarConns tvarConnsPub user pgConn pending = do
 
         case msg of 
           Just (NewMessage msg') -> do
-            putStrLn "BE: Message received."
+            putStrLn "BE: Public Message received."
             wsConns' <- atomically $ readTVar tvarConns
-            forM_ wsConns' $ 
-              \(eUser, wsConn) -> 
-                WS.sendTextData wsConn (A.encode (NewMessage msg'))
-            putStrLn "BE: Message broadcastes."
+            forM_ wsConns' $ \(user, wsConn) -> 
+              WS.sendTextData wsConn (A.encode (NewMessage msg'))
+            putStrLn "BE: Public Message broadcastes."
             insertFromFEMessage msg' pgConn 
-            putStrLn "BE: Message saved on DB."
+            putStrLn "BE: Public Message saved on DB."
             return ()
+          Just (NewPrivate msg') -> do 
+            putStrLn "BE: Private Message received."
+            broadcastPrivate pgConn tvarConns msg'
           otherwise -> putStrLn "BE: TODO case for different type of WSMessage"
   finally loop $ do 
     atomically $ modifyTVar' tvarConns (Prelude.filter ((/= user) . fst))
@@ -120,3 +122,15 @@ broadcastConnectedUsers tvarConns tvarConnsPub = do
     \(_, wsConn) -> 
       WS.sendTextData wsConn (A.encode (ConnectedClients connectedUsers))
   return ()
+
+broadcastPrivate :: P.Connection -> TVar [NamedConn] -> FEMessage -> IO ()
+broadcastPrivate pgConn tvarConns fem = do 
+  recipients <- queryRecipients (femPrivate fem)
+  let viewers = (femOwner fem):recipients
+  conns <- atomically $ readTVar tvarConns
+  let selectConns = Prelude.filter (\(u, _) -> u `elem` viewers) conns
+  forM_ selectConns $ \(user, wsConn) -> 
+    WS.sendTextData wsConn (A.encode (NewPrivate fem))
+  where
+    queryRecipients Nothing      = pure []
+    queryRecipients (Just names) = conduitQuery pgConn queryUsersByNames names

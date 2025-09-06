@@ -97,7 +97,7 @@ chatPanel dRouteUserName user appState = do
             dMessText = _inputElement_value elInpMess
             dWSMess = join $ ffor dIsPrivate $ \isPrivate -> 
               if isPrivate 
-              then NewMessage <$> (mkPrivateFEMessage user <$> dRouteUserName <*> dMessText)
+              then NewPrivate <$> (mkPrivateFEMessage user <$> dRouteUserName <*> dMessText)
               else NewMessage <$> (mkPublicFEMessage user <$> dMessText)
             -- ^ Event does not have Applicative, but Dynamic does.
             eWSMess = tagPromptlyDyn dWSMess eSend
@@ -134,6 +134,7 @@ feMessage wsm = case wsm of
   Nothing -> "*** Non Valid Message ***"
   Just m  -> case m of
     NewMessage m       -> (_userName $ femOwner m) <> "> " <> femBody m
+    NewPrivate m       -> (_userName $ femOwner m) <> "> " <> femBody m
     ConnectedClients _ -> "Client connection event."
     otherwise          -> "TODO: unknown message."
 
