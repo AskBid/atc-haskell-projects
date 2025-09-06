@@ -7,8 +7,8 @@
       - [x] exist
         - [x] pwd correct -> jwt -> opens user's chat
         - [x] pwd wrong -> ask again
-  - [x] list of online, ~~offline users~~, 
-    - [ ] clickable to fill username login input 
+  - [x] list of online/~~offline~~ users, 
+    - [x] clickable username goes to private
   - [x] signout / disconnect button, if logged
   - ~~[ ] only view Chat~~
 - ~~[ ] delete user page~~
@@ -17,11 +17,10 @@
   - [x] if accessed from other auth user, sends private messages only showing each other messages
   - [x] if accessed from auth user: standard public Chat you can send auth messages from
   - ~~[x] if UnAuth access public Chat no ability to send~~
-- [ ] Socket URL should use Routes types and Document.Local to find protocol and host address.
-- [ ] Create better rendering for chat feMessages using a type {user:, mess:} and relative rendering in simpleList
 - [x] Rethink how we broadcast messages
   - [x] if User /= UserRoute we send only relative Private messages
   - [x] if User == User we send all public messages and all Private with User as recipient
+- [ ] Create better rendering for chat feMessages using a type {user:, mess:} and relative rendering in simpleList
 - [ ] Send DB historical messages when backend route for user is reached
   - [ ] At the moment @insertFromFEMessage@ does not account for Private recipient owners. Need to add that to progress with DB historical messages capabilities.
 - [ ] If UserRoute with no existing User is reached, interface should block sending messages
