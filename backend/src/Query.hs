@@ -69,15 +69,15 @@ insertMessage conn body ownerId =
       insertExpressions
         [ Message default_ (val_ body) nothing_ (val_ ownerId) ]
 
--- | to insert in database from a frontend message, in which we won't have
---   IDs information on user.
+-- | to insert in database from a frontend message.
 insertFromFEMessage :: FEMessage -> Connection -> IO ()
 insertFromFEMessage fem conn = do 
-  users <- conduitQuery conn queryUserByName (femOwner fem)
-  case users of
+  let u = femOwner fem
+  existing <- conduitQuery conn queryUserById (primaryKey u)
+  case existing of
     []    -> return ()
-    (u:_) -> do 
-      insertMessage conn (femBody fem) (primaryKey u)
+    (u':_) -> do 
+      insertMessage conn (femBody fem) (primaryKey u')
       -- ^ data PrimaryKey UserT f = UserId (C f (SqlSerial Int32))
       --   A UserId is not just the integer, it’s a wrapper around _userId.
       --   Whenever Beam expects a UserId, you must wrap _userId inside UserId.
@@ -87,3 +87,9 @@ insertFromFEMessage fem conn = do
         Just recipients -> do 
           -- insert `Private`s 
           return ()
+
+queryUserById :: UserId -> Q Postgres ChatDB s (UserT (QExpr Postgres s))
+queryUserById uid = do
+  u <- all_ (userTable chatDB)
+  guard_ (primaryKey u ==. val_ uid)
+  pure u

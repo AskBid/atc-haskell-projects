@@ -11,7 +11,7 @@ import Reflex.Dom.Core
 import Obelisk.Route
 import Obelisk.Route.Frontend
 import Control.Monad.IO.Class (liftIO, MonadIO)
-import Control.Monad (void)
+import Control.Monad (void, join)
 import Language.Javascript.JSaddle (MonadJSM)
 import Control.Monad.Fix (MonadFix)
 import Control.Applicative (liftA2)
@@ -74,17 +74,17 @@ chatPanel
   => Dynamic t T.Text -> User -> AppState t -> m ()
 chatPanel dRouteUserName user appState = do
   elClass "div" divVerticalStyle $ do
-    -- ePostBuild <- getPostBuild
-    -- let eUrl = ("ws://localhost:8000/ws/user/" <> (_userName user)) <$ ePostBuild
-    let dButtonText = ffor dRouteUserName $ \name ->  
-          if _userName user == name 
-          then "Send >"
-          else "Send Private to " <> name
-        dButtonStyle = ffor dRouteUserName $ \name ->  
-          if _userName user == name 
-          then "class" =: buttonStyle
-          else "class" =: buttonPrivateStyle
-        eWsConn = updated (wsConn appState)
+
+    let dIsPrivate = ffor dRouteUserName $ \name -> 
+          not $ _userName user == name
+        dButtonText = join $ ffor dIsPrivate $ \isPrivate ->
+          if isPrivate
+          then ffor dRouteUserName $ \name -> "Send Private to " <> name
+          else constDyn "Send >"
+        dButtonStyle = ffor dIsPrivate $ \isPrivate -> 
+          if isPrivate
+          then "class" =: buttonPrivateStyle
+          else "class" =: buttonStyle
 
     dyn_ $ ffor (wsConn appState) $ \case 
       NoConnection        -> el "div" $ text "No connection."
@@ -95,24 +95,44 @@ chatPanel dRouteUserName user appState = do
         (elBtnSend, _) <- elDynAttr' "button" dButtonStyle $ dynText dButtonText
         let eSend = domEvent Click elBtnSend
             dMessText = _inputElement_value elInpMess
-            dWSMess = NewMessage <$> (mkFEMessage <$> dMessText)
+            dWSMess = join $ ffor dIsPrivate $ \isPrivate -> 
+              if isPrivate 
+              then NewMessage <$> (mkPrivateFEMessage user <$> dMessText <*> dRouteUserName)
+              else NewMessage <$> (mkPublicFEMessage user <$> dMessText)
             -- ^ Event does not have Applicative, but Dynamic does.
             eWSMess = tagPromptlyDyn dWSMess eSend
-            -- dPrivate = (Just . (:[])) <$> dRouteUserName
-            -- dWSMess = NewMessage <$> (mkFEMessage <$> dMessText <*> dPrivate)
         performEvent_ $ (liftIO . wsSendTrigger appState . A.encode) <$> eWSMess
         let evmWSMessage = A.decode . BSL.fromStrict <$> _webSocket_recv ws
         dChatMessages <- foldDyn (:) [] $ feMessage <$> evmWSMessage 
         elClass "div" "flex flex-col gap-0 p-4" $ void $ do
           simpleList dChatMessages $ \dMsg -> elClass "div" "p-0 " $ dynText dMsg
 
-mkFEMessage :: T.Text -> FEMessage
-mkFEMessage mess = FEMessage 
+
+mkPublicFEMessage :: User -> T.Text  -> FEMessage
+mkPublicFEMessage user mess = FEMessage
   { femId        = Nothing
   , femBody      = mess
   , femTimestamp = Nothing
-  , femOwner     = "bob"
-  , femPrivate   = Nothing -- pRecipient
+  , femOwner     = user
+  , femPrivate   = Nothing
   }
 
+mkPrivateFEMessage :: User ->  Username -> T.Text -> FEMessage
+mkPrivateFEMessage user recipient mess = FEMessage
+  { femId        = Nothing
+  , femBody      = mess
+  , femTimestamp = Nothing
+  , femOwner     = user
+  , femPrivate   = Just [recipient]
+  }
+
+-- | translates websocket messages into Frontend messages, 
+--   @Text@s ready for the chat.
+feMessage :: Maybe WSMessage -> T.Text
+feMessage wsm = case wsm of
+  Nothing -> "*** Non Valid Message ***"
+  Just m  -> case m of
+    NewMessage m       -> "TODO: user> " <> femBody m
+    ConnectedClients _ -> "Client connection event."
+    otherwise          -> "TODO: unknown message."
 

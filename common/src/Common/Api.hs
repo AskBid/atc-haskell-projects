@@ -35,9 +35,11 @@ data FEMessage = FEMessage
   { femId        :: Maybe Int
   , femBody      :: Text
   , femTimestamp :: Maybe LocalTime
-  , femOwner     :: Text
-  , femPrivate   :: Maybe [Text]
+  , femOwner     :: User
+  , femPrivate   :: Maybe [Username]
   } deriving (Show, Eq, Generic, ToJSON, FromJSON)
+
+type Username = Text
 
 type NamedConn = (User, WS.Connection)
 type AnonConn  = (Int, WS.Connection)

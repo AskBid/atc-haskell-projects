@@ -56,7 +56,7 @@ wsHandler tvarConns tvarConnsPub user pgConn pending = do
               \(eUser, wsConn) -> 
                 WS.sendTextData wsConn (A.encode (NewMessage msg'))
             putStrLn "BE: Message broadcastes."
-            -- insertFromFEMessage msg' pgConn 
+            insertFromFEMessage msg' pgConn 
             putStrLn "BE: Message saved on DB."
             return ()
           otherwise -> putStrLn "BE: TODO case for different type of WSMessage"

@@ -47,15 +47,6 @@ divConnectedUsers = "flex flex-col gap-0 p-2"
 linkStyle :: Text
 linkStyle = "underline text-blue-600 hover:text-blue-800"
 
--- | translates websocket messages into Frontend messages, @Text@s ready for the chat.
-feMessage :: Maybe WSMessage -> Text
-feMessage wsm = case wsm of
-  Nothing -> "*** Non Valid Message ***"
-  Just m -> case m of
-    NewMessage m -> "TODO: user> " <> femBody m
-    ConnectedClients _ -> "Client connection event."
-    otherwise -> "TODO: unknown message."
-
 data AppState t = AppState 
   { wsConn :: Dynamic t (WebsocketState t)
   , webSocketSwitch :: WebsocketState t -> IO ()
