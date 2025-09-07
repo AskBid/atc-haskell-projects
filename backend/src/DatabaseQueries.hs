@@ -33,8 +33,13 @@ findUsers et = do
     id = tweetOwner $ entityVal et 
 
 insertTweet :: Tweet -> IO (Key Tweet)
-insertTweet eTweet = do 
-  k <- runSqlite myDB $ insert eTweet
+insertTweet tweet = do 
+  k <- runSqlite myDB $ insert tweet
+  return k
+
+insertUser :: User -> IO (Key User)
+insertUser user = do 
+  k <- runSqlite myDB $ insert user
   return k
 
 getPostReplies :: Entity Tweet -> IO [Entity Tweet]

@@ -77,12 +77,13 @@ backendHandlers = \case
       Nothing -> do
         modifyResponse $ setResponseStatus 401 "Unauthorized"
         writeLBS "{\"error\": \"No Credentials\"}" -- TODO make type
-      Just loginReq -> do 
-        mEUser <- sqlUserPwdExist loginReq
+      Just credentials -> do 
+        mEUser <- sqlUserPwdExist credentials
         case mEUser of
           Nothing -> do 
             modifyResponse $ setResponseStatus 201 "Created"
-            -- TODO add user to DB
+            let user = User (username credentials) (password credentials) []
+            _ <- liftIO $ insertUser user
             writeLBS "Successful signup."
           Just eUser -> do
             modifyResponse $ setResponseStatus 401 "Unauthorized"

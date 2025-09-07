@@ -6,3 +6,4 @@
 - [ ] ability to follow other users
 - [ ] User page shows their tweets
 - [ ] Main page only shows users followed + some random ones
+- [ ] Improve messaging i.e. from signup to login, singup response msg is transfered to login
