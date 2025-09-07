@@ -43,7 +43,7 @@ mainPage appState = do
       evMEUserNotLog = ffilter (not . isJust) evPostMEUser
       url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Submit
   
-  prerender_ (pure never) $ do 
+  prerender_ blank $ do 
     let evIoUTCTime = getCurrentTime <$ evMEUserLogged
     evTime <- performEvent $ liftIO <$> evIoUTCTime
     dTime <- holdDyn (UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 0)) evTime 
@@ -73,7 +73,7 @@ mainPage appState = do
     evResp <- performRequestAsync evTweetReq
 
     evPostBuild <- getPostBuild
-    let evReload = leftmost [evPostBuild, evResp]
+    let evReload = leftmost [evPostBuild, () <$ evResp]
         url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Posts
         xhrReq = XhrRequest
           { _xhrRequest_method = "GET"

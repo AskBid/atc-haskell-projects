@@ -2,7 +2,7 @@
 {-# LANGUAGE GADTs               #-}
 {-# LANGUAGE OverloadedStrings   #-}
 
-module LoginPage where
+module SignupPage where
 
 import Common.Route 
 import Reflex.Dom.Core
@@ -22,31 +22,25 @@ import qualified Data.Aeson as A
 import Data.Maybe (isJust)
 
 
-loginPage :: ObeliskWidget t (R FrontendRoute) m  => AppState t -> RoutedT t () m ()
-loginPage appState = do
+signupPage :: ObeliskWidget t (R FrontendRoute) m  => AppState t -> RoutedT t () m ()
+signupPage appState = do
 
-  el "h2" $ text "Login here."
+  el "h2" $ text "Signup here."
   el "label" $ text "Username: "
   usrEl <- inputElement $ def & initialAttributes .~ 
     ("class" =: "border")
   el "label" $ text "Password: "
   pwdEl <- inputElement $ def & initialAttributes .~ 
     ("class" =: "border" <> "type" =: "password")
-  (btnEl, _) <- lift $ myButton "Submit"
+  (btnEl, _) <- lift $ myButton "Signup"
   let submitClick = domEvent Click btnEl
       usrDyn = _inputElement_value usrEl
       pwdDyn = _inputElement_value pwdEl
       logReqDyn = LoginReq <$> usrDyn <*> pwdDyn
       loginReqEv = tagPromptlyDyn logReqDyn submitClick
-  -- ^ loginReqEv, (postJson "text"), submitClick
-  --         ==
-  -- e l,        (l -> xhr),        e c 
-  -- :: (l -> xhr) -> e l -> e xhr 
-  -- (postJson "text") <$> e l :: e xhr 
-  -- performRequestAsync       :: e xhr -> m (e xhr) 
-  
+
   prerender (pure ()) $ do 
-    let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Login
+    let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Signup
     evResp <- performRequestAsync $ (postJson url) <$> loginReqEv
 
     message <- holdDyn "Enter your credentials." $ 
@@ -65,7 +59,7 @@ loginPage appState = do
         liftIO $ loginTrigger appState $ mEUser
         return ()
 
-    setRoute $ FrontendRoute_Main :/ () <$ ffilter isJust evMTextResp
+    setRoute $ FrontendRoute_Login :/ () <$ ffilter isJust evMTextResp
     return () 
 
   return ()

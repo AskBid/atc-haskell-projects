@@ -29,6 +29,7 @@ import Database.Persist
 
 import Common
 import LoginPage
+import SignupPage
 import MainPage
 import Schema
 
@@ -74,7 +75,7 @@ frontend = Frontend
           subRoute_ $ \case
             FrontendRoute_Main -> mainPage appState
             FrontendRoute_Login -> loginPage appState
-            FrontendRoute_Signup -> el "h2" $ text "Signup here."
+            FrontendRoute_Signup -> signupPage appState
             FrontendRoute_Profile -> do
               dynUserId <- askRoute
               el "h1" $ dynText $ fmap (\uid -> "Profile for " <> uid) dynUserId

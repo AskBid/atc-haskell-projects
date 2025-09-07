@@ -72,8 +72,11 @@ buttonLogInOut appState route = do
     if isNothing mLoggedUser
     then do
       (btnInEl, _) <- myButton "Login"
+      (btnInElsu, _) <- myButton "or Signup"
       let loginClick = domEvent Click btnInEl
+      let signupClick = domEvent Click btnInElsu
       setRoute $ FrontendRoute_Login :/ () <$ loginClick
+      setRoute $ FrontendRoute_Signup :/ () <$ signupClick
     else do
       (btnOutEl, _) <- myButton "Logout"
       let logoutClick = domEvent Click btnOutEl

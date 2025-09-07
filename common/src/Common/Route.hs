@@ -41,6 +41,7 @@ data BackendRoute :: * -> * where
 data Api
   = Api_Login
   | Api_Logout
+  | Api_Signup
   | Api_Me
   | Api_Posts
   | Api_Submit
@@ -54,6 +55,7 @@ tailRouteEncoder
 tailRouteEncoder = enumEncoder $ \case
   Api_Login  -> (["login"], mempty)
   Api_Logout -> (["logout"], mempty)
+  Api_Signup -> (["signup"], mempty)
   Api_Me     -> (["me"], mempty)
   Api_Posts  -> (["posts"], mempty)
   Api_Submit -> (["submit"], mempty)
