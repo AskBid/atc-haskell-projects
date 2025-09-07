@@ -11,13 +11,10 @@ import Database.Persist.Types
 
 import Schema
 
-data LoginReq = LoginReq
+data Credentials = Credentials
   { username :: Text
   , password :: Text
   } deriving (Show, Generic, FromJSON, ToJSON)
-
-data LoginResp = LoginSuccess | LoginFailure Text
-  deriving (Show, Generic, FromJSON, ToJSON)
 
 data TweetUserResp = TweetUserResp
   { tweets :: [Entity Tweet]

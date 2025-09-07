@@ -29,6 +29,7 @@ mainPage
   :: ( ObeliskWidget t (R FrontendRoute) m)  
   => AppState t -> RoutedT t () m ()
 mainPage appState = do
+
   buttonLogInOut appState $ FrontendRoute_Main :/ ()
 
   el "h2" $ text "Welcome to My X!"

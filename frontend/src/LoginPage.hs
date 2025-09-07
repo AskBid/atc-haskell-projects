@@ -15,7 +15,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.ByteString.Lazy as BL
 import Data.Functor.Identity
-import Common.Api (LoginReq(..))
+import Common.Api (Credentials(..))
 import Control.Monad.Trans (lift)
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.Aeson as A
@@ -36,7 +36,7 @@ loginPage appState = do
   let submitClick = domEvent Click btnEl
       usrDyn = _inputElement_value usrEl
       pwdDyn = _inputElement_value pwdEl
-      logReqDyn = LoginReq <$> usrDyn <*> pwdDyn
+      logReqDyn = Credentials <$> usrDyn <*> pwdDyn
       loginReqEv = tagPromptlyDyn logReqDyn submitClick
   -- ^ loginReqEv, (postJson "text"), submitClick
   --         ==

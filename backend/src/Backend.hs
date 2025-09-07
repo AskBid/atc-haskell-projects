@@ -6,7 +6,7 @@
 module Backend where
 
 import Common.Route
-import Common.Api (LoginReq(..), TweetUserResp(..))
+import Common.Api (Credentials(..), TweetUserResp(..))
 import Obelisk.Backend
 import MyJWT (verifyJWT, createJWT, mkJWTCookie, cookieLogout)
 import Schema 
@@ -52,12 +52,12 @@ backendHandlers :: R BackendRoute -> Snap ()
 backendHandlers = \case
    
   BackendRoute_Api :/ Api_Login -> do
-    usrPwd <- readRequestBody 10000
-    let maybeUsrPwd = (A.decode usrPwd) :: Maybe LoginReq
-    case maybeUsrPwd of
+    credentials <- readRequestBody 10000
+    let maybeCredentials = (A.decode credentials) :: Maybe Credentials
+    case maybeCredentials of
       Nothing -> do
         modifyResponse $ setResponseStatus 401 "Unauthorized"
-        writeLBS "{\"error\": \"No LoginReq\"}"
+        writeLBS "{\"error\": \"No Credentials\"}" -- TODO make type
       Just loginReq -> do 
         mEUser <- sqlUserPwdExist loginReq
         case mEUser of
@@ -69,6 +69,25 @@ backendHandlers = \case
             modifyResponse $ setContentType "application/json"
             modifyResponse $ addResponseCookie $ mkJWTCookie jwt
             writeLBS $ A.encode eUser --TE.encodeUtf8 $ (userName $ user') <> " logged in."
+
+  BackendRoute_Api :/ Api_Signup -> do
+    credentials <- readRequestBody 10000
+    let maybeCredentials = (A.decode credentials) :: Maybe Credentials
+    case maybeCredentials of
+      Nothing -> do
+        modifyResponse $ setResponseStatus 401 "Unauthorized"
+        writeLBS "{\"error\": \"No Credentials\"}" -- TODO make type
+      Just loginReq -> do 
+        mEUser <- sqlUserPwdExist loginReq
+        case mEUser of
+          Nothing -> do 
+            modifyResponse $ setResponseStatus 201 "Created"
+            -- TODO add user to DB
+            writeLBS "Successful signup."
+          Just eUser -> do
+            modifyResponse $ setResponseStatus 401 "Unauthorized"
+            writeBS $ TE.encodeUtf8 "Invalid credentials."
+            writeLBS "User added"
    
   BackendRoute_Api :/ Api_Logout -> do 
     modifyResponse $ setContentType "application/json"
