@@ -38,8 +38,9 @@ mainPage appState = do
     <> "class" =: "bg-blue-100 w-full p-2 rounded min-h-40")
   (elBtnPost, _) <- myButton "Post"
   
-  let dTextArea = _textAreaElement_value textArea
-      evPostMEUser = tagPromptlyDyn (loggedUser appState) $ domEvent Click elBtnPost
+  let evPostClick = domEvent Click elBtnPost
+      dTextArea = _textAreaElement_value textArea
+      evPostMEUser = tagPromptlyDyn (loggedUser appState) $ evPostClick
       evMEUserLogged = ffilter isJust evPostMEUser
       evMEUserNotLog = ffilter (not . isJust) evPostMEUser
       url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Submit
@@ -58,7 +59,12 @@ mainPage appState = do
           , tweetCreatedAt = time
           }
 
-        evTweet = updated $ ffor3 (loggedUser appState) dTextArea dTime mkTweet
+        
+        evMaybeTweet = flip tagPromptlyDyn evPostClick $
+          mkTweet <$> loggedUser appState <*> dTextArea <*> dTime
+
+        evTweet = fmapMaybe id evMaybeTweet
+
 
         evTweetReq = ffor evTweet $ \tweet -> XhrRequest
           { _xhrRequest_method = "POST"
@@ -82,8 +88,9 @@ mainPage appState = do
           , _xhrRequest_config = def & xhrRequestConfig_withCredentials .~ True
           }
     
-    evResp <- performRequestAsync $ xhrReq <$ evReload
-    dRespT <- holdDyn "." $ (\r -> fromMaybe ".." $ _xhrResponse_responseText r) <$> evResp
+    evResp' <- performRequestAsync $ xhrReq <$ evReload
+    dRespT <- holdDyn "." $ (\r -> 
+      fromMaybe ".." $ _xhrResponse_responseText r) <$> evResp'
     
     el "div" $ do
       let fromTtoTweets :: T.Text -> Maybe TweetUserResp
