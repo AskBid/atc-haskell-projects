@@ -31,7 +31,7 @@ share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
     text Text
     replyTo TweetId Maybe
     owner UserId
-    createdAt UTCTime
+    createdAt UTCTime Maybe
     UniqueTweet text owner
     deriving Show Generic FromJSON ToJSON
 
@@ -71,21 +71,21 @@ populateDB = do
   _  <- insertBy $ User "luigi" "bob456" []
   _  <- insertBy $ User "raoul" "pwd" []
   _  <- insertBy $ Tweet "Ciao Mondo! my first tweet!" Nothing (toSqlKey 1) $ 
-    UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 0)
+    Just $ UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 0)
   t2  <- insertBy $ Tweet "Am I the second?" Nothing (toSqlKey 2) $
-    UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 100)
+    Just $ UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 100)
   t3 <- insertBy $ Tweet "the laggard I guess?" Nothing (toSqlKey 3) $
-    UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 1100)
+    Just $ UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 1100)
   _  <- insertBy $ Tweet "yup, I was first" (Just $ key' t3) (toSqlKey 1) $
-    UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 1500)
+    Just $ UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 1500)
   _  <- insertBy $ Tweet "y8888888" (Just $ key' t3) (toSqlKey 4) $
-    UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 1500)
+    Just $ UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 1500)
   t4  <- insertBy $ Tweet "t88878787, replyy" (Just $ key' t3) (toSqlKey 5) $
-    UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 1600)
+    Just $ UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 1600)
   t5  <- insertBy $ Tweet "tdsfdsfdsf787, replyy" (Just $ key' t2) (toSqlKey 2) $
-    UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 1700)
+    Just $ UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 1700)
   _  <- insertBy $ Tweet "replyy of replyy woo" (Just $ key' t5) (toSqlKey 6) $
-    UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 1000)
+    Just $ UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 1000)
   -- ^ need @insertBy@ rather than @insert_@ because we need to check if record already exist
   --   from previously generated DataBase.
   return ()

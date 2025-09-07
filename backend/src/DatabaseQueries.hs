@@ -7,6 +7,7 @@ import Database.Persist.Sqlite
 import Control.Monad.IO.Class (liftIO, MonadIO)
 import Data.Maybe (catMaybes)
 import Control.Monad.Reader
+import Data.Time (getCurrentTime, UTCTime(..), fromGregorian, secondsToDiffTime)
 
 import Common.MyFunctions
 import Common.Api
@@ -34,7 +35,9 @@ findUsers et = do
 
 insertTweet :: Tweet -> IO (Key Tweet)
 insertTweet tweet = do 
-  k <- runSqlite myDB $ insert tweet
+  time <- getCurrentTime
+  let tweet' = tweet {tweetCreatedAt = Just time}
+  k <- runSqlite myDB $ insert tweet'
   return k
 
 insertUser :: User -> IO (Key User)

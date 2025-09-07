@@ -46,22 +46,19 @@ mainPage appState = do
       url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Submit
   
   prerender_ blank $ do 
-    let evIoUTCTime = getCurrentTime <$ evMEUserLogged
-    evTime <- performEvent $ liftIO <$> evIoUTCTime
-    dTime <- holdDyn (UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 0)) evTime 
 
-    let mkTweet :: Maybe (Entity User) -> T.Text -> UTCTime -> Maybe Tweet
-        mkTweet Nothing areaText time = Nothing
-        mkTweet (Just (Entity k _)) areaText time = Just $ Tweet 
+    let mkTweet :: Maybe (Entity User) -> T.Text -> Maybe Tweet
+        mkTweet Nothing areaText = Nothing
+        mkTweet (Just (Entity k _)) areaText = Just $ Tweet 
           { tweetText = areaText
           , tweetReplyTo = Nothing
           , tweetOwner = k
-          , tweetCreatedAt = time
+          , tweetCreatedAt = Nothing
           }
 
         
         evMaybeTweet = flip tagPromptlyDyn evPostClick $
-          mkTweet <$> loggedUser appState <*> dTextArea <*> dTime
+          mkTweet <$> loggedUser appState <*> dTextArea
 
         evTweet = fmapMaybe id evMaybeTweet
 
@@ -81,10 +78,10 @@ mainPage appState = do
 
     evPostBuild <- getPostBuild
     let evReload = leftmost [evPostBuild, () <$ evResp]
-        url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Posts
+        urlPost = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Posts
         xhrReq = XhrRequest
           { _xhrRequest_method = "GET"
-          , _xhrRequest_url = url
+          , _xhrRequest_url = urlPost
           , _xhrRequest_config = def & xhrRequestConfig_withCredentials .~ True
           }
     
