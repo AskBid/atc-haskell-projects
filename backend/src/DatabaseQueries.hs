@@ -26,6 +26,16 @@ getPosts = do
   users <- catMaybes <$> mapM findUsers posts
   return $ TweetUserResp posts users
 
+getPostsByUser :: UserId -> IO TweetUserResp
+getPostsByUser userId = do 
+  posts <- runSqlite myDB $ 
+    selectList 
+      [ TweetReplyTo ==. Nothing
+      , TweetOwner ==. userId
+      ] [Desc TweetCreatedAt]
+  users <- catMaybes <$> mapM findUsers posts
+  return $ TweetUserResp posts users
+
 findUsers :: Entity Tweet -> IO (Maybe (Entity User))
 findUsers et = do 
   mEUser <- runSqlite myDB $ selectFirst [UserId ==. id] []

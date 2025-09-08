@@ -49,10 +49,10 @@ data Api
   | Api_Submit
   deriving (Show, Eq, Ord)
 
-tailRouteEncoder 
+apiRouteEncoder 
   :: (MonadError Text parse, MonadError Text check) 
   => Encoder check parse Api PageName
-tailRouteEncoder = reviewEncoder apiPrism
+apiRouteEncoder = reviewEncoder apiPrism
   -- reviewEncoder is a helper, It says: 
   -- “If you already have a Prism' b a (partial isomorphism), 
   -- I can turn that into an Encoder.”
@@ -72,7 +72,7 @@ tailRouteEncoder = reviewEncoder apiPrism
       Api_Signup        -> (["signup"], mempty)
       Api_Me            -> (["me"], mempty)
       Api_Posts         -> (["posts"], mempty)
-      Api_PostsByUser u -> (["posts", "user", u], mempty)
+      Api_PostsByUser u -> (["posts", "users", u], mempty)
       Api_Submit        -> (["submit"], mempty)
 
     from :: PageName -> Either PageName Api
@@ -82,7 +82,7 @@ tailRouteEncoder = reviewEncoder apiPrism
       (["signup"], _)           -> Right Api_Signup
       (["me"], _)               -> Right Api_Me
       (["posts"], _)            -> Right Api_Posts
-      (["posts", "user", u], _) -> Right (Api_PostsByUser u)
+      (["posts", "users", u], _) -> Right (Api_PostsByUser u)
       (["submit"], _)           -> Right Api_Submit
       p                         -> Left p                     
 
@@ -104,7 +104,7 @@ fullRouteEncoder :: Encoder (Either Text) Identity (R (FullRoute BackendRoute Fr
 fullRouteEncoder = mkFullRouteEncoder
   (FullRoute_Backend BackendRoute_Missing :/ ()) -- ^ 404 handler (first arg only, second is below)
   (\case
-    BackendRoute_Api -> PathSegment "api" tailRouteEncoder
+    BackendRoute_Api -> PathSegment "api" apiRouteEncoder
     BackendRoute_Missing -> PathSegment "missing" $ unitEncoder mempty
   )
   (\case

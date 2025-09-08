@@ -116,6 +116,16 @@ backendHandlers = \case
     -- writeBS $ "all the primary tweets (not replies)"
     writeLBS $ A.encode postsUsers
 
+  BackendRoute_Api :/ Api_PostsByUser username -> do
+    mEUser <- liftIO $ runSqlite myDB $ selectFirst [UserName ==. username] [] 
+    case mEUser of
+      Nothing -> do 
+        modifyResponse $ setResponseStatus 401 "unauthorized"
+        writeBS "User did not exist."
+      Just eUser -> do 
+        postsUsers <- liftIO $ getPostsByUser $ entityKey eUser
+        writeBS $ BL.toStrict $ A.encode postsUsers
+
   BackendRoute_Api :/ Api_Submit -> do
     mUsername <- verifyJWT
     payload <- readRequestBody 10000
