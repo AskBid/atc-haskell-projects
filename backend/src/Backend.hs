@@ -120,7 +120,7 @@ backendHandlers = \case
     mEUser <- liftIO $ runSqlite myDB $ selectFirst [UserName ==. username] [] 
     case mEUser of
       Nothing -> do 
-        modifyResponse $ setResponseStatus 401 "unauthorized"
+        modifyResponse $ setResponseStatus 404 "Not Found"
         writeBS "User did not exist."
       Just eUser -> do 
         postsUsers <- liftIO $ getPostsByUser $ entityKey eUser

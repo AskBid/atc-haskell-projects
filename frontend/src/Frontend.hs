@@ -31,6 +31,7 @@ import Common
 import LoginPage
 import SignupPage
 import MainPage
+import UserPage
 import Schema
 
 -- This runs in a monad that can be run on the client or the server.
@@ -77,9 +78,10 @@ frontend = Frontend
             FrontendRoute_Login -> loginPage appState
             FrontendRoute_Signup -> signupPage appState
             FrontendRoute_Profile -> do
-              dynUserId <- askRoute
-              el "h1" $ dynText $ fmap (\uid -> "Profile for " <> uid) dynUserId
-              return ()
+              dynUsername <- askRoute
+              dyn_ $ ffor dynUsername $ \username -> 
+                userPage appState username
+              -- return ()
             FrontendRoute_Tweet -> do 
               dynTweetId <- askRoute
               el "h1" $ dynText $ fmap (\uid -> "Tweet id is: " <> uid) dynTweetId
