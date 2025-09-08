@@ -112,16 +112,21 @@ elTweet
   -> Entity Tweet 
   -> m ()
 elTweet users tweet = do 
+
+  let usernameT = fromMaybe "" $ userName . entityVal <$> user
+      url = getUrl $ 
+        FullRoute_Frontend (ObeliskRoute_App FrontendRoute_Profile) :/ usernameT
+
   elClass "div" "rounded-xl bg-gray-100 max-w-full w-full p-4 my-2" $ do
-    let usernameT = fromMaybe "" $ userName . entityVal <$> user
-    elAttr "a" (  "class" =: "text-blue-400 font-bold" 
-               <> "href" =: (getUrl $ FullRoute_Frontend 
-                                      (ObeliskRoute_App FrontendRoute_Profile) :/ usernameT)) 
-               $ text usernameT
+
+    elAttr "a" ("class" =: "text-blue-400 font-bold" <> "href" =: url) $ text usernameT
     (tweetDiv, _) <- elAttr' "div" ("style" =: "cursor: pointer;") $ text $ tweetText $ tweet'
+
     let tweetId = T.pack $ show $ fromSqlKey $ entityKey tweet
         tweetClick = domEvent Click tweetDiv 
+
     setRoute $ FrontendRoute_Tweet :/ tweetId <$ tweetClick
+
   where 
     tweet' = entityVal tweet
     user = findInEntityList users $ tweetOwner tweet'
