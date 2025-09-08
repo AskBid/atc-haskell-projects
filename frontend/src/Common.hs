@@ -106,25 +106,32 @@ buttonLogInOut appState route = do
 -- | given an Entity Tweet and a list [Entity User] renders the tweet with the related owner User.
 --   the logic is in the route Api_Posts that together with a list [Entity Tweet] returns a list 
 --   [Entity User] with all the related owner of all [Entity Tweet] returned.
-elTweet :: (DomBuilder t m, SetRoute t (R FrontendRoute) m) => [Entity User] -> Entity Tweet -> m ()
+elTweet 
+  :: (DomBuilder t m, SetRoute t (R FrontendRoute) m) 
+  => [Entity User] 
+  -> Entity Tweet 
+  -> m ()
 elTweet users tweet = do 
-  (tweetDiv, _) <- elAttr' "div" ("class" =: "rounded-xl bg-gray-100 max-w-full w-full p-4 my-2"
-                                 <> "style" =: "cursor: pointer;") $ do
+  elClass "div" "rounded-xl bg-gray-100 max-w-full w-full p-4 my-2" $ do
     let usernameT = fromMaybe "" $ userName . entityVal <$> user
-    elAttr "a" ("class" =: "text-blue-400 font-bold" 
-               <> "href" =: (getUrl $ FullRoute_Frontend (ObeliskRoute_App FrontendRoute_Profile) :/ usernameT)) 
+    elAttr "a" (  "class" =: "text-blue-400 font-bold" 
+               <> "href" =: (getUrl $ FullRoute_Frontend 
+                                      (ObeliskRoute_App FrontendRoute_Profile) :/ usernameT)) 
                $ text usernameT
-    el "h3" $ text $ tweetText $ tweet'
-  let tweetId = T.pack $ show $ fromSqlKey $ entityKey tweet
-  let tweetClick = domEvent Click tweetDiv 
-  setRoute $ FrontendRoute_Tweet :/ tweetId <$ tweetClick
-  return ()
+    (tweetDiv, _) <- elAttr' "div" ("style" =: "cursor: pointer;") $ text $ tweetText $ tweet'
+    let tweetId = T.pack $ show $ fromSqlKey $ entityKey tweet
+        tweetClick = domEvent Click tweetDiv 
+    setRoute $ FrontendRoute_Tweet :/ tweetId <$ tweetClick
   where 
     tweet' = entityVal tweet
     user = findInEntityList users $ tweetOwner tweet'
 
 -- | finds the record relative to an id/key given a list of Entity and the key.
-findInEntityList :: Eq (Schema.Key record) =>  [Entity record] -> Schema.Key record -> Maybe (Entity record)
+findInEntityList 
+  :: Eq (Schema.Key record) 
+  =>  [Entity record] 
+  -> Schema.Key record 
+  -> Maybe (Entity record)
 findInEntityList recs id = headSafe $ filter (\(Entity k _) -> k == id) recs
 -- ^ Even though Persistent derives Eq for every Key MyEntity, the compiler doesn't know 
 --   that for all record types unless you say so.

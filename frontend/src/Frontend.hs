@@ -71,7 +71,8 @@ frontend = Frontend
           let eUserName :: Maybe (Entity User) -> T.Text
               eUserName Nothing      = "No user is logged in."
               eUserName (Just eUser) = "Hello " <> (userName $ entityVal eUser) <> "!"
-          elClass "h3" "font-bold text-gray-400" $ dynText (eUserName <$> loggedUser appState) 
+          elClass "h3" "font-bold text-gray-400" $ 
+            dynText (eUserName <$> loggedUser appState) 
 
           subRoute_ $ \case
             FrontendRoute_Main -> mainPage appState
