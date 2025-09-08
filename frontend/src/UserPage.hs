@@ -49,8 +49,8 @@ userPage appState username = do
       let fromTtoTweets :: T.Text -> Maybe TweetUserResp
           fromTtoTweets = A.decode . BL.fromStrict . TE.encodeUtf8
           dMtweets = fromTtoTweets <$> dRespT
-          dTUResp = fromMaybe (TweetUserResp [] []) <$> dMtweets
-      dyn_ $ ffor dTUResp $ \tuResp -> mapM_ (elTweet $ users tuResp) (tweets tuResp)     
+          dTwUsrResp = fromMaybe (TweetUserResp [] []) <$> dMtweets
+      dyn_ $ ffor dTwUsrResp $ \twUsrResp -> mapM_ (elTweet $ users twUsrResp) (tweets twUsrResp)     
       -- ^ dyn_ runs the Dynamic t (m ()), otherwise you'd only have a Dynamic not run.
       return ()
     return ()

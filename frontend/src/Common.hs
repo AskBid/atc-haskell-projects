@@ -117,19 +117,64 @@ elTweet users tweet = do
       url = getUrl $ 
         FullRoute_Frontend (ObeliskRoute_App FrontendRoute_Profile) :/ usernameT
 
-  elClass "div" "rounded-xl bg-gray-100 max-w-full w-full p-4 my-2" $ do
+  elClass "div" (containerStyle <> containerBorder) $ do
 
-    elAttr "a" ("class" =: "text-blue-400 font-bold" <> "href" =: url) $ text usernameT
-    (tweetDiv, _) <- elAttr' "div" ("style" =: "cursor: pointer;") $ text $ tweetText $ tweet'
+    elAttr "a" ("class" =: userStyle <> "href" =: url) $ 
+      text usernameT
+    (tweetDiv, _) <- elAttr' "div" ("style" =: "cursor: pointer;") $ 
+      text $ tweetText $ tweet'
+    elClass "div" replyStyle $ text "Reply \x1F5E8"
+
+    elTweet2 users tweet
+    elTweet2 users tweet
 
     let tweetId = T.pack $ show $ fromSqlKey $ entityKey tweet
         tweetClick = domEvent Click tweetDiv 
-
+        
     setRoute $ FrontendRoute_Tweet :/ tweetId <$ tweetClick
 
   where 
     tweet' = entityVal tweet
     user = findInEntityList users $ tweetOwner tweet'
+
+    replyStyle = "text-right text-xs text-gray-400 underline"
+    userStyle = "text-blue-400 font-bold"
+    containerStyle = "rounded-xl bg-gray-100 max-w-full w-full p-2 my-2 "
+    containerBorder = "border-4 border-white"
+
+elTweet2
+  :: (DomBuilder t m, SetRoute t (R FrontendRoute) m) 
+  => [Entity User] 
+  -> Entity Tweet 
+  -> m ()
+elTweet2 users tweet = do 
+
+  let usernameT = fromMaybe "" $ userName . entityVal <$> user
+      url = getUrl $ 
+        FullRoute_Frontend (ObeliskRoute_App FrontendRoute_Profile) :/ usernameT
+
+  elClass "div" (containerStyle <> containerBorder) $ do
+
+    elAttr "a" ("class" =: userStyle <> "href" =: url) $ 
+      text usernameT
+    (tweetDiv, _) <- elAttr' "div" ("style" =: "cursor: pointer;") $ 
+      text $ tweetText $ tweet'
+    elClass "div" replyStyle $ text "Reply \x1F5E8"
+
+    let tweetId = T.pack $ show $ fromSqlKey $ entityKey tweet
+        tweetClick = domEvent Click tweetDiv 
+        
+    setRoute $ FrontendRoute_Tweet :/ tweetId <$ tweetClick
+
+  where 
+    tweet' = entityVal tweet
+    user = findInEntityList users $ tweetOwner tweet'
+
+    replyStyle = "text-right text-xs text-gray-400 underline"
+    userStyle = "text-blue-400 font-bold"
+    containerStyle = "rounded-xl bg-gray-100 max-w-full w-full p-2 my-2 "
+    containerBorder = "border-4 border-white"
+
 
 -- | finds the record relative to an id/key given a list of Entity and the key.
 findInEntityList 

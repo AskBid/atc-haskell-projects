@@ -1,9 +1,11 @@
 - [ ] Login page message text at bottom should change when responseText is Nothing?
 - [ ] Save tweet in LocalStorage if user was not logged in so that after login tweet is saved in text area
 - [x] add date to tweet and find a way to sort them by it 
-- [ ] click on tweet opens the card to show direct replies
-- [ ] signup page add user to database
+- [ ] click on elTweet text opens the card to shows direct replies - recursive for all elTweet?
+- [x] signup page add user to database
 - [ ] ability to follow other users
-- [ ] User page shows their tweets
+- [x] User page shows their tweets
 - [ ] Main page only shows users followed + some random ones
 - [ ] Improve messaging i.e. from signup to login, singup response msg is transfered to login
+- [ ] Logged in user can delete its own tweets
+- [ ] Logged user can modify its profile

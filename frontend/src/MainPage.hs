@@ -6,7 +6,6 @@ module MainPage where
 
 import Common.Route 
 import Reflex.Dom.Core
--- import Reflex.Dom
 import Common
 import Obelisk.Route
 import Obelisk.Route.Frontend
@@ -88,7 +87,11 @@ mainPage appState = do
     evResp' <- performRequestAsync $ xhrReq <$ evReload
     dRespT <- holdDyn "." $ (\r -> 
       fromMaybe ".." $ _xhrResponse_responseText r) <$> evResp'
-    
+
+    elClass "div" "text-gray-400 text-sm space-y-0" $ do 
+      el "div" $ text "Click on tweet's username to see its profile." 
+      el "div" $ text "Click on tweet's text to expand its reply if any."
+
     el "div" $ do
       let fromTtoTweets :: T.Text -> Maybe TweetUserResp
           fromTtoTweets = A.decode . BL.fromStrict . TE.encodeUtf8
