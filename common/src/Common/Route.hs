@@ -26,6 +26,7 @@ import Data.Functor.Identity
 import Obelisk.Route
 import Obelisk.Route.TH
 
+import Control.Lens (Prism', prism)
 import Control.Lens.Combinators (makeWrapped)
 import Control.Monad.Error
 import Data.Universe
@@ -44,24 +45,46 @@ data Api
   | Api_Signup
   | Api_Me
   | Api_Posts
+  | Api_PostsByUser Text
   | Api_Submit
-  deriving (Show, Eq, Ord, Enum, Bounded)
-
-instance Universe Api
+  deriving (Show, Eq, Ord)
 
 tailRouteEncoder 
   :: (MonadError Text parse, MonadError Text check) 
   => Encoder check parse Api PageName
-tailRouteEncoder = enumEncoder $ \case
-  Api_Login  -> (["login"], mempty)
-  Api_Logout -> (["logout"], mempty)
-  Api_Signup -> (["signup"], mempty)
-  Api_Me     -> (["me"], mempty)
-  Api_Posts  -> (["posts"], mempty)
-  Api_Submit -> (["submit"], mempty)
+tailRouteEncoder = reviewEncoder apiPrism
+  -- reviewEncoder is a helper, It says: 
+  -- “If you already have a Prism' b a (partial isomorphism), 
+  -- I can turn that into an Encoder.”
+  where
+    apiPrism :: Prism' PageName Api
+    apiPrism = prism to from
+    -- A Prism (from the lens library) is like a partial isomorphism:
+    -- It’s a way to say:
+    -- “I can always turn an Api into a PageName” (the review direction).
+    -- “I can sometimes turn a PageName into an Api” (the preview direction).
+    -- Think of it as:
+    -- Prism' s a  ≈  (a -> s, s -> Either s a)
+    to :: Api -> PageName
+    to = \case
+      Api_Login         -> (["login"], mempty)
+      Api_Logout        -> (["logout"], mempty)
+      Api_Signup        -> (["signup"], mempty)
+      Api_Me            -> (["me"], mempty)
+      Api_Posts         -> (["posts"], mempty)
+      Api_PostsByUser u -> (["posts", "user", u], mempty)
+      Api_Submit        -> (["submit"], mempty)
 
--- newtype UserID = UserID { unUserID :: Text } deriving (Show, Eq)
--- makeWrapped ''UserID
+    from :: PageName -> Either PageName Api
+    from = \case
+      (["login"], _)            -> Right Api_Login
+      (["logout"], _)           -> Right Api_Logout
+      (["signup"], _)           -> Right Api_Signup
+      (["me"], _)               -> Right Api_Me
+      (["posts"], _)            -> Right Api_Posts
+      (["posts", "user", u], _) -> Right (Api_PostsByUser u)
+      (["submit"], _)           -> Right Api_Submit
+      p                         -> Left p                     
 
 data FrontendRoute :: * -> * where
   FrontendRoute_Main :: FrontendRoute ()
