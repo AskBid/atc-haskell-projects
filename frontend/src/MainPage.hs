@@ -25,7 +25,7 @@ import Common.MyFunctions (headSafe)
 import Common
 
 mainPage 
-  :: ( ObeliskWidget t (R FrontendRoute) m)  
+  :: ObeliskWidget t (R FrontendRoute) m
   => AppState t -> RoutedT t () m ()
 mainPage appState = do
 

@@ -26,7 +26,7 @@ import Common.MyFunctions (headSafe)
 import Common
 
 userPage 
-  :: ( ObeliskWidget t (R FrontendRoute) m)  
+  :: (ObeliskWidget t (R FrontendRoute) m)
   => AppState t -> T.Text -> RoutedT t a m ()
 userPage appState username = do
   prerender_ blank $ do 
@@ -50,7 +50,8 @@ userPage appState username = do
           fromTtoTweets = A.decode . BL.fromStrict . TE.encodeUtf8
           dMtweets = fromTtoTweets <$> dRespT
           dTwUsrResp = fromMaybe (TweetUserResp [] []) <$> dMtweets
-      dyn_ $ ffor dTwUsrResp $ \twUsrResp -> mapM_ (elTweet $ users twUsrResp) (tweets twUsrResp)     
+      dyn_ $ ffor dTwUsrResp $ \twUsrResp -> 
+        mapM_ (elTweet $ users twUsrResp) (tweets twUsrResp)     
       -- ^ dyn_ runs the Dynamic t (m ()), otherwise you'd only have a Dynamic not run.
       return ()
     return ()

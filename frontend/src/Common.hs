@@ -10,9 +10,11 @@ import Obelisk.Route
 import Data.Functor.Identity
 import Common.Route 
 import Obelisk.Route.Frontend
-import Control.Monad.IO.Class (liftIO)
+import Control.Monad.IO.Class (liftIO, MonadIO)
 import Database.Persist.Sql
 import Data.Maybe
+import Control.Monad.Fix (MonadFix)
+import Language.Javascript.JSaddle (MonadJSM)
 
 import Schema
 import Common.MyFunctions
@@ -110,7 +112,16 @@ buttonLogInOut appState route = do
 --   [Entity Tweet] returns a list [Entity User] with all the related 
 --   owner of all [Entity Tweet] returned.
 elTweet 
-  :: (DomBuilder t m, SetRoute t (R FrontendRoute) m) 
+  :: ( DomBuilder t m
+     , SetRoute t (R FrontendRoute) m
+     , MonadHold t m
+     , MonadFix m
+     , MonadIO m
+     , PerformEvent t m
+     , TriggerEvent t m
+     , MonadJSM (Performable m)
+     , PostBuild t m
+     ) 
   => [Entity User] 
   -> Entity Tweet 
   -> m ()
@@ -144,20 +155,28 @@ elTweet users tweet = do
           BackendRoute_Api :/
           Api_PostReplies tweetId
     dToggleReplies <- toggle False evTextClick
-    let eToggleReplies = updated dToggleReplies 
+     
+    let eToggleReplies = updated dToggleReplies
         eShowReplies = ffilter id eToggleReplies
-
+    --     eHideReplies = ffilter (not id) eToggleReplies
+    --
     emTweetUserReplies <- getAndDecode $ url4replies <$ eShowReplies
 
-    performEvent_ $ ffor emTweetUserReplies $ \mTUReplies -> do 
-      case mTUReplies of
-        Nothing -> el "div" $ text "There was an issue. Replies not retreived."
-        Just tuReplies -> elTweetsList tuReplies
+    dyn_ $ ffor dToggleReplies $ \toggleReplies -> 
+        if not toggleReplies
+        then blank
+        else widgetHold_ (tweetTabMsg "Loading replies...") $ 
+          ffor emTweetUserReplies $ \case
+            Nothing -> el "div" $ text "404. No replies retrieved."
+            Just tuReplies -> do 
+              elTweetsList tuReplies
         
     setRoute $ FrontendRoute_Tweet :/ tweetId <$ evReplyClick
   where 
     tweet' = entityVal tweet
     user = findInEntityList users $ tweetOwner tweet'
+
+    errReplies = "There was an issue. Replies not retreived."
 
     replyStyle      = "text-right text-xs text-gray-400 underline"
     userStyle       = "text-blue-400 font-bold"
@@ -165,8 +184,31 @@ elTweet users tweet = do
     containerBorder = "border-4 border-white"
     pointer         = "cursor: pointer;"
 
-elTweetsList :: TweetUserResp -> m ()
-elTweetsList tur = mapM_ (elTweet $ users tur) (tweets tur)
+elTweetsList 
+  :: ( DomBuilder t m
+     , SetRoute t (R FrontendRoute) m
+     , MonadHold t m
+     , MonadFix m
+     , MonadIO m
+     , PerformEvent t m
+     , TriggerEvent t m
+     , MonadJSM (Performable m)
+     , PostBuild t m
+     ) 
+  => TweetUserResp 
+  -> m ()
+elTweetsList tur = 
+  case tur of 
+    TweetUserResp [] _ -> tweetTabMsg "Nothing to see here."
+    TweetUserResp tweets users -> mapM_ (elTweet $ users) tweets
+
+tweetTabMsg 
+  :: DomBuilder t m 
+  => T.Text 
+  -> m ()
+tweetTabMsg msg = elClass "div" css $ text msg
+  where 
+    css = "text-gray-400 text-sm"
 
 -- | finds the record relative to an id/key given a list of Entity and the key.
 findInEntityList 
