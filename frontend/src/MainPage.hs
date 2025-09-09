@@ -42,7 +42,10 @@ mainPage appState = do
       evPostMEUser = tagPromptlyDyn (loggedUser appState) $ evPostClick
       evMEUserLogged = ffilter isJust evPostMEUser
       evMEUserNotLog = ffilter (not . isJust) evPostMEUser
-      url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Submit
+      url = getUrl $ 
+        FullRoute_Backend 
+        BackendRoute_Api :/ 
+        Api_SubmitPost
   
   prerender_ blank $ do 
 

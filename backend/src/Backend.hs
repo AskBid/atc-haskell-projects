@@ -137,7 +137,7 @@ backendHandlers = \case
         users <- liftIO $ catMaybes <$> mapM findUsers replies
         writeBS $ BL.toStrict $ A.encode $ TweetUserResp replies users
 
-  BackendRoute_Api :/ Api_Submit -> do
+  BackendRoute_Api :/ Api_SubmitPost -> do
     mUsername <- verifyJWT
     payload <- readRequestBody 10000
     let mTweet = A.decode payload :: Maybe Tweet

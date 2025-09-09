@@ -47,7 +47,8 @@ data Api
   | Api_Posts
   | Api_PostsByUser Text
   | Api_PostReplies Text
-  | Api_Submit
+  | Api_SubmitPost
+  | Api_SubmitReply Text
   deriving (Show, Eq, Ord)
 
 apiRouteEncoder 
@@ -75,19 +76,21 @@ apiRouteEncoder = reviewEncoder apiPrism
       Api_Posts         -> (["posts"], mempty)
       Api_PostsByUser u -> (["posts", "users", u], mempty)
       Api_PostReplies t -> (["posts", t, "replies"], mempty)
-      Api_Submit        -> (["submit"], mempty)
+      Api_SubmitPost    -> (["post"], mempty)
+      Api_SubmitReply t -> (["post", t, "reply"], mempty)
 
     from :: PageName -> Either PageName Api
     from = \case
-      (["login"], _)            -> Right Api_Login
-      (["logout"], _)           -> Right Api_Logout
-      (["signup"], _)           -> Right Api_Signup
-      (["me"], _)               -> Right Api_Me
-      (["posts"], _)            -> Right Api_Posts
-      (["posts", "users", u], _) -> Right (Api_PostsByUser u)
+      (["login"], _)               -> Right Api_Login
+      (["logout"], _)              -> Right Api_Logout
+      (["signup"], _)              -> Right Api_Signup
+      (["me"], _)                  -> Right Api_Me
+      (["posts"], _)               -> Right Api_Posts
+      (["posts", "users", u], _)   -> Right (Api_PostsByUser u)
       (["posts", t, "replies"], _) -> Right (Api_PostReplies t)
-      (["submit"], _)           -> Right Api_Submit
-      p                         -> Left p                     
+      (["post"], _)                -> Right Api_SubmitPost
+      (["post", t, "reply"], _)    -> Right (Api_SubmitReply t)
+      p                            -> Left p                     
 
 data FrontendRoute :: * -> * where
   FrontendRoute_Main :: FrontendRoute ()
