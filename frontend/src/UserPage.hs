@@ -32,7 +32,8 @@ userPage appState username = do
   prerender_ blank $ do 
     el "h1" $ text $ "Profile for " <> username
     elClass "h3" "text-gray-400" $ text "TODO: user's attributes ..."
-    el "h3" $ text $ username <> "`s tweets:"
+    el "h3" $ text $ username <> "`s tweets:" 
+    elClass "div" "text-gray-400" $ text "TODO: handle replies not showing."
     evPostBuild <- getPostBuild
     let urlPost = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_PostsByUser username 
         xhrReq = XhrRequest
@@ -49,7 +50,7 @@ userPage appState username = do
       let fromTtoTweets :: T.Text -> Maybe TweetUserResp
           fromTtoTweets = A.decode . BL.fromStrict . TE.encodeUtf8
           dMtweets = fromTtoTweets <$> dRespT
-          dTwUsrResp = fromMaybe (TweetUserResp [] []) <$> dMtweets
+          dTwUsrResp = fromMaybe (TweetUserResp [] [] Nothing) <$> dMtweets
       dyn_ $ ffor dTwUsrResp $ \twUsrResp -> 
         mapM_ (elTweet $ users twUsrResp) (tweets twUsrResp)     
       -- ^ dyn_ runs the Dynamic t (m ()), otherwise you'd only have a Dynamic not run.

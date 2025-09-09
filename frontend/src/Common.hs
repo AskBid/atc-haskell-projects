@@ -199,8 +199,8 @@ elTweetsList
   -> m ()
 elTweetsList tur = 
   case tur of 
-    TweetUserResp [] _ -> tweetTabMsg "Nothing to see here."
-    TweetUserResp tweets users -> mapM_ (elTweet $ users) tweets
+    TweetUserResp [] _ _         -> tweetTabMsg "Nothing to see here."
+    TweetUserResp tweets users _ -> mapM_ (elTweet $ users) tweets
 
 tweetTabMsg 
   :: DomBuilder t m 

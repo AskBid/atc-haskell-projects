@@ -27,7 +27,7 @@ getPosts :: IO TweetUserResp
 getPosts = do 
   posts <- runSqlite myDB $ selectList [TweetReplyTo ==. Nothing] [Desc TweetCreatedAt]
   users <- catMaybes <$> mapM findUsers posts
-  return $ TweetUserResp posts users
+  return $ TweetUserResp posts users Nothing
 
 getPostsByUser :: UserId -> IO TweetUserResp
 getPostsByUser userId = do 
@@ -37,7 +37,7 @@ getPostsByUser userId = do
       , TweetOwner ==. userId
       ] [Desc TweetCreatedAt]
   users <- catMaybes <$> mapM findUsers posts
-  return $ TweetUserResp posts users
+  return $ TweetUserResp posts users Nothing
 
 findUsers :: Entity Tweet -> IO (Maybe (Entity User))
 findUsers et = do 

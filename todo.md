@@ -9,3 +9,4 @@
 - [ ] Improve messaging i.e. from signup to login, singup response msg is transfered to login
 - [ ] Logged in user can delete its own tweets
 - [ ] Logged user can modify its profile
+- [ ] in profile's page, also replies from the user should appear with access to the tweet they reply to.

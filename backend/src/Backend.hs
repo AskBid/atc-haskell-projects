@@ -135,7 +135,7 @@ backendHandlers = \case
       Just n  -> do 
         replies <- liftIO $ getPostReplies n
         users <- liftIO $ catMaybes <$> mapM findUsers replies
-        writeBS $ BL.toStrict $ A.encode $ TweetUserResp replies users
+        writeBS $ BL.toStrict $ A.encode $ TweetUserResp replies users Nothing -- < should return parent tweet replies are replying to.
 
   BackendRoute_Api :/ Api_SubmitPost -> do
     mUsername <- verifyJWT

@@ -16,7 +16,12 @@ data Credentials = Credentials
   , password :: Text
   } deriving (Show, Generic, FromJSON, ToJSON)
 
+-- | Type for frontend, tweets are followed from a list of users that covers
+--   all the owners of all tweets.
+--   We also carry the tweet all the replies reply to in case the query is for 
+--   replies rather than main posts.
 data TweetUserResp = TweetUserResp
   { tweets :: [Entity Tweet]
   , users :: [Entity User]
+  , parentTweet :: Maybe (Entity Tweet)
   } deriving (Show, Generic, FromJSON, ToJSON)
