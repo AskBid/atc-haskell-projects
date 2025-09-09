@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE GADTs               #-}
 {-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE LambdaCase           #-}
+{-# LANGUAGE LambdaCase          #-}
 
 module MainPage where
 
@@ -17,12 +17,9 @@ import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BL
 import Database.Persist.Sql
 import Data.Maybe
-import Data.Time (getCurrentTime, UTCTime(..), fromGregorian, secondsToDiffTime)
-import Control.Monad.IO.Class (liftIO, MonadIO)
 
 import Schema
 import Common.Api (TweetUserResp(..))
-import Common.MyFunctions (headSafe)
 import Common
 
 mainPage 
@@ -76,6 +73,8 @@ mainPage appState = do
       el "div" $ text "Click on tweet's username to see its profile." 
       el "div" $ text "Click on tweet's text to expand its reply if any."
 
+    -------------
+    -- list posts
     el "div" $ do
 
       evPostBuild <- getPostBuild
@@ -103,6 +102,8 @@ mainPage appState = do
         Just tuResp -> elTweetsList tuResp
 
       return ()
+    -- list posts
+    -------------
     return ()
   return ()
 

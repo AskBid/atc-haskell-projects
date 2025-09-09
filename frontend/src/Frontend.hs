@@ -32,6 +32,7 @@ import LoginPage
 import SignupPage
 import MainPage
 import UserPage
+import TweetPage
 import Schema
 
 -- This runs in a monad that can be run on the client or the server.
@@ -40,7 +41,7 @@ import Schema
 frontend :: Frontend (R FrontendRoute)
 frontend = Frontend
   { _frontend_head = do
-      el "title" $ text "My X"
+      el "title" $ text "My Twitter"
       elAttr "script" ("type" =: "application/javascript" <> "src" =: $(static "lib.js")) blank
       elAttr "script" ("src" =: "https://cdn.tailwindcss.com") blank
 
@@ -72,8 +73,8 @@ frontend = Frontend
               eUserName Nothing      = "No user is logged in."
               eUserName (Just eUser) = "Hello " <> (userName $ entityVal eUser) <> "!"
           elClass "div" "flex justify-between items-center" $ do
-            elAttr "a" ("class" =: "text-black-400 font-bold underline" <>
-              "href" =: "/") $ text "X"
+            elAttr "a" ("class" =: "text-blue-600 font-bold underline" <>
+              "href" =: "/") $ text "Twitter"
             elClass "h3" "font-bold text-gray-400 text-right" $ 
               dynText (eUserName <$> loggedUser appState) 
 
@@ -85,11 +86,11 @@ frontend = Frontend
               dynUsername <- askRoute
               dyn_ $ ffor dynUsername $ \username -> 
                 userPage appState username
-              -- return ()
             FrontendRoute_Tweet -> do 
               dynTweetId <- askRoute
-              el "h1" $ dynText $ fmap (\uid -> "Tweet id is: " <> uid) dynTweetId
-              return ()
+              dyn_ $ ffor dynTweetId $ \tweetId -> 
+                tweetPage appState tweetId
+              -- el "h1" $ dynText $ fmap (\uid -> "Tweet id is: " <> uid) dynTweetId
           return ()
           
         elClass "div" "bg-gray-100" blank

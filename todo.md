@@ -1,7 +1,7 @@
 - [ ] Login page message text at bottom should change when responseText is Nothing?
 - [ ] Save tweet in LocalStorage if user was not logged in so that after login tweet is saved in text area
 - [x] add date to tweet and find a way to sort them by it 
-- [ ] click on elTweet text opens the card to shows direct replies - recursive for all elTweet?
+- [x] click on elTweet text opens the card to shows direct replies - recursive for all elTweet?
 - [x] signup page add user to database
 - [ ] ability to follow other users
 - [x] User page shows their tweets
