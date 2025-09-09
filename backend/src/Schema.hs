@@ -64,30 +64,59 @@ myDB = "Xs.db"
 populateDB :: MonadIO m => SqlPersistT m ()
 populateDB = do
   runMigration migrateAll
-  _  <- insertBy $ User "alice" "alice123" []
-  _  <- insertBy $ User "bob" "bob456" []
+  _  <- insertBy $ User "alice" "alice" []
+  _  <- insertBy $ User "bob" "bob" []
   _  <- insertBy $ User "sergio" "pwd" []
-  _  <- insertBy $ User "mario" "alice123" []
-  _  <- insertBy $ User "luigi" "bob456" []
-  _  <- insertBy $ User "raoul" "pwd" []
-  _  <- insertBy $ Tweet "Ciao Mondo! my first tweet!" Nothing (toSqlKey 1) $ 
-    Just $ UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 0)
-  t2  <- insertBy $ Tweet "Am I the second?" Nothing (toSqlKey 2) $
-    Just $ UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 100)
-  t3 <- insertBy $ Tweet "the laggard I guess?" Nothing (toSqlKey 3) $
-    Just $ UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 1100)
-  _  <- insertBy $ Tweet "yup, I was first" (Just $ key' t3) (toSqlKey 1) $
-    Just $ UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 1500)
-  _  <- insertBy $ Tweet "y8888888" (Just $ key' t3) (toSqlKey 4) $
-    Just $ UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 1500)
-  t4  <- insertBy $ Tweet "t88878787, replyy" (Just $ key' t3) (toSqlKey 5) $
-    Just $ UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 1600)
-  t5  <- insertBy $ Tweet "tdsfdsfdsf787, replyy" (Just $ key' t2) (toSqlKey 2) $
-    Just $ UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 1700)
-  _  <- insertBy $ Tweet "replyy of replyy woo" (Just $ key' t5) (toSqlKey 6) $
-    Just $ UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 1000)
-  -- ^ need @insertBy@ rather than @insert_@ because we need to check if record already exist
-  --   from previously generated DataBase.
+  _  <- insertBy $ User "mario" "mario" []
+  _  <- insertBy $ User "luigi" "luigi" []
+  _  <- insertBy $ User "raoul" "raoul" []
+
+  _  <- insertBy $ Tweet "Ciao Mondo! my first tweet!" 
+    Nothing -- replying to 
+    (toSqlKey 1) $ -- owner
+      Just $ UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 0)
+
+  t2  <- insertBy $ Tweet "Am I the second?" 
+    Nothing -- replying to 
+    (toSqlKey 2) $ -- owner
+      Just $ UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 100)
+
+  t3 <- insertBy $ Tweet "The S&P500 to break ATH!!" 
+    Nothing -- replying to 
+    (toSqlKey 3) $ -- owner
+      Just $ UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 1100)
+
+  _  <- insertBy $ Tweet "yup, I was first" 
+    (Just $ key' t2) -- replying to 
+    (toSqlKey 1) $ -- owner
+      Just $ UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 1500)
+
+  r1 <- insertBy $ Tweet "No way! CPI next week will take markets down!" 
+    (Just $ key' t3) -- replying to 
+    (toSqlKey 4) $ -- owner
+      Just $ UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 1500)
+
+  t4 <- insertBy $ Tweet "I agree, the FED seems changing tone." 
+    (Just $ key' t3) -- replying to 
+    (toSqlKey 5) $ -- owner
+      Just $ UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 1600)
+
+  t5  <- insertBy $ Tweet "Yes I was!" 
+    (Just $ key' t2) -- replying to 
+    (toSqlKey 2) $ -- owner
+      Just $ UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 1700)
+
+  _  <- insertBy $ Tweet "Well done, this is the first reply of a reply." 
+    (Just $ key' t5) -- replying to 
+    (toSqlKey 6) $ -- owner
+      Just $ UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 1000)
+
+  _  <- insertBy $ Tweet "Commodities seem to indicate a deflationary environment!" 
+    (Just $ key' r1) -- replying to 
+    (toSqlKey 6) $ -- owner
+      Just $ UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 1000)
+  -- ^ need @insertBy@ rather than @insert_@ because we need to check if record 
+  -- already exist from previously generated DataBase.
   return ()
   where 
     key' (Left _)  = toSqlKey 1
