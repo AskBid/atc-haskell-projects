@@ -97,7 +97,7 @@ mainPage appState = do
           fromTtoTweets = A.decode . BL.fromStrict . TE.encodeUtf8
           dMtweets = fromTtoTweets <$> dRespT
           dTUResp = fromMaybe (TweetUserResp [] []) <$> dMtweets
-      dyn_ $ ffor dTUResp $ \tuResp -> mapM_ (elTweet $ users tuResp) (tweets tuResp)     
+      dyn_ $ ffor dTUResp elTweetsList
       -- ^ dyn_ runs the Dynamic t (m ()), otherwise you'd only have a Dynamic not run.
       return ()
     return ()

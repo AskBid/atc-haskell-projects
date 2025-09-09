@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE LambdaCase #-}
 
 module Common where
 
@@ -15,7 +16,7 @@ import Data.Maybe
 
 import Schema
 import Common.MyFunctions
--- import Obelisk.Frontend
+import Common.Api (TweetUserResp(..))
 
 -- | Needs monad extended to @RoutedT@ because we run it in the @subRoute_@
 -- used lift actually as a more generalised solution.
@@ -129,7 +130,7 @@ elTweet users tweet = do
         ( "style" =: pointer
         ) $ text $ tweetText $ tweet'
 
-    (tweetRepLink, _) <- elAttr' 
+    (tweetReplyLink, _) <- elAttr' 
         "div" 
         ( "style" =: pointer 
         <> "class" =: replyStyle
@@ -137,15 +138,23 @@ elTweet users tweet = do
 
     let tweetId = T.pack $ show $ fromSqlKey $ entityKey tweet
         evTextClick = domEvent Click tweetTextDiv 
-        evRepClick = domEvent Click tweetRepLink 
-        -- reqReplies = getAndDecode?
-        -- TODO prepare request for replies to this tweet
+        evReplyClick = domEvent Click tweetReplyLink 
+        url4replies = getUrl $ 
+          FullRoute_Backend 
+          BackendRoute_Api :/
+          Api_PostReplies tweetId
+    dToggleReplies <- toggle False evTextClick
+    let eToggleReplies = updated dToggleReplies 
+        eShowReplies = ffilter id eToggleReplies
 
-    -- performEvent_ $ 
-    -- TODO perform request when event clicked and visualise
+    emTweetUserReplies <- getAndDecode $ url4replies <$ eShowReplies
+
+    performEvent_ $ ffor emTweetUserReplies $ \mTUReplies -> do 
+      case mTUReplies of
+        Nothing -> el "div" $ text "There was an issue. Replies not retreived."
+        Just tuReplies -> elTweetsList tuReplies
         
-    setRoute $ FrontendRoute_Tweet :/ tweetId <$ evRepClick
-
+    setRoute $ FrontendRoute_Tweet :/ tweetId <$ evReplyClick
   where 
     tweet' = entityVal tweet
     user = findInEntityList users $ tweetOwner tweet'
@@ -155,6 +164,9 @@ elTweet users tweet = do
     containerStyle  = "rounded-xl bg-gray-100 max-w-full w-full p-2 my-4 "
     containerBorder = "border-4 border-white"
     pointer         = "cursor: pointer;"
+
+elTweetsList :: TweetUserResp -> m ()
+elTweetsList tur = mapM_ (elTweet $ users tur) (tweets tur)
 
 -- | finds the record relative to an id/key given a list of Entity and the key.
 findInEntityList 
