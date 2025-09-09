@@ -8,6 +8,9 @@ import Control.Monad.IO.Class (liftIO, MonadIO)
 import Data.Maybe (catMaybes)
 import Control.Monad.Reader
 import Data.Time (getCurrentTime, UTCTime(..), fromGregorian, secondsToDiffTime)
+import qualified Data.Text as T
+import Data.Int (Int64)
+import Text.Read (readMaybe)
 
 import Common.MyFunctions
 import Common.Api
@@ -55,7 +58,11 @@ insertUser user = do
   k <- runSqlite myDB $ insert user
   return k
 
-getPostReplies :: Entity Tweet -> IO [Entity Tweet]
-getPostReplies tweet = do 
-  replies <- runSqlite myDB $ selectList [TweetReplyTo ==. Just (entityKey tweet)] [Desc TweetCreatedAt]
+getPostReplies :: Int64 -> IO [Entity Tweet]
+getPostReplies tweetId = do 
+  replies <- runSqlite myDB $ 
+    selectList [TweetReplyTo ==. Just (toSqlKey tweetId)] [Desc TweetCreatedAt]
   return replies
+
+textToInt64 :: T.Text -> Maybe Int64
+textToInt64 = readMaybe . T.unpack

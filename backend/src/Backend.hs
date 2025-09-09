@@ -8,9 +8,10 @@ module Backend where
 import Common.Route
 import Common.Api (Credentials(..), TweetUserResp(..))
 import Obelisk.Backend
+
 import MyJWT (verifyJWT, createJWT, mkJWTCookie, cookieLogout)
 import Schema 
-import DatabaseQueries 
+import DatabaseQueries
 
 import Obelisk.Route -- (R(..))
 import Snap
@@ -21,7 +22,8 @@ import qualified Data.ByteString.Lazy.Char8 as BL
 import Database.Persist
 import Database.Persist.Sqlite
 import Control.Monad.IO.Class (liftIO)
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, catMaybes)
+import Control.Monad.IO.Class (liftIO)
 
 
 backend :: Backend BackendRoute FrontendRoute
@@ -37,8 +39,8 @@ backend = Backend
   -- _backend_run = \serve -> serve backendHandlers
   -- ...means:
   -- “When the Obelisk backend server starts, use backendHandlers to respond to requests. 
-  -- serve will automatically use the route encoder to map URLs to BackendRoute constructors 
-  -- and pass the right one into backendHandlers.”
+  -- serve will automatically use the route encoder to map URLs to BackendRoute 
+  -- constructors and pass the right one into backendHandlers.”
   -- Sets up Snap (Obelisk uses Snap under the hood)
   -- Uses `fullRouteEncoder` to decode the request path into a `BackendRoute`
   -- Passes that `BackendRoute` to your handler: like `BackendRoute_Login :/ ()`
@@ -126,6 +128,15 @@ backendHandlers = \case
         postsUsers <- liftIO $ getPostsByUser $ entityKey eUser
         writeBS $ BL.toStrict $ A.encode postsUsers
 
+  BackendRoute_Api :/ Api_PostReplies tweetId -> do 
+    let idInt = textToInt64 tweetId
+    case idInt of
+      Nothing -> modifyResponse $ setResponseStatus 400 "Bad Request"
+      Just n  -> do 
+        replies <- liftIO $ getPostReplies n
+        users <- liftIO $ catMaybes <$> mapM findUsers replies
+        writeBS $ BL.toStrict $ A.encode $ TweetUserResp replies users
+
   BackendRoute_Api :/ Api_Submit -> do
     mUsername <- verifyJWT
     payload <- readRequestBody 10000
@@ -139,7 +150,8 @@ backendHandlers = \case
     writeBS "TODO: insert new tweet in database"
    
   BackendRoute_Missing :/ () -> writeBS "404 - Not Found"
-  -- ^ `R` it’s the standard (advanced and complicated) way to refer to parsed routes in Obelisk.
+  -- ^ `R` it’s the standard (advanced and complicated) way to refer to parsed 
+  -- routes in Obelisk.
   -- :/ is a type-safe path separator
   -- It separates a route constructor from its parameter(s) — 
   -- think of it like a typed version of a slash (/) in a URL.

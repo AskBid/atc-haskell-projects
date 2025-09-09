@@ -46,6 +46,7 @@ data Api
   | Api_Me
   | Api_Posts
   | Api_PostsByUser Text
+  | Api_PostReplies Text
   | Api_Submit
   deriving (Show, Eq, Ord)
 
@@ -73,6 +74,7 @@ apiRouteEncoder = reviewEncoder apiPrism
       Api_Me            -> (["me"], mempty)
       Api_Posts         -> (["posts"], mempty)
       Api_PostsByUser u -> (["posts", "users", u], mempty)
+      Api_PostReplies t -> (["posts", t, "replies"], mempty)
       Api_Submit        -> (["submit"], mempty)
 
     from :: PageName -> Either PageName Api
@@ -83,6 +85,7 @@ apiRouteEncoder = reviewEncoder apiPrism
       (["me"], _)               -> Right Api_Me
       (["posts"], _)            -> Right Api_Posts
       (["posts", "users", u], _) -> Right (Api_PostsByUser u)
+      (["posts", t, "replies"], _) -> Right (Api_PostReplies t)
       (["submit"], _)           -> Right Api_Submit
       p                         -> Left p                     
 

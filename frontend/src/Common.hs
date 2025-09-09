@@ -103,9 +103,11 @@ buttonLogInOut appState route = do
       -- ^ Dynamic t (Event t XhrResponse) << returned from `prerender`
       setRoute $ route <$ switchDyn dynEvLogoutResp
 
--- | given an Entity Tweet and a list [Entity User] renders the tweet with the related owner User.
---   the logic is in the route Api_Posts that together with a list [Entity Tweet] returns a list 
---   [Entity User] with all the related owner of all [Entity Tweet] returned.
+-- | given an Entity Tweet and a list [Entity User] renders the tweet 
+--   with the related owner User.
+--   the logic is in the route Api_Posts that together with a list 
+--   [Entity Tweet] returns a list [Entity User] with all the related 
+--   owner of all [Entity Tweet] returned.
 elTweet 
   :: (DomBuilder t m, SetRoute t (R FrontendRoute) m) 
   => [Entity User] 
@@ -121,60 +123,38 @@ elTweet users tweet = do
 
     elAttr "a" ("class" =: userStyle <> "href" =: url) $ 
       text usernameT
-    (tweetDiv, _) <- elAttr' "div" ("style" =: "cursor: pointer;") $ 
-      text $ tweetText $ tweet'
-    elClass "div" replyStyle $ text "Reply \x1F5E8"
 
-    elTweet2 users tweet
-    elTweet2 users tweet
+    (tweetTextDiv, _) <- elAttr' 
+        "div" 
+        ( "style" =: pointer
+        ) $ text $ tweetText $ tweet'
+
+    (tweetRepLink, _) <- elAttr' 
+        "div" 
+        ( "style" =: pointer 
+        <> "class" =: replyStyle
+        ) $ text "reply\x1F5E8"
 
     let tweetId = T.pack $ show $ fromSqlKey $ entityKey tweet
-        tweetClick = domEvent Click tweetDiv 
+        evTextClick = domEvent Click tweetTextDiv 
+        evRepClick = domEvent Click tweetRepLink 
+        -- reqReplies = getAndDecode?
+        -- TODO prepare request for replies to this tweet
+
+    -- performEvent_ $ 
+    -- TODO perform request when event clicked and visualise
         
-    setRoute $ FrontendRoute_Tweet :/ tweetId <$ tweetClick
+    setRoute $ FrontendRoute_Tweet :/ tweetId <$ evRepClick
 
   where 
     tweet' = entityVal tweet
     user = findInEntityList users $ tweetOwner tweet'
 
-    replyStyle = "text-right text-xs text-gray-400 underline"
-    userStyle = "text-blue-400 font-bold"
-    containerStyle = "rounded-xl bg-gray-100 max-w-full w-full p-2 my-2 "
+    replyStyle      = "text-right text-xs text-gray-400 underline"
+    userStyle       = "text-blue-400 font-bold"
+    containerStyle  = "rounded-xl bg-gray-100 max-w-full w-full p-2 my-4 "
     containerBorder = "border-4 border-white"
-
-elTweet2
-  :: (DomBuilder t m, SetRoute t (R FrontendRoute) m) 
-  => [Entity User] 
-  -> Entity Tweet 
-  -> m ()
-elTweet2 users tweet = do 
-
-  let usernameT = fromMaybe "" $ userName . entityVal <$> user
-      url = getUrl $ 
-        FullRoute_Frontend (ObeliskRoute_App FrontendRoute_Profile) :/ usernameT
-
-  elClass "div" (containerStyle <> containerBorder) $ do
-
-    elAttr "a" ("class" =: userStyle <> "href" =: url) $ 
-      text usernameT
-    (tweetDiv, _) <- elAttr' "div" ("style" =: "cursor: pointer;") $ 
-      text $ tweetText $ tweet'
-    elClass "div" replyStyle $ text "Reply \x1F5E8"
-
-    let tweetId = T.pack $ show $ fromSqlKey $ entityKey tweet
-        tweetClick = domEvent Click tweetDiv 
-        
-    setRoute $ FrontendRoute_Tweet :/ tweetId <$ tweetClick
-
-  where 
-    tweet' = entityVal tweet
-    user = findInEntityList users $ tweetOwner tweet'
-
-    replyStyle = "text-right text-xs text-gray-400 underline"
-    userStyle = "text-blue-400 font-bold"
-    containerStyle = "rounded-xl bg-gray-100 max-w-full w-full p-2 my-2 "
-    containerBorder = "border-4 border-white"
-
+    pointer         = "cursor: pointer;"
 
 -- | finds the record relative to an id/key given a list of Entity and the key.
 findInEntityList 
