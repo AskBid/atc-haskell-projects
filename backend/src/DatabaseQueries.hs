@@ -19,7 +19,10 @@ import Schema
 sqlUserPwdExist :: MonadIO m => Credentials -> m (Maybe (Entity User))
 sqlUserPwdExist lr = do
   liftIO $ runSqlite myDB $ do
-    mEUser <- selectFirst [UserName ==. (username lr), UserPwd ==. (password lr)] []
+    mEUser <- selectFirst   
+      [ UserName ==. (username lr)
+      , UserPwd ==. (password lr)
+      ] []
     return mEUser
 
 getPosts :: IO TweetsOwnersResp

@@ -144,11 +144,14 @@ elTweet users tweet = do
         ( "style" =: pointer
         ) $ text $ tweetText $ tweet'
 
-    (tweetReplyLink, _) <- elAttr' 
-        "div" 
-        ( "style" =: pointer 
-        <> "class" =: replyStyle
-        ) $ text "reply\x1F5E8"
+    tweetReplyLink <- elClass "div" "flex" $ do
+      elClass "div" "flex-1" blank
+      (tweetReplyLink, _) <- elAttr' 
+          "div" 
+          ( "style" =: pointer 
+          <> "class" =: replyStyle
+          ) $ text "reply\x1F5E8"
+      return tweetReplyLink
 
     let tweetId = T.pack $ show $ fromSqlKey $ entityKey tweet
         evTextClick = domEvent Click tweetTextDiv 
