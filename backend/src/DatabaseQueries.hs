@@ -23,27 +23,21 @@ sqlUserPwdExist lr = do
     return mEUser
 
 getPosts :: IO TweetsOwnersResp
-getPosts = do 
-  posts <- runSqlite myDB $ selectList [TweetReplyTo ==. Nothing] [Desc TweetCreatedAt]
-  users <- catMaybes <$> mapM findUsers posts
-  return $ TweetsOwnersResp posts users Nothing
+getPosts = runSqlite myDB $ do 
+  posts <- selectList [TweetReplyTo ==. Nothing] [Desc TweetCreatedAt]
+  let ownerIds = map (tweetOwner . entityVal) posts
+  owners <- selectList [UserId <-. ownerIds] []
+  return $ TweetsOwnersResp posts owners Nothing
 
 getPostsByUser :: UserId -> IO TweetsOwnersResp
-getPostsByUser userId = do 
-  posts <- runSqlite myDB $ 
-    selectList 
+getPostsByUser userId = runSqlite myDB $ do 
+  posts <- selectList 
       -- [ TweetReplyTo ==. Nothing
       [ TweetOwner ==. userId
       ] [Desc TweetCreatedAt]
-  users <- catMaybes <$> mapM findUsers posts
-  return $ TweetsOwnersResp posts users Nothing
-
-findUsers :: Entity Tweet -> IO (Maybe (Entity User))
-findUsers et = do 
-  mEUser <- runSqlite myDB $ selectFirst [UserId ==. id] []
-  return mEUser
-  where 
-    id = tweetOwner $ entityVal et 
+  let ownerIds = map (tweetOwner . entityVal) posts
+  owners <- selectList [UserId <-. ownerIds] []
+  return $ TweetsOwnersResp posts owners Nothing
 
 insertTweet :: Tweet -> IO (Key Tweet)
 insertTweet tweet = do 

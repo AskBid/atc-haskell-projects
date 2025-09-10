@@ -135,11 +135,16 @@ backendHandlers = \case
       Nothing -> modifyResponse $ setResponseStatus 400 "Bad Request"
       Just n  -> do 
         let keyTweet = toSqlKey n
-        parentTweet <- liftIO $ runSqlite myDB $ get keyTweet
-        replies <- liftIO $ getPostReplies n
-        users <- liftIO $ catMaybes <$> mapM findUsers replies 
-        writeBS $ BL.toStrict $ A.encode $ 
-          TweetsOwnersResp replies users (Entity keyTweet <$> parentTweet)
+        mParentTweet <- liftIO $ runSqlite myDB $ get keyTweet
+        case mParentTweet of
+          Nothing -> modifyResponse $ setResponseStatus 404 "Not Found"
+          Just parentTweet -> do 
+            replies <- liftIO $ getPostReplies n
+            let parentEntity = Entity keyTweet parentTweet
+            let ownerIds = map (tweetOwner . entityVal) (parentEntity : replies)
+            owners <- liftIO $ runSqlite myDB $ selectList [UserId <-. ownerIds] []
+            writeBS $ BL.toStrict $ A.encode $ 
+              TweetsOwnersResp replies owners (Just parentEntity)
 
   BackendRoute_Api :/ Api_SubmitPost -> do
     mUsername <- verifyJWT
