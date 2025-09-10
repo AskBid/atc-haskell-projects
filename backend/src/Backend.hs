@@ -70,7 +70,7 @@ backendHandlers = \case
             let jwt = createJWT $ entityVal eUser
             modifyResponse $ setContentType "application/json"
             modifyResponse $ addResponseCookie $ mkJWTCookie jwt
-            writeLBS $ A.encode eUser --TE.encodeUtf8 $ (userName $ user') <> " logged in."
+            writeLBS $ A.encode eUser 
 
   BackendRoute_Api :/ Api_Signup -> do
     credentials <- readRequestBody 10000
@@ -133,11 +133,12 @@ backendHandlers = \case
     case idInt of
       Nothing -> modifyResponse $ setResponseStatus 400 "Bad Request"
       Just n  -> do 
-        parentTweet <- liftIO $ runSqlite myDB $ get (toSqlKey n)
+        let keyTweet = toSqlKey n
+        parentTweet <- liftIO $ runSqlite myDB $ get keyTweet
         replies <- liftIO $ getPostReplies n
-        users <- liftIO $ catMaybes <$> mapM findUsers replies
+        users <- liftIO $ catMaybes <$> mapM findUsers replies 
         writeBS $ BL.toStrict $ A.encode $ 
-          TweetsOwnersResp replies users parentTweet
+          TweetsOwnersResp replies users (Entity keyTweet <$> parentTweet)
 
   BackendRoute_Api :/ Api_SubmitPost -> do
     mUsername <- verifyJWT

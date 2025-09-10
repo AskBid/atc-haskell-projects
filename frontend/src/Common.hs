@@ -239,7 +239,7 @@ requestAndListTweets
      )
   => Event t a 
   -> R (FullRoute BackendRoute FrontendRoute) 
-  ->  m ()
+  ->  m (Dynamic t (Maybe TweetsOwnersResp))
 requestAndListTweets event routeQueryTweets = do 
   el "div" $ do
     let xhrGetPosts = XhrRequest
@@ -255,9 +255,9 @@ requestAndListTweets event routeQueryTweets = do
         Nothing   -> Nothing
         Just text -> A.decode . BL.fromStrict . TE.encodeUtf8 $ text
 
-    dyn_ $ ffor dTweetsOwnersResp $ \case
+    evParentTweet <- dyn $ ffor dTweetsOwnersResp $ \case
       Nothing     -> el "div" $ text "something went wrong."
       Just tuResp -> elTweetsList tuResp
 
-    return ()
+    return (dTweetsOwnersResp)
 

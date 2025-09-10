@@ -23,5 +23,5 @@ data Credentials = Credentials
 data TweetsOwnersResp = TweetsOwnersResp
   { tweets :: [Entity Tweet]
   , users :: [Entity User]
-  , parentTweet :: Maybe Tweet
+  , parentTweet :: Maybe (Entity Tweet)
   } deriving (Show, Generic, FromJSON, ToJSON)

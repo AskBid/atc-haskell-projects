@@ -36,8 +36,10 @@ data BackendRoute :: * -> * where
   BackendRoute_Missing :: BackendRoute ()
   BackendRoute_Api :: BackendRoute Api
   -- BackendRoute_Logout :: BackendRoute ()
-  -- You can define any routes that will be handled specially by the backend here.
-  -- i.e. These do not serve the frontend, but do something different, such as serving static files.
+  -- You can define any routes that will be handled specially by the 
+  -- backend here.
+  -- i.e. These do not serve the frontend, but do something different, 
+  -- such as serving static files.
 
 data Api
   = Api_Login
@@ -99,8 +101,10 @@ data FrontendRoute :: * -> * where
   FrontendRoute_Profile :: FrontendRoute Text
   FrontendRoute_Tweet :: FrontendRoute Text
 
--- | mkFullRouteEncoder is a helper function provided by Obelisk to create an Encoder that converts between:
--- Obelisk uses a type-safe routing system: instead of using raw strings for URLs everywhere, 
+-- | mkFullRouteEncoder is a helper function provided by Obelisk to create an 
+-- Encoder that converts between:
+-- Obelisk uses a type-safe routing system: instead of using raw strings for
+-- URLs everywhere, 
 -- you define Haskell data types representing your routes, e.g.:
 -- But your web browser uses URLs like /login or /profile/alice.
 -- mkFullRouteEncoder connects these two worlds:
@@ -108,7 +112,8 @@ data FrontendRoute :: * -> * where
 --  - When your app wants to generate a link, it encodes a route type back into a URL.
 fullRouteEncoder :: Encoder (Either Text) Identity (R (FullRoute BackendRoute FrontendRoute)) PageName
 fullRouteEncoder = mkFullRouteEncoder
-  (FullRoute_Backend BackendRoute_Missing :/ ()) -- ^ 404 handler (first arg only, second is below)
+  (FullRoute_Backend BackendRoute_Missing :/ ()) 
+  -- ^ 404 handler (first arg only, second is below)
   (\case
     BackendRoute_Api -> PathSegment "api" apiRouteEncoder
     BackendRoute_Missing -> PathSegment "missing" $ unitEncoder mempty

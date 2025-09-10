@@ -56,8 +56,7 @@ mainPage appState = do
           { _xhrRequest_method = "POST"
           , _xhrRequest_url = getUrl $ 
               FullRoute_Backend 
-              BackendRoute_Api :/ 
-              Api_SubmitPost
+              BackendRoute_Api :/ Api_SubmitPost
           , _xhrRequest_config = def 
               & xhrRequestConfig_withCredentials .~ True
               & xhrRequestConfig_headers .~ ("Content-Type" =: "application/json")
