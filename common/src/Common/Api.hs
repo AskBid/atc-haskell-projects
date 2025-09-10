@@ -20,8 +20,8 @@ data Credentials = Credentials
 --   all the owners of all tweets.
 --   We also carry the tweet all the replies reply to in case the query is for 
 --   replies rather than main posts.
-data TweetUserResp = TweetUserResp
+data TweetsOwnersResp = TweetsOwnersResp
   { tweets :: [Entity Tweet]
   , users :: [Entity User]
-  , parentTweet :: Maybe (Entity Tweet)
+  , parentTweet :: Maybe Tweet
   } deriving (Show, Generic, FromJSON, ToJSON)

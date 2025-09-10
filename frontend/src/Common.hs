@@ -21,7 +21,7 @@ import qualified Data.Text.Encoding as TE
 
 import Schema
 import Common.MyFunctions
-import Common.Api (TweetUserResp(..))
+import Common.Api (TweetsOwnersResp(..))
 
 -- | Needs monad extended to @RoutedT@ because we run it in the @subRoute_@
 -- used lift actually as a more generalised solution.
@@ -198,12 +198,12 @@ elTweetsList
      , MonadJSM (Performable m)
      , PostBuild t m
      ) 
-  => TweetUserResp 
+  => TweetsOwnersResp 
   -> m ()
 elTweetsList tur = 
   case tur of 
-    TweetUserResp [] _ _         -> tweetTabMsg "Nothing to see here."
-    TweetUserResp tweets users _ -> mapM_ (elTweet $ users) tweets
+    TweetsOwnersResp [] _ _         -> tweetTabMsg "Nothing to see here."
+    TweetsOwnersResp tweets users _ -> mapM_ (elTweet $ users) tweets
 
 tweetTabMsg 
   :: DomBuilder t m 
@@ -250,12 +250,12 @@ requestAndListTweets event routeQueryTweets = do
 
     evGetPostsResp <- performRequestAsync $ xhrGetPosts <$ event
     
-    dPosts <- holdDyn Nothing $ ffor evGetPostsResp $ \resp ->
+    dTweetsOwnersResp <- holdDyn Nothing $ ffor evGetPostsResp $ \resp ->
       case _xhrResponse_responseText resp of
         Nothing   -> Nothing
         Just text -> A.decode . BL.fromStrict . TE.encodeUtf8 $ text
 
-    dyn_ $ ffor dPosts $ \case
+    dyn_ $ ffor dTweetsOwnersResp $ \case
       Nothing     -> el "div" $ text "something went wrong."
       Just tuResp -> elTweetsList tuResp
 

@@ -19,7 +19,7 @@ import Database.Persist.Sql
 import Data.Maybe
 
 import Schema
-import Common.Api (TweetUserResp(..))
+import Common.Api (TweetsOwnersResp(..))
 import Common
 
 mainPage 
@@ -33,18 +33,17 @@ mainPage appState = do
 
     el "h2" $ text "Welcome to My Tweetter!"
     textArea <- textAreaElement $ def & initialAttributes .~ 
-      ("placeholder" =: "Write your Tweet here ..." 
-      <> "class" =: "bg-blue-100 w-full p-2 rounded min-h-40")
+      (  "placeholder" =: "Write your Tweet here ..." 
+      <> "class"       =: "bg-blue-100 w-full p-2 rounded min-h-40"
+      )
     (elBtnPost, _) <- myButton "Post"
   
     let evPostClick = domEvent Click elBtnPost
+        evPostWithUser = tagPromptlyDyn (loggedUser appState) $ evPostClick
+        evNotLogged = ffilter (not . isJust) evPostWithUser
         dTextArea = _textAreaElement_value textArea
 
-        evPostWithMEUser = tagPromptlyDyn (loggedUser appState) $ evPostClick
-        evMEUserLogged = ffilter isJust evPostWithMEUser
-        evMEUserNotLog = ffilter (not . isJust) evPostWithMEUser
-
-    setRoute $ FrontendRoute_Login :/ () <$ evMEUserNotLog
+    setRoute $ FrontendRoute_Login :/ () <$ evNotLogged
     
     ----------------
     -- posting tweet
@@ -65,7 +64,7 @@ mainPage appState = do
               & xhrRequestConfig_sendData .~ BL.toStrict (A.encode tweet)
           }
 
-    evTweetPostResp <- performRequestAsync $ xhrSubmitPost <$> evMkTweet
+    evTweetsOwnersResp <- performRequestAsync $ xhrSubmitPost <$> evMkTweet
     -- posting tweet
     ----------------
 
@@ -77,8 +76,8 @@ mainPage appState = do
     -- list posts
     evPostBuild <- getPostBuild
 
-    let evReload = leftmost [evPostBuild, () <$ evTweetPostResp]
-    -- ^ we refresh general posts feed at page start or tweet post.
+    let evReload = leftmost [evPostBuild, () <$ evTweetsOwnersResp]
+    -- ^ we refresh general posts feed at page start or tweet post response.
     requestAndListTweets evReload $ 
       FullRoute_Backend 
       BackendRoute_Api :/ Api_Posts

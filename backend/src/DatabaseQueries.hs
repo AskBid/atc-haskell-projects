@@ -23,13 +23,13 @@ sqlUserPwdExist lr = do
     mEUser <- selectFirst [UserName ==. (username lr), UserPwd ==. (password lr)] []
     return mEUser
 
-getPosts :: IO TweetUserResp
+getPosts :: IO TweetsOwnersResp
 getPosts = do 
   posts <- runSqlite myDB $ selectList [TweetReplyTo ==. Nothing] [Desc TweetCreatedAt]
   users <- catMaybes <$> mapM findUsers posts
-  return $ TweetUserResp posts users Nothing
+  return $ TweetsOwnersResp posts users Nothing
 
-getPostsByUser :: UserId -> IO TweetUserResp
+getPostsByUser :: UserId -> IO TweetsOwnersResp
 getPostsByUser userId = do 
   posts <- runSqlite myDB $ 
     selectList 
@@ -37,7 +37,7 @@ getPostsByUser userId = do
       [ TweetOwner ==. userId
       ] [Desc TweetCreatedAt]
   users <- catMaybes <$> mapM findUsers posts
-  return $ TweetUserResp posts users Nothing
+  return $ TweetsOwnersResp posts users Nothing
 
 findUsers :: Entity Tweet -> IO (Maybe (Entity User))
 findUsers et = do 

@@ -6,7 +6,7 @@
 module Backend where
 
 import Common.Route
-import Common.Api (Credentials(..), TweetUserResp(..))
+import Common.Api (Credentials(..), TweetsOwnersResp(..))
 import Obelisk.Backend
 
 import MyJWT (verifyJWT, createJWT, mkJWTCookie, cookieLogout)
@@ -133,9 +133,11 @@ backendHandlers = \case
     case idInt of
       Nothing -> modifyResponse $ setResponseStatus 400 "Bad Request"
       Just n  -> do 
+        parentTweet <- liftIO $ runSqlite myDB $ get (toSqlKey n)
         replies <- liftIO $ getPostReplies n
         users <- liftIO $ catMaybes <$> mapM findUsers replies
-        writeBS $ BL.toStrict $ A.encode $ TweetUserResp replies users Nothing -- < should return parent tweet replies are replying to.
+        writeBS $ BL.toStrict $ A.encode $ 
+          TweetsOwnersResp replies users parentTweet
 
   BackendRoute_Api :/ Api_SubmitPost -> do
     mUsername <- verifyJWT
