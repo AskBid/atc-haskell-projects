@@ -12,6 +12,7 @@ import Obelisk.Backend
 import MyJWT (verifyJWT, createJWT, mkJWTCookie, cookieLogout)
 import Schema 
 import DatabaseQueries
+import Common.Api
 
 import Obelisk.Route -- (R(..))
 import Snap
@@ -142,15 +143,18 @@ backendHandlers = \case
 
   BackendRoute_Api :/ Api_SubmitPost -> do
     mUsername <- verifyJWT
-    payload <- readRequestBody 10000
-    let mTweet = A.decode payload :: Maybe Tweet
-    case mTweet of 
-      Nothing -> error "could not decode tweet from JSON."
-      Just tweet -> do 
-        keyUser <- liftIO $ insertTweet tweet
-        writeBS "all Good"
-    writeBS "TODO: check if cookies have JWT of loggedIn,"
-    writeBS "TODO: insert new tweet in database"
+    case mUsername of
+      Nothing -> do
+        modifyResponse $ setResponseStatus 401 "unauthorized"
+        writeBS "invalid JWT"
+      Just username' -> do
+        payload <- readRequestBody 10000
+        let mTweet = A.decode payload :: Maybe Tweet
+        case mTweet of 
+          Nothing -> error "could not decode tweet from JSON."
+          Just tweet -> do 
+            keyUser <- liftIO $ insertTweet tweet
+            writeBS "Tweet saved on DB."
    
   BackendRoute_Missing :/ () -> writeBS "404 - Not Found"
   -- ^ `R` it’s the standard (advanced and complicated) way to refer to parsed 
