@@ -10,24 +10,13 @@ import Obelisk.Route
 import Obelisk.Route.Frontend
 import Obelisk.Frontend
 import qualified Data.Text as T
-import qualified Data.Text.Encoding as TE
-import qualified Data.Aeson as A
-import qualified Data.ByteString.Lazy as BL
-import Database.Persist.Sql
-import Data.Maybe
-import Data.Time (getCurrentTime, UTCTime(..), fromGregorian, secondsToDiffTime)
-import Control.Monad.IO.Class (liftIO, MonadIO)
--- import Control.Monad.Trans (lift)
-import Schema
-import Common.Api (TweetsOwnersResp(..))
-import Common.MyFunctions (headSafe)
-import FrontendCommon.Common
+
 import FrontendCommon.TweetRender
 
 userPage 
   :: (ObeliskWidget t (R FrontendRoute) m)
-  => AppState t -> T.Text -> RoutedT t a m ()
-userPage appState username = do
+  => T.Text -> RoutedT t a m ()
+userPage username = do
 
   prerender_ blank $ do 
 
@@ -40,7 +29,7 @@ userPage appState username = do
     -- list posts
     evPostBuild <- getPostBuild
 
-    requestAndListTweets evPostBuild $ 
+    _ <- requestAndListTweets evPostBuild $ 
       FullRoute_Backend
       BackendRoute_Api :/ Api_PostsByUser username
 

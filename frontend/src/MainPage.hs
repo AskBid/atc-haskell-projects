@@ -9,16 +9,11 @@ import Reflex.Dom.Core
 import Obelisk.Route
 import Obelisk.Route.Frontend
 import Obelisk.Frontend
-import qualified Data.Text as T
-import qualified Data.Text.Encoding as TE
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BL
-import Database.Persist.Sql
 import Data.Maybe
 
 import Common.Route 
-import Schema
-import Common.Api (TweetsOwnersResp(..))
 import FrontendCommon.Common
 import FrontendCommon.TweetRender
 
@@ -32,7 +27,7 @@ mainPage appState = do
     buttonLogInOut appState $ FrontendRoute_Main :/ ()
 
     el "h2" $ text "Welcome to My Tweetter!"
-    textArea <- textAreaElement $ def & initialAttributes .~ 
+    textArea' <- textAreaElement $ def & initialAttributes .~ 
       (  "placeholder" =: "Write your Tweet here ..." 
       <> "class"       =: "bg-blue-100 w-full p-2 rounded min-h-40"
       )
@@ -41,7 +36,7 @@ mainPage appState = do
     let evPostClick = domEvent Click elBtnPost
         evPostWithUser = tagPromptlyDyn (loggedUser appState) $ evPostClick
         evNotLogged = ffilter (not . isJust) evPostWithUser
-        dTextArea = _textAreaElement_value textArea
+        dTextArea = _textAreaElement_value textArea'
 
     setRoute $ FrontendRoute_Login :/ () <$ evNotLogged
     
@@ -77,7 +72,7 @@ mainPage appState = do
 
     let evReload = leftmost [evPostBuild, () <$ evTweetsOwnersResp]
     -- ^ we refresh general posts feed at page start or tweet post response.
-    requestAndListTweets evReload $ 
+    _ <- requestAndListTweets evReload $ 
       FullRoute_Backend 
       BackendRoute_Api :/ Api_Posts
 

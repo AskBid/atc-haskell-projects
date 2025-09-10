@@ -10,17 +10,11 @@ import Obelisk.Route
 import Data.Functor.Identity
 import Common.Route 
 import Obelisk.Route.Frontend
-import Control.Monad.IO.Class (liftIO, MonadIO)
+import Control.Monad.IO.Class (liftIO)
 import Database.Persist.Sql
 import Data.Maybe
-import Language.Javascript.JSaddle (MonadJSM)
-import qualified Data.Aeson as A
-import qualified Data.ByteString.Lazy as BL
-import qualified Data.Text.Encoding as TE
 
 import Schema
-import Common.MyFunctions
-import Common.Api (TweetsOwnersResp(..), textToInt64)
 
 -- | Needs monad extended to @RoutedT@ because we run it in the @subRoute_@
 -- used lift actually as a more generalised solution.
@@ -55,9 +49,9 @@ getUrl route = T.intercalate "/" $ fst pageName
     pageName = encode safeEncoder route
 
 statusCheck :: Word -> Word -> XhrResponse -> Bool
-statusCheck min max xhr
-  | status >= min && status < max = True
-  | otherwise                     = False
+statusCheck min' max' xhr
+  | status >= min' && status < max' = True
+  | otherwise                       = False
   where status = _xhrResponse_status xhr
 
 -- | widget that shows login button if not loggedin and logout button otherwise

@@ -1,8 +1,7 @@
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE TemplateHaskell #-}
-
+{-# LANGUAGE CPP                   #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE LambdaCase            #-}
+{-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE PartialTypeSignatures #-}
@@ -51,7 +50,7 @@ frontend = Frontend
         elClass "div" "bg-gray-100" blank
         elClass "div" "min-w-[600px] max-w-[600px] w-full bg-white flex flex-col p-4 space-y-4" $ do 
            
-          (evLoggedInByTrigger, loginTrigger) <- newTriggerEvent
+          (evLoggedInByTrigger, loginTrigger') <- newTriggerEvent
           
           dMEUser <- prerender (pure never) $ do
             postBuildEv <- getPostBuild
@@ -66,7 +65,7 @@ frontend = Frontend
           --   on more than just one Event.
           let appState = AppState {
               loggedUser = dynLoggedIn
-            , loginTrigger = loginTrigger
+            , loginTrigger = loginTrigger'
             }
 
           let eUserName :: Maybe (Entity User) -> T.Text
@@ -85,7 +84,7 @@ frontend = Frontend
             FrontendRoute_Profile -> do
               dynUsername <- askRoute
               dyn_ $ ffor dynUsername $ \username -> 
-                userPage appState username
+                userPage username
             FrontendRoute_Tweet -> do 
               dynTweetId <- askRoute
               dyn_ $ ffor dynTweetId $ \tweetId -> 
@@ -100,20 +99,18 @@ frontend = Frontend
 -- | send XhrRequest to /me route to check if user is sending a valid JWT in the 
 --   headers/set-cookies.
 meRouteLoginCheck
-  :: ( Monad m
-     , MonadJSM (Performable m)
-     , Reflex t 
+  :: ( MonadJSM (Performable m)
      , PerformEvent t m
      , TriggerEvent t m
      ) 
   => Event t a -> m (Event t (Maybe (Entity User)))
 meRouteLoginCheck evTrigger = do
-  let xhrRequest = XhrRequest { 
+  let xhrReq = XhrRequest { 
       _xhrRequest_method = "GET"
     , _xhrRequest_url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Me 
     , _xhrRequest_config = def
     }
-  evResp <- performRequestAsync $ xhrRequest <$ evTrigger
+  evResp <- performRequestAsync $ xhrReq <$ evTrigger
   let evRespSucc = ffilter (statusCheck 200 300) evResp
       evMTextResp = _xhrResponse_responseText <$> evRespSucc
       evMEUser = ffor evMTextResp $ 

@@ -6,7 +6,6 @@
 module Backend where
 
 import Common.Route
-import Common.Api (Credentials(..), TweetsOwnersResp(..))
 import Obelisk.Backend
 
 import MyJWT (verifyJWT, createJWT, mkJWTCookie, cookieLogout)
@@ -22,8 +21,6 @@ import qualified Data.Text.Encoding as TE
 import qualified Data.ByteString.Lazy.Char8 as BL
 import Database.Persist
 import Database.Persist.Sqlite
-import Control.Monad.IO.Class (liftIO)
-import Data.Maybe (fromMaybe, catMaybes)
 import Control.Monad.IO.Class (liftIO)
 
 
@@ -80,15 +77,15 @@ backendHandlers = \case
       Nothing -> do
         modifyResponse $ setResponseStatus 401 "Unauthorized"
         writeLBS "{\"error\": \"No Credentials\"}" -- TODO make type
-      Just credentials -> do 
-        mEUser <- sqlUserPwdExist credentials
+      Just creds -> do 
+        mEUser <- sqlUserPwdExist creds
         case mEUser of
           Nothing -> do 
             modifyResponse $ setResponseStatus 201 "Created"
-            let user = User (username credentials) (password credentials) []
+            let user = User (username creds) (password creds) []
             _ <- liftIO $ insertUser user
             writeLBS "Successful signup."
-          Just eUser -> do
+          Just _ -> do
             modifyResponse $ setResponseStatus 401 "Unauthorized"
             writeBS $ TE.encodeUtf8 "Invalid credentials."
             writeLBS "User added"
@@ -119,8 +116,8 @@ backendHandlers = \case
     -- writeBS $ "all the primary tweets (not replies)"
     writeLBS $ A.encode postsUsers
 
-  BackendRoute_Api :/ Api_PostsByUser username -> do
-    mEUser <- liftIO $ runSqlite myDB $ selectFirst [UserName ==. username] [] 
+  BackendRoute_Api :/ Api_PostsByUser username' -> do
+    mEUser <- liftIO $ runSqlite myDB $ selectFirst [UserName ==. username'] [] 
     case mEUser of
       Nothing -> do 
         modifyResponse $ setResponseStatus 404 "Not Found"
@@ -138,9 +135,9 @@ backendHandlers = \case
         mParentTweet <- liftIO $ runSqlite myDB $ get keyTweet
         case mParentTweet of
           Nothing -> modifyResponse $ setResponseStatus 404 "Not Found"
-          Just parentTweet -> do 
+          Just parentTweet' -> do 
             replies <- liftIO $ getPostReplies n
-            let parentEntity = Entity keyTweet parentTweet
+            let parentEntity = Entity keyTweet parentTweet'
             let ownerIds = map (tweetOwner . entityVal) (parentEntity : replies)
             owners <- liftIO $ runSqlite myDB $ selectList [UserId <-. ownerIds] []
             writeBS $ BL.toStrict $ A.encode $ 
@@ -152,13 +149,13 @@ backendHandlers = \case
       Nothing -> do
         modifyResponse $ setResponseStatus 401 "unauthorized"
         writeBS "invalid JWT"
-      Just username' -> do
+      Just _ -> do
         payload <- readRequestBody 10000
         let mTweet = A.decode payload :: Maybe Tweet
         case mTweet of 
           Nothing -> error "could not decode tweet from JSON."
           Just tweet -> do 
-            keyUser <- liftIO $ insertTweet tweet
+            _ <- liftIO $ insertTweet tweet
             writeBS "Tweet saved on DB."
    
   BackendRoute_Missing :/ () -> writeBS "404 - Not Found"

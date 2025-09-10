@@ -12,13 +12,10 @@ import Obelisk.Route
 import Obelisk.Route.Frontend
 import Obelisk.Frontend
 import qualified Data.Text as T
-import qualified Data.Text.Encoding as TE
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BL
-import Database.Persist.Sql
 import Data.Maybe
 
-import Schema
 import Common.Api (TweetsOwnersResp(..))
 import FrontendCommon.Common
 import FrontendCommon.TweetRender
@@ -39,10 +36,10 @@ tweetPage appState tweetId = do
 
     dyn_ $ ffor dmTORfirst $ \case 
       Nothing -> el "div" $ text "Loading"
-      Just (TweetsOwnersResp _ users mParentTweet) -> 
+      Just (TweetsOwnersResp _ users' mParentTweet) -> 
         case mParentTweet of
           Nothing -> el "div" $ text "err: No tweet retrieved."
-          Just parentTweet -> elTweet users parentTweet
+          Just parentTweet' -> elTweet users' parentTweet'
     -- one time show parent tweet
     -----------------------------
     

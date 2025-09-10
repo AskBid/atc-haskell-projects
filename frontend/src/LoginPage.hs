@@ -8,10 +8,8 @@ import Reflex.Dom.Core
 import Obelisk.Route
 import Obelisk.Route.Frontend
 import Obelisk.Frontend
-import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.ByteString.Lazy as BL
-import Data.Functor.Identity
 import Common.Api (Credentials(..))
 import Control.Monad.Trans (lift)
 import Control.Monad.IO.Class (liftIO)
@@ -44,7 +42,7 @@ loginPage appState = do
   -- (postJson "text") <$> e l :: e xhr 
   -- performRequestAsync       :: e xhr -> m (e xhr) 
   
-  prerender (pure ()) $ do 
+  prerender_ (pure ()) $ do 
     let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Login
     evResp <- performRequestAsync $ (postJson url) <$> loginReqEv
 

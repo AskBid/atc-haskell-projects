@@ -9,10 +9,8 @@ import Reflex.Dom.Core
 import Obelisk.Route
 import Obelisk.Route.Frontend
 import Obelisk.Frontend
-import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.ByteString.Lazy as BL
-import Data.Functor.Identity
 import Control.Monad.Trans (lift)
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.Aeson as A
@@ -38,7 +36,7 @@ signupPage appState = do
       logReqDyn = Credentials <$> usrDyn <*> pwdDyn
       loginReqEv = tagPromptlyDyn logReqDyn submitClick
 
-  prerender (pure ()) $ do 
+  prerender_ (pure ()) $ do 
     let url = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_Signup
     evResp <- performRequestAsync $ (postJson url) <$> loginReqEv
 

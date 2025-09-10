@@ -4,14 +4,10 @@ module DatabaseQueries where
 
 import Database.Persist
 import Database.Persist.Sqlite
-import Control.Monad.IO.Class (liftIO, MonadIO)
-import Data.Maybe (catMaybes)
 import Control.Monad.Reader
-import Data.Time (getCurrentTime, UTCTime(..), fromGregorian, secondsToDiffTime)
-import qualified Data.Text as T
+import Data.Time (getCurrentTime)
 import Data.Int (Int64)
 
-import Common.MyFunctions
 import Common.Api
 import Schema
 

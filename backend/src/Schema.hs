@@ -96,7 +96,7 @@ populateDB = do
     (toSqlKey 4) $ -- owner
       Just $ UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 1500)
 
-  t4 <- insertBy $ Tweet "I agree, the FED seems changing tone." 
+  _ <- insertBy $ Tweet "I agree, the FED seems changing tone." 
     (Just $ key' t3) -- replying to 
     (toSqlKey 5) $ -- owner
       Just $ UTCTime (fromGregorian 2000 1 1) (secondsToDiffTime 1600)

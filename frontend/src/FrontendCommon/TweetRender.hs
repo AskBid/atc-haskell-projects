@@ -8,9 +8,8 @@ import Common.Route
 import Reflex.Dom.Core
 import Obelisk.Route
 import Obelisk.Route.Frontend
-import Obelisk.Frontend
 import Control.Monad.Fix (MonadFix)
-import Control.Monad.IO.Class (liftIO, MonadIO)
+import Control.Monad.IO.Class (MonadIO)
 import Language.Javascript.JSaddle (MonadJSM)
 import Database.Persist.Sql
 import qualified Data.Text as T
@@ -42,7 +41,7 @@ elTweet
   => [Entity User] 
   -> Entity Tweet 
   -> m ()
-elTweet users tweet = do 
+elTweet users' tweet = do 
 
   let usernameT = fromMaybe "" $ userName . entityVal <$> user
       url = getUrl $ 
@@ -87,16 +86,16 @@ elTweet users tweet = do
         then blank
         else widgetHold_ (tweetTabMsg "Loading replies...") $ 
           ffor emTweetUserReplies $ \case
-            Nothing -> el "div" $ text "404. No replies retrieved."
+            Nothing -> el "div" $ text errReplies
             Just tuReplies -> do 
               elTweetsList tuReplies
         
     setRoute $ FrontendRoute_Tweet :/ tweetId <$ evReplyClick
   where 
     tweet' = entityVal tweet
-    user = findInEntityList users $ tweetOwner tweet'
+    user = findInEntityList users' $ tweetOwner tweet'
 
-    errReplies = "There was an issue. Replies not retreived."
+    errReplies = "404. No replies retrieved."
 
     replyStyle      = "text-right text-xs text-gray-400 underline"
     userStyle       = "text-blue-400 font-bold"
@@ -120,7 +119,7 @@ elTweetsList
 elTweetsList tur = 
   case tur of 
     TweetsOwnersResp [] _ _         -> tweetTabMsg "Nothing to see here."
-    TweetsOwnersResp tweets users _ -> mapM_ (elTweet $ users) tweets
+    TweetsOwnersResp tweets' users' _ -> mapM_ (elTweet $ users') tweets'
 
 tweetTabMsg 
   :: DomBuilder t m 
@@ -136,18 +135,15 @@ findInEntityList
   =>  [Entity record] 
   -> Schema.Key record 
   -> Maybe (Entity record)
-findInEntityList recs id = headSafe $ filter (\(Entity k _) -> k == id) recs
+findInEntityList recs id' = headSafe $ filter (\(Entity k _) -> k == id') recs
 -- ^ Even though Persistent derives Eq for every Key MyEntity, the compiler doesn't know 
 --   that for all record types unless you say so.
 
 requestAndListTweets 
-  :: ( Monad m 
-     , PerformEvent t m
+  :: ( PerformEvent t m
      , MonadJSM (Performable m)
      , TriggerEvent t m
      , MonadHold t m
-     , Adjustable t m
-     , NotReady t m
      , PostBuild t m
      , MonadIO m
      , MonadFix m
@@ -170,9 +166,9 @@ requestAndListTweets event routeQueryTweets = do
     dTweetsOwnersResp <- holdDyn Nothing $ ffor evGetPostsResp $ \resp ->
       case _xhrResponse_responseText resp of
         Nothing   -> Nothing
-        Just text -> A.decode . BL.fromStrict . TE.encodeUtf8 $ text
+        Just textResp -> A.decode . BL.fromStrict . TE.encodeUtf8 $ textResp
 
-    evParentTweet <- dyn $ ffor dTweetsOwnersResp $ \case
+    dyn_ $ ffor dTweetsOwnersResp $ \case
       Nothing     -> el "div" $ text "something went wrong."
       Just tuResp -> elTweetsList tuResp
 
