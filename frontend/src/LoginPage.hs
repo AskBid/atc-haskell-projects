@@ -4,9 +4,7 @@
 
 module LoginPage where
 
-import Common.Route 
 import Reflex.Dom.Core
-import Common
 import Obelisk.Route
 import Obelisk.Route.Frontend
 import Obelisk.Frontend
@@ -20,6 +18,8 @@ import Control.Monad.IO.Class (liftIO)
 import qualified Data.Aeson as A
 import Data.Maybe (isJust)
 
+import Common.Route 
+import FrontendCommon.Common
 
 loginPage :: ObeliskWidget t (R FrontendRoute) m  => AppState t -> RoutedT t () m ()
 loginPage appState = do

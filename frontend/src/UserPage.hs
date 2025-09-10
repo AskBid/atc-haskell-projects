@@ -6,8 +6,6 @@ module UserPage where
 
 import Common.Route 
 import Reflex.Dom.Core
--- import Reflex.Dom
-import Common
 import Obelisk.Route
 import Obelisk.Route.Frontend
 import Obelisk.Frontend
@@ -23,7 +21,8 @@ import Control.Monad.IO.Class (liftIO, MonadIO)
 import Schema
 import Common.Api (TweetsOwnersResp(..))
 import Common.MyFunctions (headSafe)
-import Common
+import FrontendCommon.Common
+import FrontendCommon.TweetRender
 
 userPage 
   :: (ObeliskWidget t (R FrontendRoute) m)

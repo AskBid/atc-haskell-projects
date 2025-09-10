@@ -6,8 +6,6 @@ module SignupPage where
 
 import Common.Route 
 import Reflex.Dom.Core
--- import Reflex.Dom
-import Common
 import Obelisk.Route
 import Obelisk.Route.Frontend
 import Obelisk.Frontend
@@ -15,12 +13,13 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.ByteString.Lazy as BL
 import Data.Functor.Identity
-import Common.Api (Credentials(..))
 import Control.Monad.Trans (lift)
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.Aeson as A
 import Data.Maybe (isJust)
 
+import Common.Api (Credentials(..))
+import FrontendCommon.Common
 
 signupPage :: ObeliskWidget t (R FrontendRoute) m  => AppState t -> RoutedT t () m ()
 signupPage appState = do

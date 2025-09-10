@@ -5,9 +5,7 @@
 
 module MainPage where
 
-import Common.Route 
 import Reflex.Dom.Core
-import Common
 import Obelisk.Route
 import Obelisk.Route.Frontend
 import Obelisk.Frontend
@@ -18,9 +16,11 @@ import qualified Data.ByteString.Lazy as BL
 import Database.Persist.Sql
 import Data.Maybe
 
+import Common.Route 
 import Schema
 import Common.Api (TweetsOwnersResp(..))
-import Common
+import FrontendCommon.Common
+import FrontendCommon.TweetRender
 
 mainPage 
   :: ObeliskWidget t (R FrontendRoute) m

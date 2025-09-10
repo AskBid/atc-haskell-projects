@@ -27,7 +27,7 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text as T
 import Database.Persist
 
-import Common
+import FrontendCommon.Common
 import LoginPage
 import SignupPage
 import MainPage

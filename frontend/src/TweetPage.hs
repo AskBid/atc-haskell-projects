@@ -8,7 +8,6 @@ module TweetPage where
 
 import Common.Route 
 import Reflex.Dom.Core
-import Common
 import Obelisk.Route
 import Obelisk.Route.Frontend
 import Obelisk.Frontend
@@ -21,7 +20,8 @@ import Data.Maybe
 
 import Schema
 import Common.Api (TweetsOwnersResp(..))
-import Common
+import FrontendCommon.Common
+import FrontendCommon.TweetRender
 
 tweetPage 
   :: ObeliskWidget t (R FrontendRoute) m

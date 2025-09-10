@@ -17,8 +17,14 @@ library
                , reflex-dom-core
                , text
                , containers
-  exposed-modules:
-    Frontend, Common, LoginPage, MainPage, CabalPage, UserPage, TweetPage
+  exposed-modules: Frontend
+                 , FrontendCommon.Common 
+                 , FrontendCommon.TweetRender 
+                 , LoginPage
+                 , MainPage
+                 , CabalPage
+                 , UserPage
+                 , TweetPage
   ghc-options: -Wall -O -fno-show-valid-hole-fits
                -- unsafe code
                -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields
