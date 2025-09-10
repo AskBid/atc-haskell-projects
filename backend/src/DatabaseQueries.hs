@@ -33,8 +33,8 @@ getPostsByUser :: UserId -> IO TweetUserResp
 getPostsByUser userId = do 
   posts <- runSqlite myDB $ 
     selectList 
-      [ TweetReplyTo ==. Nothing
-      , TweetOwner ==. userId
+      -- [ TweetReplyTo ==. Nothing
+      [ TweetOwner ==. userId
       ] [Desc TweetCreatedAt]
   users <- catMaybes <$> mapM findUsers posts
   return $ TweetUserResp posts users Nothing

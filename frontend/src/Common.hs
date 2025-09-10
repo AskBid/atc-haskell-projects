@@ -15,6 +15,9 @@ import Database.Persist.Sql
 import Data.Maybe
 import Control.Monad.Fix (MonadFix)
 import Language.Javascript.JSaddle (MonadJSM)
+import qualified Data.Aeson as A
+import qualified Data.ByteString.Lazy as BL
+import qualified Data.Text.Encoding as TE
 
 import Schema
 import Common.MyFunctions
@@ -219,3 +222,42 @@ findInEntityList
 findInEntityList recs id = headSafe $ filter (\(Entity k _) -> k == id) recs
 -- ^ Even though Persistent derives Eq for every Key MyEntity, the compiler doesn't know 
 --   that for all record types unless you say so.
+
+requestAndListTweets 
+  :: ( Monad m 
+     , PerformEvent t m
+     , MonadJSM (Performable m)
+     , TriggerEvent t m
+     , MonadHold t m
+     , Adjustable t m
+     , NotReady t m
+     , PostBuild t m
+     , MonadIO m
+     , MonadFix m
+     , DomBuilder t m
+     , SetRoute t (R FrontendRoute) m
+     )
+  => Event t a 
+  -> R (FullRoute BackendRoute FrontendRoute) 
+  ->  m ()
+requestAndListTweets event routeQueryTweets = do 
+  el "div" $ do
+    let xhrGetPosts = XhrRequest
+          { _xhrRequest_method = "GET"
+          , _xhrRequest_url = getUrl routeQueryTweets
+          , _xhrRequest_config = def & xhrRequestConfig_withCredentials .~ True
+          }
+
+    evGetPostsResp <- performRequestAsync $ xhrGetPosts <$ event
+    
+    dPosts <- holdDyn Nothing $ ffor evGetPostsResp $ \resp ->
+      case _xhrResponse_responseText resp of
+        Nothing   -> Nothing
+        Just text -> A.decode . BL.fromStrict . TE.encodeUtf8 $ text
+
+    dyn_ $ ffor dPosts $ \case
+      Nothing     -> el "div" $ text "something went wrong."
+      Just tuResp -> elTweetsList tuResp
+
+    return ()
+

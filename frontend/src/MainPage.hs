@@ -75,33 +75,14 @@ mainPage appState = do
 
     -------------
     -- list posts
-    el "div" $ do
+    evPostBuild <- getPostBuild
 
-      evPostBuild <- getPostBuild
+    let evReload = leftmost [evPostBuild, () <$ evTweetPostResp]
+    -- ^ we refresh general posts feed at page start or tweet post.
+    requestAndListTweets evReload $ 
+      FullRoute_Backend 
+      BackendRoute_Api :/ Api_Posts
 
-      let evReload = leftmost [evPostBuild, () <$ evTweetPostResp]
-          -- ^ we refresh general posts feed at page start or tweet post.
-          xhrGetPosts = XhrRequest
-            { _xhrRequest_method = "GET"
-            , _xhrRequest_url = getUrl $ 
-                FullRoute_Backend 
-                BackendRoute_Api :/ 
-                Api_Posts
-            , _xhrRequest_config = def & xhrRequestConfig_withCredentials .~ True
-            }
-    
-      evGetPostsResp <- performRequestAsync $ xhrGetPosts <$ evReload
-      
-      dPosts <- holdDyn Nothing $ ffor evGetPostsResp $ \resp ->
-        case _xhrResponse_responseText resp of
-          Nothing   -> Nothing
-          Just text -> A.decode . BL.fromStrict . TE.encodeUtf8 $ text
-
-      dyn_ $ ffor dPosts $ \case
-        Nothing     -> el "div" $ text "something went wrong."
-        Just tuResp -> elTweetsList tuResp
-
-      return ()
     -- list posts
     -------------
     return ()

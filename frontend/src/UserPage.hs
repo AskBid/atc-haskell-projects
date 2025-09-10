@@ -33,7 +33,7 @@ userPage appState username = do
     el "h1" $ text $ "Profile for " <> username
     elClass "h3" "text-gray-400" $ text "TODO: user's attributes ..."
     el "h3" $ text $ username <> "`s tweets:" 
-    elClass "div" "text-gray-400" $ text "TODO: handle replies not showing."
+    elClass "div" "text-gray-400" $ text "TODO: handle replies distinction from main posts."
     evPostBuild <- getPostBuild
     let urlPost = getUrl $ FullRoute_Backend BackendRoute_Api :/ Api_PostsByUser username 
         xhrReq = XhrRequest
