@@ -49,7 +49,7 @@ mainPage appState = do
     -- posting tweet
     let evMkTweet = fmapMaybe id $ 
           tagPromptlyDyn 
-            (mkTweet <$> loggedUser appState <*> dTextArea)
+            (mkTweet Nothing <$> loggedUser appState <*> dTextArea)
             evPostClick
 
         xhrSubmitPost = \tweet -> XhrRequest
@@ -85,13 +85,4 @@ mainPage appState = do
     -------------
     return ()
   return ()
-
-mkTweet :: Maybe (Entity User) -> T.Text -> Maybe Tweet
-mkTweet Nothing _                    = Nothing
-mkTweet (Just (Entity k _)) areaText = Just $ Tweet 
-  { tweetText = areaText
-  , tweetReplyTo = Nothing
-  , tweetOwner = k
-  , tweetCreatedAt = Nothing
-  }
 

@@ -10,7 +10,6 @@ import Control.Monad.Reader
 import Data.Time (getCurrentTime, UTCTime(..), fromGregorian, secondsToDiffTime)
 import qualified Data.Text as T
 import Data.Int (Int64)
-import Text.Read (readMaybe)
 
 import Common.MyFunctions
 import Common.Api
@@ -63,6 +62,3 @@ getPostReplies tweetId = do
   replies <- runSqlite myDB $ 
     selectList [TweetReplyTo ==. Just (toSqlKey tweetId)] [Desc TweetCreatedAt]
   return replies
-
-textToInt64 :: T.Text -> Maybe Int64
-textToInt64 = readMaybe . T.unpack

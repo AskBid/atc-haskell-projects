@@ -11,7 +11,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
--- {-# LANGUAGE DerivingStrategies    #-}
 
 module Common.Route where
 
@@ -50,7 +49,6 @@ data Api
   | Api_PostsByUser Text
   | Api_PostReplies Text
   | Api_SubmitPost
-  | Api_SubmitReply Text
   deriving (Show, Eq, Ord)
 
 apiRouteEncoder 
@@ -79,7 +77,6 @@ apiRouteEncoder = reviewEncoder apiPrism
       Api_PostsByUser u -> (["posts", "users", u], mempty)
       Api_PostReplies t -> (["posts", t, "replies"], mempty)
       Api_SubmitPost    -> (["post"], mempty)
-      Api_SubmitReply t -> (["post", t, "reply"], mempty)
 
     from :: PageName -> Either PageName Api
     from = \case
@@ -91,7 +88,6 @@ apiRouteEncoder = reviewEncoder apiPrism
       (["posts", "users", u], _)   -> Right (Api_PostsByUser u)
       (["posts", t, "replies"], _) -> Right (Api_PostReplies t)
       (["post"], _)                -> Right Api_SubmitPost
-      (["post", t, "reply"], _)    -> Right (Api_SubmitReply t)
       p                            -> Left p                     
 
 data FrontendRoute :: * -> * where

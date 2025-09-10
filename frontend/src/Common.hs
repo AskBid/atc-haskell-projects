@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE LambdaCase        #-}
 
 module Common where
 
@@ -21,7 +21,7 @@ import qualified Data.Text.Encoding as TE
 
 import Schema
 import Common.MyFunctions
-import Common.Api (TweetsOwnersResp(..))
+import Common.Api (TweetsOwnersResp(..), textToInt64)
 
 -- | Needs monad extended to @RoutedT@ because we run it in the @subRoute_@
 -- used lift actually as a more generalised solution.
@@ -261,3 +261,21 @@ requestAndListTweets event routeQueryTweets = do
 
     return (dTweetsOwnersResp)
 
+mkTweet :: Maybe T.Text -> Maybe (Entity User) -> T.Text -> Maybe Tweet
+mkTweet _ Nothing _ = Nothing
+mkTweet Nothing (Just (Entity usrKey _)) areaText = 
+  Just $ Tweet 
+    { tweetText = areaText
+    , tweetReplyTo = Nothing
+    , tweetOwner = usrKey
+    , tweetCreatedAt = Nothing
+    }
+mkTweet (Just tId) (Just (Entity usrKey _)) areaText =
+  case textToInt64 tId of
+    Nothing       -> Nothing
+    Just replyKey -> Just $ Tweet
+      { tweetText = areaText
+      , tweetReplyTo = Just $ toSqlKey replyKey
+      , tweetOwner = usrKey
+      , tweetCreatedAt = Nothing
+      }
