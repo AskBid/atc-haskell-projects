@@ -36,7 +36,6 @@ userChat appState = do
     performEvent_ $ ffor (updated (loggedAs appState)) $
       \name -> liftIO $ putStrLn $ show name
     dyn_ $ ffor (loggedAs appState) $ \case
-      Loading    -> el "div" $ text "loading..."
       LoggedIn u -> chatPanel dName u appState
       LoggedOut  -> do 
         liftIO $ putStrLn "FE: LoggedOut"

@@ -53,7 +53,7 @@ frontend = Frontend
         let route = FullRoute_Backend BackendRoute_Me :/ () 
         evLoggedMUser <- requestWithCredentialsAndDecode route ePostBuild
         let evLogged = leftmost [evLoggedMUser, evLoggedByTrigger]
-        dLogged <- holdDyn Loading evLogged
+        dLogged <- holdDyn LoggedOut evLogged
         -- ^ without Maybe we would run straight into the redirection
         --   while requestWithCredentialsAndDecode is still running and the
         --   FRP diagram would flow in LoggedOut
@@ -115,8 +115,6 @@ frontend = Frontend
                 liftIO $ putStrLn ("FE: WS recv (Public): " <> show msg)
 
               pure (PublicConnection ws)
-
-            Loading -> pure NoConnection
         -- --
         -- Dynamically setting the AppState WebSocket
         ---------------------------------------------
@@ -154,12 +152,10 @@ frontend = Frontend
               subRoute_ $ \case
                 FrontendRoute_Main -> do 
                   dyn_ $ ffor (loggedAs appState) $ \case
-                    Loading     -> el "div" $ text "Loading... MainRoute"
                     LoggedIn _  -> mainPageLogged 
                     LoggedOut   -> mainPage appState
                 FrontendRoute_User -> do 
                   dyn_ $ ffor (loggedAs appState) $ \case
-                    Loading    -> el "div" $ text "Loading... UserRoute"
                     LoggedIn _ -> userChat appState
                     LoggedOut  -> mainPage appState
             -- CHAT/AUTH
@@ -246,7 +242,6 @@ logoutButton appState = do
   let evSucc = ffor eUser $ \case 
         LoggedOut             -> ()
         LoggedIn (User _ _ _) -> () 
-        Loading               -> ()
   -- ^ I am here using User solely to be able to reuse @requestWithCredentialsAndDecode@
   --   but we are only interested that the events fires if the statusCheck was filtered
   performEvent_ $ (liftIO $ loggedTrigger appState $ LoggedOut) <$ evSucc

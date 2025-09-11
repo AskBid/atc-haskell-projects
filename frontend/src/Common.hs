@@ -57,7 +57,6 @@ data AppState t = AppState
 data LoginState 
   = LoggedIn User 
   | LoggedOut 
-  | Loading
   deriving stock Show
 
 data WebsocketState t

@@ -138,7 +138,6 @@ loginInterface ws appState = do
     setRoute $ fforMaybe (updated (loggedAs appState)) $ \case
       LoggedIn u -> Just (FrontendRoute_User :/ _userName u)
       LoggedOut  -> Nothing
-      Loading    -> Nothing
       -- ^ this is important to check that setRoute isn't fired without the
       --   loggedTrigger function being completed yet. It was abug toke me a
       --   while to figure out.
