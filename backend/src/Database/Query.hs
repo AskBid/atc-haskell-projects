@@ -9,8 +9,6 @@ import qualified Data.Conduit.List as CL
 import Data.Conduit
 import Control.Monad.Trans.Resource (runResourceT)
 import Database.Beam.Postgres (Connection, runBeamPostgres, Postgres)
-import Database.Beam.Postgres.Full (insertOnConflict)
-import Database.Beam (Beamable, FromBackendRow) 
 
 import Database.Schema
 import Common.Api
@@ -90,7 +88,7 @@ insertFromFEMessage fem conn = do
       --   or use the primaryKey method coming from Table instance
       case femPrivate fem of
         Nothing         -> return ()
-        Just recipients -> do 
+        Just _          -> do 
           -- TODO insert `Private`s 
           return ()
 

@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-} 
 {-# LANGUAGE LambdaCase #-} 
-{-# LANGUAGE FlexibleContexts, FlexibleInstances #-} 
+{-# LANGUAGE FlexibleContexts, FlexibleInstances, DerivingStrategies #-} 
 
 module Common where
 
@@ -8,12 +8,9 @@ import Data.Text
 import Reflex.Dom.Core
 import Obelisk.Route
 import Data.Functor.Identity
-import Language.Javascript.JSaddle (MonadJSM)
-import qualified Data.Aeson as A (FromJSON, decode)
+import qualified Data.Aeson as A (FromJSON)
 import qualified Data.ByteString.Lazy as BSL 
-import qualified Data.Text.Encoding as ET (encodeUtf8)
 
-import Common.Api
 import Database.Schema
 import Common.Route
 
@@ -49,7 +46,6 @@ linkStyle = "underline text-blue-600 hover:text-blue-800"
 
 data AppState t = AppState 
   { wsConn :: Dynamic t (WebsocketState t)
-  , webSocketSwitch :: WebsocketState t -> IO ()
   , evWsSend :: Event t BSL.ByteString
   , wsSendTrigger :: BSL.ByteString -> IO ()
   , evWsClose :: Event t ()
@@ -62,7 +58,7 @@ data LoginState
   = LoggedIn User 
   | LoggedOut 
   | Loading
-  deriving (Show)
+  deriving stock Show
 
 data WebsocketState t
   = NoConnection 
@@ -99,9 +95,9 @@ getUrl = renderObeliskRoute safeEncoder
 -- >>> statusCheck 200 400 xhrResp
 -- >>> True
 statusCheck :: Word -> Word -> XhrResponse -> Bool
-statusCheck min max xhr
-  | status >= min && status < max = True
-  | otherwise                     = False
+statusCheck min' max' xhr
+  | status >= min' && status < max' = True
+  | otherwise                       = False
   where status = _xhrResponse_status xhr
 
 -- | handles the response from a given XhrRequest filtering for successul response

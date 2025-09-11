@@ -5,7 +5,6 @@ module Database.Migration where
 import Database.Beam
 import Database.Beam.Migrate
 import Database.Beam.Migrate.Simple
-import Database.Beam.Backend
 import Database.Beam.Postgres
 import Database.Beam.Postgres.Full
 import qualified Database.Beam.Postgres.Migrate as PG

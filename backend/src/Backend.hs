@@ -11,28 +11,14 @@ import Snap
 
 import Data.Text 
 import Control.Monad 
-import Data.Time (getCurrentTime)
-import Control.Monad.IO.Class (liftIO, MonadIO)
-import qualified Data.Map.Strict as M (Map, lookup, toList)
-import qualified Data.Text.Encoding as TE
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy.Char8 as BL
-import Control.Monad.Trans.Resource (runResourceT)
 
-import Control.Concurrent (threadDelay)
 import Control.Concurrent.STM 
 import Database.Beam
 import qualified Database.Beam.Postgres as P
-import Database.Beam.Migrate
-import Database.Beam.Migrate.Simple
-import Data.Conduit
 import qualified Database.Beam.Postgres.Conduit as PC
-import qualified Data.Conduit.List as CL
 import qualified Network.WebSockets.Snap as WSSnap
-import Network.WebSockets (Connection)
-
-import Data.CaseInsensitive (original)
-import Data.Maybe (fromMaybe)
 
 import Database.Schema 
 import Common.Api
@@ -44,10 +30,10 @@ import Websocket (wsHandler, wsHandlerPublic)
 
 connInfo :: P.ConnectInfo
 connInfo = P.ConnectInfo
-  { P.connectHost = "localhost"	 
-  , P.connectPort = 5432 
-  , P.connectUser = "atc_user" 	 
-  , P.connectPassword = "atcpassword" 
+  { P.connectHost = "localhost"
+  , P.connectPort = 5432
+  , P.connectUser = "atc_user"
+  , P.connectPassword = "atcpassword"
   , P.connectDatabase = "atc_db"
   }
 
@@ -58,7 +44,7 @@ backend = Backend
       wsConns <- liftIO $ atomically $ newTVar ([] :: [NamedConn])
       wsConnsPublic <- liftIO $ atomically $ newTVar ([] :: [AnonConn])
       pgConn <- P.connect connInfo
-      migrateDB pgConn
+      _ <- migrateDB pgConn
       -- P.runBeamPostgresDebug putStrLn pgConn $
       --   autoMigrate defaultPostgresMigrationBackend migration
       populateUsers pgConn
@@ -122,7 +108,7 @@ backendHandlers conns pubConns pgConn = \case
         case users of
 
           [] -> do
-            PC.runInsert pgConn $ 
+            _ <- PC.runInsert pgConn $ 
               insert (userTable chatDB) $ 
                 insertExpressions [User default_ (val_ usr) (val_ pwd)]
             modifyResponse $ setResponseCode 200
@@ -132,7 +118,7 @@ backendHandlers conns pubConns pgConn = \case
             liftIO $ putStrLn $ unpack msg
             writeBS $ BL.toStrict $ A.encode $ BackendResponse {textOnly = msg}
 
-          (u:_) -> do 
+          (_:_) -> do 
             let msg = usr <> " already exist. No signup possible. \x1F6AB"
             liftIO $ putStrLn $ unpack msg     
             modifyResponse $ setResponseStatus 401 "unauthorized"
@@ -144,8 +130,8 @@ backendHandlers conns pubConns pgConn = \case
       Nothing -> do
         modifyResponse $ setResponseStatus 401 "unauthorized"
         liftIO $ putStrLn "BE: Not Authorised. Please login or signup."
-      Just username -> do
-        users <- liftIO $ conduitQuery pgConn queryUserByName username 
+      Just username' -> do
+        users <- liftIO $ conduitQuery pgConn queryUserByName username' 
         case users of
           [] -> do 
             modifyResponse $ setResponseStatus 401 "unauthorized"
@@ -171,18 +157,18 @@ backendHandlers conns pubConns pgConn = \case
             liftIO $ putStrLn $ "BE: JWT not perceived. Socket not opening."
             writeBS "invalid JWT"
           Just userAuth -> do
-            users <- liftIO $ conduitQuery pgConn queryUserByName userAuth 
-            case users of
+            users' <- liftIO $ conduitQuery pgConn queryUserByName userAuth 
+            case users' of
               [] -> do 
                 modifyResponse $ setResponseStatus 401 "unauthorized"
                 liftIO $ putStrLn $ "BE: Auth not succesful. Socket not opening."
                 writeBS "User did not exist."
-              (u:_) -> do 
+              (u':_) -> do 
                 liftIO $ putStrLn 
                        $ "BE: Auth successful, opening socket for: " 
-                       <> (unpack $ _userName u)
+                       <> (unpack $ _userName u')
                 modifyResponse $ setResponseStatus 200 "OK"
-                writeBS $ BL.toStrict $ A.encode u
+                writeBS $ BL.toStrict $ A.encode u'
         WSSnap.runWebSocketsSnap $ wsHandler conns pubConns u pgConn
 
   BackendRoute_Websocket :/ WebscocketRoute_Main :/ () -> do 

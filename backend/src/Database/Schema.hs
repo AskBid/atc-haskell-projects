@@ -21,11 +21,6 @@ import Data.Aeson (FromJSON, ToJSON)
 import Data.Text (Text)
 import Data.Time (LocalTime)
 import Database.Beam
-import Database.Beam.Migrate
-import Database.Beam.Migrate.SQL
-import Database.Beam.Postgres
-import Database.Beam.Postgres.Migrate
-import Data.Proxy (Proxy(..))
 import GHC.Int (Int32)
 import Database.Beam.Backend.SQL.BeamExtensions (SqlSerial)
 
@@ -34,7 +29,8 @@ data UserT f = User
   { _userId   :: C f (SqlSerial Int32)
   , _userName :: C f Text
   , _userPwd  :: C f Text
-  } deriving (Generic, Beamable)
+  } deriving stock Generic
+    deriving anyclass Beamable
 -- ^ basically every attribute is a @Columnar@ also said @C@ that is a Data Family in 
 --   which one argument needs a type to give back a concrete type, so it is a container
 --   (Type -> Type) or (* -> *) like Identity or Nullable (it's Type Constructor)
@@ -47,18 +43,19 @@ type User = UserT Identity
 type UserId = PrimaryKey UserT Identity 
 -- ^ like saying: I want a convenient short name UserId for the concrete 
 --   primary-key type of the UserT table, in its real-data form.”
-deriving instance Show User
-deriving instance Eq User
-deriving instance FromJSON User
-deriving instance ToJSON User
-deriving instance Show (PrimaryKey UserT Identity)
-deriving instance Eq   (PrimaryKey UserT Identity)
-deriving instance FromJSON (PrimaryKey UserT Identity)
-deriving instance ToJSON (PrimaryKey UserT Identity)
+deriving stock instance Show User
+deriving stock instance Eq User
+deriving anyclass instance FromJSON User
+deriving anyclass instance ToJSON User
+deriving stock instance Show (PrimaryKey UserT Identity)
+deriving stock instance Eq   (PrimaryKey UserT Identity)
+deriving anyclass instance FromJSON (PrimaryKey UserT Identity)
+deriving anyclass instance ToJSON (PrimaryKey UserT Identity)
 
 instance Table UserT where
   data PrimaryKey UserT f = UserId (C f (SqlSerial Int32)) 
-    deriving (Generic, Beamable)
+    deriving stock Generic
+    deriving anyclass Beamable
   primaryKey = UserId . _userId
 
 ----------
@@ -68,19 +65,21 @@ data MessageT f = Message
   , _messageBody :: C f Text
   , _messageTimestamp :: C f (Maybe LocalTime)
   , _messageOwner :: PrimaryKey UserT f
-  } deriving (Generic, Beamable)
+  } deriving stock Generic
+    deriving anyclass Beamable
 
 type Message = MessageT Identity
 type MessageId = PrimaryKey MessageT Identity
 
-deriving instance Show Message
-deriving instance Eq Message
-deriving instance FromJSON Message
-deriving instance ToJSON Message
+deriving stock instance Show Message
+deriving stock instance Eq Message
+deriving anyclass instance FromJSON Message
+deriving anyclass instance ToJSON Message
 
 instance Table MessageT where
   data PrimaryKey MessageT f = MessageId (C f (SqlSerial Int32)) 
-    deriving (Generic, Beamable)
+    deriving stock Generic
+    deriving anyclass Beamable
   primaryKey = MessageId . _messageId
 
 ----------
@@ -88,14 +87,16 @@ instance Table MessageT where
 data PrivateT f = Private
   { _privateMessage :: PrimaryKey MessageT f 
   , _privateRecipient :: PrimaryKey UserT f 
-  } deriving (Generic, Beamable)
+  } deriving stock Generic
+    deriving anyclass Beamable
 
 type Private = PrivateT Identity
 type PrivateId = PrimaryKey PrivateT Identity
 
 instance Table PrivateT where
   data PrimaryKey PrivateT f = PrivateId (PrimaryKey MessageT f) (PrimaryKey UserT f)
-    deriving (Generic, Beamable)
+    deriving stock Generic
+    deriving anyclass Beamable
   primaryKey = PrivateId <$> _privateMessage <*> _privateRecipient
   -- ^ primaryKey :: table column -> PrimaryKey table column
   -- function that extracts the “key fields” from a row.
@@ -107,7 +108,7 @@ data ChatDB f = ChatDB
   { userTable    :: f (TableEntity UserT)
   , messageTable :: f (TableEntity MessageT)
   , privateTable :: f (TableEntity PrivateT)
-  } deriving (Generic)
+  } deriving stock Generic
 -- ^ notice that the wrapper f here is not the same as the one for Columnar
 --   A table is a "row type" with each column wrapped in something 
 --   (Identity for real values, Nullable for optional).

@@ -9,10 +9,8 @@ import qualified Network.WebSockets.Connection as WSC
 import Control.Concurrent.STM 
 import qualified Database.Beam.Postgres as P
 import qualified Data.Text.Encoding as TE
-import Data.ByteString.UTF8 (toString)
 import Control.Monad.IO.Class (liftIO)
 import Control.Exception (finally)
-import Network.WebSockets (Connection)
 import Data.Text as T
 
 import Database.Schema
@@ -52,8 +50,8 @@ wsHandler tvarConns tvarConnsPub user pgConn pending = do
           Just (NewMessage msg') -> do
             putStrLn "BE: Public Message received."
             wsConns' <- atomically $ readTVar tvarConns
-            forM_ wsConns' $ \(user, wsConn) -> 
-              WS.sendTextData wsConn (A.encode (NewMessage msg'))
+            forM_ wsConns' $ \(_, wsConn') -> 
+              WS.sendTextData wsConn' (A.encode (NewMessage msg'))
             putStrLn "BE: Public Message broadcastes."
             insertFromFEMessage msg' pgConn 
             putStrLn "BE: Public Message saved on DB."
@@ -61,7 +59,7 @@ wsHandler tvarConns tvarConnsPub user pgConn pending = do
           Just (NewPrivate msg') -> do 
             putStrLn "BE: Private Message received."
             broadcastPrivate pgConn tvarConns msg'
-          otherwise -> putStrLn "BE: TODO case for different type of WSMessage"
+          _ -> putStrLn "BE: TODO case for different type of WSMessage"
   finally loop $ do 
     atomically $ modifyTVar' tvarConns (Prelude.filter ((/= user) . fst))
     _ <- broadcastConnectedUsers tvarConns tvarConnsPub
@@ -129,7 +127,7 @@ broadcastPrivate pgConn tvarConns fem = do
   let viewers = (femOwner fem):recipients
   conns <- atomically $ readTVar tvarConns
   let selectConns = Prelude.filter (\(u, _) -> u `elem` viewers) conns
-  forM_ selectConns $ \(user, wsConn) -> 
+  forM_ selectConns $ \(_, wsConn) -> 
     WS.sendTextData wsConn (A.encode (NewPrivate fem))
   where
     queryRecipients Nothing      = pure []

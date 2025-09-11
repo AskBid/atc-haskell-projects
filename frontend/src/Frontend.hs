@@ -10,24 +10,20 @@
 
 module Frontend where
 
-import Control.Lens ((^.), Identity)
 import Control.Monad
-import qualified Data.Text as T
-import qualified Data.Text.Encoding as ET
-import Language.Javascript.JSaddle (liftJSM, js, js1, jsg, MonadJSM)
+import Language.Javascript.JSaddle (MonadJSM)
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.Aeson as A
+import qualified Data.Text as T
 import qualified Data.ByteString.Lazy as BSL 
 import Control.Monad.Fix (MonadFix)
 import qualified Data.Maybe as DM (fromMaybe)
 
 import Obelisk.Frontend
-import Obelisk.Configs
 import Obelisk.Route
 import Obelisk.Route.Frontend
 import Obelisk.Generated.Static
 import Reflex.Dom.Core
-import Reflex.Dom.WebSocket (webSocket, WebSocketConfig(..), WebSocket)
 
 import Common.Api
 import Common.Route
@@ -94,7 +90,7 @@ frontend = Frontend
                   fullUrl = "ws://localhost:8000" <> url
                   -- TODO use Document.Local to find protocol and host address.
               ws <- webSocket fullUrl $ def
-                      & webSocketConfig_reconnect .~ True
+                      & webSocketConfig_reconnect .~ False 
                       & webSocketConfig_send .~ ((:[]) <$> evWsSend appState)
                       -- ^ evWsSend will then be triggered in the interface location
                       --   where we need it.
@@ -112,13 +108,15 @@ frontend = Frontend
                   fullUrl = "ws://localhost:8000" <> url
                   -- TODO use Document.Local to find protocol and host address.
               ws <- webSocket fullUrl $ def
-                      & webSocketConfig_reconnect .~ True
+                      & webSocketConfig_reconnect .~ False
                       & webSocketConfig_send .~ ((:[]) <$> evWsSend appState)
 
               performEvent_ $ ffor (_webSocket_recv ws) $ \msg ->
                 liftIO $ putStrLn ("FE: WS recv (Public): " <> show msg)
 
               pure (PublicConnection ws)
+
+            Loading -> pure NoConnection
         -- --
         -- Dynamically setting the AppState WebSocket
         ---------------------------------------------
@@ -134,15 +132,16 @@ frontend = Frontend
               LoggedIn u  -> do 
                 elClass "div" divHorizontalStyleNoGap $ do 
                   logoutButton appState 
-                  let username = _userName u
+                  let username' = _userName u
                   let userUrl = getUrl (FullRoute_Frontend 
                                        (ObeliskRoute_App FrontendRoute_User) 
-                                       :/ username)
+                                       :/ username')
                   elAttr "a" 
                     (  "class" =: ("px-4 " <> linkStyle) 
                     <> "href" =: userUrl
-                    ) $ text username
-              otherwise   -> el "div" $ text "Welcome to Chat!"
+                    ) $ text username'
+
+              _ -> el "div" $ text "Welcome to Chat!"
           -- HEADER
           -----------
           
@@ -156,7 +155,7 @@ frontend = Frontend
                 FrontendRoute_Main -> do 
                   dyn_ $ ffor (loggedAs appState) $ \case
                     Loading     -> el "div" $ text "Loading... MainRoute"
-                    LoggedIn _  -> mainPageLogged appState
+                    LoggedIn _  -> mainPageLogged 
                     LoggedOut   -> mainPage appState
                 FrontendRoute_User -> do 
                   dyn_ $ ffor (loggedAs appState) $ \case
@@ -173,15 +172,15 @@ frontend = Frontend
               elClass "h1" "text-green-500 font-bold" $ text "Connected Users"
               elClass "div" divConnectedUsers $ do 
                 dyn_ $ ffor (wsConn appState) $ \ws -> case getWS ws of
-                  Nothing -> pure ()
-                  Just ws -> do 
-                    let eRecvRaw = _webSocket_recv ws
+                  Nothing  -> pure ()
+                  Just ws' -> do 
+                    let eRecvRaw = _webSocket_recv ws'
                         eWSMessage = DM.fromMaybe NoMessage 
                                      <$> A.decode . BSL.fromStrict 
                                      <$> eRecvRaw
                         eUsersConnected = flip fmapMaybe eWSMessage $ \case 
                           ConnectedClients users -> Just users 
-                          otherwise              -> Nothing
+                          _                      -> Nothing
                     void $ listUsers eUsersConnected 
             -- CONNECTED CLIENTS SIDE BAR
             -----------------------------
@@ -190,12 +189,10 @@ frontend = Frontend
   }
 
 listUsers 
-  :: ( Monad m
-     , MonadHold t m
+  :: ( MonadHold t m 
      , Reflex t
      , MonadFix m
      , PostBuild t m
-     , Adjustable t m
      , DomBuilder t m 
      , RouteToUrl (R FrontendRoute) m 
      , SetRoute t (R FrontendRoute) m
@@ -206,14 +203,14 @@ listUsers eNames = do
   dUserList <- holdDyn [] $ (_userName <$>) <$> eNames
   simpleList dUserList $ \dUsername -> 
     el "div" $ do
-      dyn_ $ ffor dUsername $ \username ->
-        routeLink (FrontendRoute_User :/ username) $
+      dyn_ $ ffor dUsername $ \username' ->
+        routeLink (FrontendRoute_User :/ username') $
           elAttr "div"
             ( "class" =:
               "block cursor-pointer py-0 p-1 \
               \bg-white hover:bg-fuchsia-400 hover:text-white \
               \transition-colors duration-100"
-            ) $ text username
+            ) $ text username'
 
 requestWithCredentialsAndDecode 
   :: ( MonadJSM (Performable m)
@@ -228,17 +225,15 @@ requestWithCredentialsAndDecode route event = do
       req = xhrRequest "POST" url $ def 
         & xhrRequestConfig_withCredentials .~ True
   evRes <- performRequestAsync $ req <$ event
-  let evEMDecoded = decodeResponse "Error." evRes
+  let evEMDecoded = decodeResponse ("Error." :: T.Text) evRes
   pure $ ffor evEMDecoded $ \case
     Left _         -> LoggedOut
     Right Nothing  -> LoggedOut
     Right (Just u) -> LoggedIn u
 
 logoutButton 
-  :: ( Monad m
-     , DomBuilder t m 
+  :: ( DomBuilder t m 
      , MonadJSM (Performable m)
-     , MonadJSM m 
      , PerformEvent t m
      , TriggerEvent t m 
      ) 
@@ -249,8 +244,9 @@ logoutButton appState = do
       route = FullRoute_Backend BackendRoute_Logout :/ () 
   eUser <- requestWithCredentialsAndDecode route eClickLogout
   let evSucc = ffor eUser $ \case 
-        LoggedOut           -> ()
+        LoggedOut             -> ()
         LoggedIn (User _ _ _) -> () 
+        Loading               -> ()
   -- ^ I am here using User solely to be able to reuse @requestWithCredentialsAndDecode@
   --   but we are only interested that the events fires if the statusCheck was filtered
   performEvent_ $ (liftIO $ loggedTrigger appState $ LoggedOut) <$ evSucc

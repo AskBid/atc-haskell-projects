@@ -23,8 +23,6 @@ import Data.Functor.Identity
 import Obelisk.Route
 import Obelisk.Route.TH
 
-import Data.Map.Strict (Map)
-
 data BackendRoute :: * -> * where
   -- | Used to handle unparseable routes.
   BackendRoute_Missing :: BackendRoute ()

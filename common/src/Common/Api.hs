@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE DeriveAnyClass  #-}
+{-# LANGUAGE DerivingStrategies #-} 
 
 module Common.Api where
 
@@ -18,19 +19,28 @@ data WSMessage
   | UserExist Text
   | NoUser
   | NoMessage
-  deriving (Show, Generic, FromJSON, ToJSON)
+  deriving stock Show
+  deriving stock Generic
+  deriving anyclass FromJSON
+  deriving anyclass ToJSON
 
 data Credentials = Credentials 
   { username :: Text
   , password :: Text
-  } deriving (Show, Generic, ToJSON, FromJSON)
+  } deriving stock Show
+    deriving stock Generic
+    deriving anyclass FromJSON
+    deriving anyclass ToJSON
 
 -- | need this to be able to send only text messages from backend while
 --   using common Aeson methods that process responses with actual types.
 --   in other words it makes Text encodable with Aeson.
 data BackendResponse = BackendResponse
   { textOnly :: Text
-  } deriving (Show, Generic, ToJSON, FromJSON)
+  } deriving stock Show
+    deriving stock Generic
+    deriving anyclass FromJSON
+    deriving anyclass ToJSON
 
 data FEMessage = FEMessage
   { femId        :: Maybe Int
@@ -38,7 +48,11 @@ data FEMessage = FEMessage
   , femTimestamp :: Maybe LocalTime
   , femOwner     :: User
   , femPrivate   :: Maybe [Username]
-  } deriving (Show, Eq, Generic, ToJSON, FromJSON)
+  } deriving stock Show
+    deriving stock Eq
+    deriving stock Generic
+    deriving anyclass FromJSON
+    deriving anyclass ToJSON
 
 type Username = Text
 

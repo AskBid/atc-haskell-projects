@@ -15,7 +15,6 @@ import Control.Monad.IO.Class (liftIO, MonadIO)
 import Control.Monad (void, join)
 import Language.Javascript.JSaddle (MonadJSM)
 import Control.Monad.Fix (MonadFix)
-import Control.Applicative (liftA2)
 
 import Common
 import Common.Api
@@ -25,7 +24,6 @@ import Common.Route
 userChat 
   :: ( Prerender t m
      , Monad m
-     , Routed t T.Text m
      , Routed t T.Text (Client m)
      , SetRoute t (R FrontendRoute) (Client m)
      ) 
@@ -49,7 +47,6 @@ userChat appState = do
 
 redirectToAuth 
   :: ( SetRoute t (R FrontendRoute) (Client m)
-     , Monad m
      , PostBuild t m 
      , SetRoute t (R FrontendRoute) m
      )
@@ -62,14 +59,10 @@ chatPanel
   :: ( Monad m
      , MonadIO m
      , PostBuild t m 
-     , DomSpace (DomBuilderSpace m)
-     , TriggerEvent t m
      , PerformEvent t m
      , MonadJSM (Performable m)
-     , MonadJSM m
      , MonadHold t m
      , MonadFix m
-     , Adjustable t m
      , DomBuilder t m
      ) 
   => Dynamic t T.Text -> User -> AppState t -> m ()
@@ -91,7 +84,7 @@ chatPanel dRouteUserName user appState = do
 
     dyn_ $ ffor (wsConn appState) $ \case 
       NoConnection        -> el "div" $ text "No connection."
-      PublicConnection ws -> el "div" $ text "Loading..."
+      PublicConnection _  -> el "div" $ text "Loading..."
       AuthConnection ws   -> mdo 
         elClass "label" labelStyle $ text "Message:"
         
@@ -143,9 +136,9 @@ feMessage :: Maybe WSMessage -> T.Text
 feMessage wsm = case wsm of
   Nothing -> "*** Non Valid Message ***"
   Just m  -> case m of
-    NewMessage m       -> (_userName $ femOwner m) <> "> " <> femBody m
-    NewPrivate (FEMessage _ body _ owner (Just (x:xs))) ->
+    NewMessage m'      -> (_userName $ femOwner m') <> "> " <> femBody m'
+    NewPrivate (FEMessage _ body _ owner (Just (x:_))) ->
       (_userName owner) <> "(@" <> x <> ")> " <> body
     ConnectedClients _ -> "Client connection event."
-    otherwise          -> "TODO: unknown message."
+    _                  -> "TODO: unknown message."
 

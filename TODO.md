@@ -25,3 +25,4 @@
   - [ ] At the moment @insertFromFEMessage@ does not account for Private recipient owners. Need to add that to progress with DB historical messages capabilities.
 - [ ] If UserRoute with no existing User is reached, interface should block sending messages
 - [ ] Add Parsers to better handle user and password inputs. perhaps for chat message safety too.
+- [ ] When setting reconnect to True, the list of connected users misbehaves as possibly client reconnects just before the logout has been completed and mainPage loaded. leaving the connection in authentication page.

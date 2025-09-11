@@ -13,10 +13,9 @@ import Reflex.Dom.Core
 import Obelisk.Route
 import Obelisk.Route.Frontend
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad (void, join)
-import qualified Data.Maybe as DM (isJust, fromMaybe)
+import Control.Monad (join)
+import qualified Data.Maybe as DM (fromMaybe)
 import Data.Map (fromList, Map)
-import Control.Monad.Fix
 import Language.Javascript.JSaddle (MonadJSM)
 
 import Common
@@ -25,34 +24,17 @@ import Database.Schema
 import Common.Route
 
 
-mainPageLogged 
-  :: ( Prerender t m
-     , Monad m
-     , Routed t r m
-     , Routed t r (Client m)
-     , DomSpace (DomBuilderSpace m)
-     , DomBuilder t m
-     , SetRoute t (R FrontendRoute) (Client m)
-     ) 
-  => AppState t -> m ()
-mainPageLogged appState = do
+mainPageLogged :: DomBuilder t m => m ()
+mainPageLogged = do
   el "div" $ text "you already logged in."
   el "div" $ text "TODO: link to logout" 
   el "div" $ text "TODO: link to user's chat"
 
 mainPage 
   :: ( Prerender t m
-     , Monad m
-     , Routed t r m
-     , Routed t r (Client m)
-     , DomSpace (DomBuilderSpace m)
      , DomBuilder t m
      , SetRoute t (R FrontendRoute) (Client m)
-     , MonadFix m
      , PostBuild t m
-     , TriggerEvent t m
-     , MonadHold t m
-     , PerformEvent t m
      ) 
   => AppState t -> m ()
 mainPage appState = do
@@ -69,10 +51,6 @@ mainPage appState = do
 loginInterface 
   :: ( Monad m
      , DomBuilder t m 
-     , TriggerEvent t m
-     , MonadFix m
-     , MonadHold t m 
-     , PerformEvent t m
      , Prerender t m
      , SetRoute t (R FrontendRoute) (Client m)
      )
@@ -107,15 +85,17 @@ loginInterface ws appState = do
 
     let eUserResult = flip ffilter eWSMessage $ 
           \case
-            UserExist name -> True
+            UserExist _    -> True
             NoUser         -> True
-            otherwise      -> False
+            _              -> False
         
         eUserExistence = ffor eUserResult $ 
           \case 
-            UserExist name -> "User `" <> name <> "` already exist. Connect to the chat with a password."
+            UserExist name -> "User `" <> 
+                              name <> 
+                              "` already exist. Connect to the chat with a password."
             NoUser         -> "No user found, Register as new one?"
-            otherwise      -> "Error!"
+            _              -> "Error!"
     
         dNameLenght = ffor dName $ \name -> T.length name > 2
         
@@ -158,6 +138,7 @@ loginInterface ws appState = do
     setRoute $ fforMaybe (updated (loggedAs appState)) $ \case
       LoggedIn u -> Just (FrontendRoute_User :/ _userName u)
       LoggedOut  -> Nothing
+      Loading    -> Nothing
       -- ^ this is important to check that setRoute isn't fired without the
       --   loggedTrigger function being completed yet. It was abug toke me a
       --   while to figure out.
@@ -167,12 +148,12 @@ buttonStyleDisabled :: T.Text
 buttonStyleDisabled = buttonStyle <> " disabled:bg-grey-200 disabled:opacity-50 disabled:border-grey-300"
 
 wsMessageEqualName 
-  :: (Reflex t, Functor (Dynamic t)) 
+  :: Reflex t 
   => Dynamic t T.Text -> WSMessage -> Dynamic t Bool
 wsMessageEqualName dName wsm = 
   case wsm of
     UserExist nameuser -> (nameuser ==) <$> dName
-    otherwise          -> False <$ dName
+    _                  -> False <$ dName
 
 enableDisable 
   :: Functor (Dynamic t)
@@ -184,8 +165,7 @@ enableDisable dConditions = ffor dConditions $
       else (fromList [("class", buttonStyleDisabled), ("disabled","")])
 
 sendButton 
-  :: ( Monad m
-     , DomBuilder t m
+  :: ( DomBuilder t m
      , PostBuild t m
      , MonadJSM (Performable m)
      , PerformEvent t m
