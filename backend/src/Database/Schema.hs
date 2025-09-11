@@ -15,7 +15,7 @@
 {-# LANGUAGE DeriveAnyClass             #-}
 {-# LANGUAGE DeriveGeneric              #-}
 
-module Schema where
+module Database.Schema where
 
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Text (Text)

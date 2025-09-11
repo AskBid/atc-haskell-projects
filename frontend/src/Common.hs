@@ -14,7 +14,7 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text.Encoding as ET (encodeUtf8)
 
 import Common.Api
-import Schema
+import Database.Schema
 import Common.Route
 
 buttonPrivateStyle :: Text

@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Migration where
+module Database.Migration where
 
 import Database.Beam
 import Database.Beam.Migrate
@@ -10,7 +10,7 @@ import Database.Beam.Postgres
 import Database.Beam.Postgres.Full
 import qualified Database.Beam.Postgres.Migrate as PG
 
-import Schema
+import Database.Schema
 
 -- | All the major functions you'll need to actually write migrations are in 
 --   Database.Beam.Migrate.SQL.Tables.

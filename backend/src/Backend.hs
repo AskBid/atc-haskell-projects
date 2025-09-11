@@ -34,11 +34,11 @@ import Network.WebSockets (Connection)
 import Data.CaseInsensitive (original)
 import Data.Maybe (fromMaybe)
 
-import Schema 
+import Database.Schema 
 import Common.Api
 import MyJWT
-import Migration
-import Query
+import Database.Migration
+import Database.Query
 import Websocket (wsHandler, wsHandlerPublic)
 
 

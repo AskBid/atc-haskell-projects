@@ -10,7 +10,7 @@ import Data.Time.Clock (UTCTime(..), secondsToDiffTime)
 import Data.Time.Calendar
 import Snap
 
-import Schema
+import Database.Schema
 
 jwtSecret :: JWT.EncodeSigner
 jwtSecret = JWT.hmacSecret "my-super-secret-key"

@@ -21,7 +21,7 @@ import Language.Javascript.JSaddle (MonadJSM)
 
 import Common
 import Common.Api
-import Schema
+import Database.Schema
 import Common.Route
 
 

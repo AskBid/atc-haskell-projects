@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module Query where 
+module Database.Query where 
 
 import Data.Text 
 import Database.Beam
@@ -12,10 +12,9 @@ import Database.Beam.Postgres (Connection, runBeamPostgres, Postgres)
 import Database.Beam.Postgres.Full (insertOnConflict)
 import Database.Beam (Beamable, FromBackendRow) 
 
-import Schema
+import Database.Schema
 import Common.Api
-import Migration
-import DatabaseFrontendBridge
+import Database.Migration
 
 -- | Run a Beam query and collect all results into a list.
 conduitQuery 

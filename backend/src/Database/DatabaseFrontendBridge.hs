@@ -1,4 +1,4 @@
-module DatabaseFrontendBridge where 
+module Database.DatabaseFrontendBridge where 
 
 import Schema
 import Common.Api

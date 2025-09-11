@@ -9,7 +9,7 @@ import Data.Aeson
 import GHC.Generics (Generic)
 import qualified Network.WebSockets as WS
 
-import Schema
+import Database.Schema
 
 data WSMessage 
   = NewMessage FEMessage

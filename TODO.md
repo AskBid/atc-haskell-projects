@@ -24,4 +24,4 @@
 - [ ] Send DB historical messages when backend route for user is reached
   - [ ] At the moment @insertFromFEMessage@ does not account for Private recipient owners. Need to add that to progress with DB historical messages capabilities.
 - [ ] If UserRoute with no existing User is reached, interface should block sending messages
-
+- [ ] Add Parsers to better handle user and password inputs. perhaps for chat message safety too.

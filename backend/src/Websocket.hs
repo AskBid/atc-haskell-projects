@@ -15,9 +15,9 @@ import Control.Exception (finally)
 import Network.WebSockets (Connection)
 import Data.Text as T
 
-import Schema
+import Database.Schema
 import Common.Api
-import Query
+import Database.Query
 
 -- | @type ServerApp = PendingConnection -> IO ()@ is a fucntion type, 
 --   hence why `pending` appears down here.

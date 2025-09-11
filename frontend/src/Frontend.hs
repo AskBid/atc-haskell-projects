@@ -32,7 +32,7 @@ import Reflex.Dom.WebSocket (webSocket, WebSocketConfig(..), WebSocket)
 import Common.Api
 import Common.Route
 import Common
-import Schema
+import Database.Schema
 import UserChat
 import MainPage
 
@@ -94,7 +94,7 @@ frontend = Frontend
                   fullUrl = "ws://localhost:8000" <> url
                   -- TODO use Document.Local to find protocol and host address.
               ws <- webSocket fullUrl $ def
-                      & webSocketConfig_reconnect .~ False
+                      & webSocketConfig_reconnect .~ True
                       & webSocketConfig_send .~ ((:[]) <$> evWsSend appState)
                       -- ^ evWsSend will then be triggered in the interface location
                       --   where we need it.
@@ -112,7 +112,7 @@ frontend = Frontend
                   fullUrl = "ws://localhost:8000" <> url
                   -- TODO use Document.Local to find protocol and host address.
               ws <- webSocket fullUrl $ def
-                      & webSocketConfig_reconnect .~ False
+                      & webSocketConfig_reconnect .~ True
                       & webSocketConfig_send .~ ((:[]) <$> evWsSend appState)
 
               performEvent_ $ ffor (_webSocket_recv ws) $ \msg ->
