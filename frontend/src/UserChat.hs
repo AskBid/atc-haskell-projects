@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts  #-} 
 {-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE RecursiveDo       #-}
 
 module UserChat where
 
@@ -77,10 +78,12 @@ chatPanel dRouteUserName user appState = do
 
     let dIsPrivate = ffor dRouteUserName $ \name -> 
           not $ _userName user == name
+
         dButtonText = join $ ffor dIsPrivate $ \isPrivate ->
           if isPrivate
           then ffor dRouteUserName $ \name -> "Send Private to " <> name
           else constDyn "Send >"
+        
         dButtonStyle = ffor dIsPrivate $ \isPrivate -> 
           if isPrivate
           then "class" =: buttonPrivateStyle
@@ -89,10 +92,15 @@ chatPanel dRouteUserName user appState = do
     dyn_ $ ffor (wsConn appState) $ \case 
       NoConnection        -> el "div" $ text "No connection."
       PublicConnection ws -> el "div" $ text "Loading..."
-      AuthConnection ws   -> do 
+      AuthConnection ws   -> mdo 
         elClass "label" labelStyle $ text "Message:"
-        elInpMess <- inputElement $ def & initialAttributes .~ ("class" =: inputStyle)
+        
+        elInpMess <- inputElement $ def 
+          & initialAttributes .~ ("class" =: inputStyle)
+          & inputElementConfig_setValue .~ evEmptyInput
+
         (elBtnSend, _) <- elDynAttr' "button" dButtonStyle $ dynText dButtonText
+
         let eSend = domEvent Click elBtnSend
             dMessText = _inputElement_value elInpMess
             dWSMess = join $ ffor dIsPrivate $ \isPrivate -> 
@@ -101,6 +109,8 @@ chatPanel dRouteUserName user appState = do
               else NewMessage <$> (mkPublicFEMessage user <$> dMessText)
             -- ^ Event does not have Applicative, but Dynamic does.
             eWSMess = tagPromptlyDyn dWSMess eSend
+            evEmptyInput = "" <$ eWSMess
+            
         performEvent_ $ (liftIO . wsSendTrigger appState . A.encode) <$> eWSMess
         let evmWSMessage = A.decode . BSL.fromStrict <$> _webSocket_recv ws
         dChatMessages <- foldDyn (:) [] $ feMessage <$> evmWSMessage 
