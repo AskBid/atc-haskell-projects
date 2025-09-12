@@ -50,6 +50,9 @@ data AppState t = AppState
   , loggedTrigger :: LoginState -> IO ()
   }
 
+-- | Configuration of a websocket Frontend side, gathering
+--   together send and close triggers so that they do not 
+--   end up aiming to a lost connection.
 data WSConfig t = WSConfig
   { wsConn         :: WebSocket t
   , wsSendTrigger  :: BSL.ByteString -> IO ()
@@ -61,6 +64,7 @@ data LoginState
   | LoggedOut 
   deriving stock Show
 
+-- | wrapper over websocket config so to have a dyamic of connection state
 data WebsocketState t
   = NoConnection 
   | PublicConnection (WSConfig t)
