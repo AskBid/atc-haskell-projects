@@ -30,18 +30,12 @@ wsHandler tvarConns tvarConnsPub user pgConn pending = do
       un = T.unpack $ _userName user
 
   putStrLn $ "BE: Request path: " <> show path
-  wsConn <- WS.acceptRequest pending
-  -- TODO send tvarConns to this wsConn only.
+  wsConn <- WS.acceptRequest pending -- TODO send tvarConns to this wsConn only.
+
   wsConns <- liftIO $ atomically $ readTVar tvarConns
-  let newNamedConn = (user, wsConn)
-  -- let wsConnsPlusThis = case elem user (fst <$> wsConns) of
-  --       True  -> wsConns
-  --       False -> newNamedConn : wsConns
-  -- liftIO $ atomically $ writeTVar tvarConns wsConnsPlusThis
-  wsConns <- atomically $ readTVar tvarConns
-  forM_ wsConns $ \(u, oldConn) ->
-    when (u == user) $ WS.sendClose oldConn ("Closing old connection for " 
-      <> _userName user)
+  
+  forM_ wsConns $ \(u, oldConn) -> when (u == user) $ 
+    WS.sendClose oldConn ("Closing old connection for " <> _userName user)
 
   atomically $ modifyTVar' tvarConns $ \conns ->
     (user, wsConn) : Prelude.filter ((/= user) . fst) conns
@@ -53,11 +47,15 @@ wsHandler tvarConns tvarConnsPub user pgConn pending = do
         putStrLn $  "BE: " <> T.unpack (_userName user) 
                  <> " -------------------- Socket cycle new round ..."
         msgJSON <- WSC.receiveData wsConn
+        -- BUG: here sometime the loop gets stuck, and even though frontend sends
+        -- a message, here is not received anymore. But if other user sends a message it 
+        -- works for all clients.
+        putStrLn "BE: after receive data"
         let msg = A.decode msgJSON :: Maybe WSMessage
 
         case msg of 
           Just (NewMessage msg') -> do
-            putStrLn $ "BE: Public Message received." <> un
+            putStrLn $ "BE: Public Message received. " <> un
             wsConns' <- atomically $ readTVar tvarConns
             putStrLn $ un <> ": BE: CONNECTIONs: " <> (show $ (fst <$> wsConns')) 
             forM_ wsConns' $ \(_, wsConn') -> 
@@ -70,11 +68,6 @@ wsHandler tvarConns tvarConnsPub user pgConn pending = do
             putStrLn $ "BE: Private Message received. - " <> un
             broadcastPrivate pgConn tvarConns msg'
           _ -> putStrLn "BE: TODO case for different type of WSMessage"
-  -- finally loop $ do 
-  --   atomically $ modifyTVar' tvarConns (Prelude.filter ((/= user) . fst))
-  --   _ <- broadcastConnectedUsers tvarConns tvarConnsPub
-  --   putStrLn $ "BE: " <> T.unpack (_userName user) <> " WebSocket connection closed"
-  --   WS.sendClose wsConn ("BE: " <> _userName user <> " WebSocket closed")
   finally loop $ do
     atomically $ modifyTVar' tvarConns (Prelude.filter ((/= user) . fst))
     _ <- broadcastConnectedUsers tvarConns tvarConnsPub

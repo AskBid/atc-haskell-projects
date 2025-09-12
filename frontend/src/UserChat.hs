@@ -66,7 +66,9 @@ chatPanel
      ) 
   => Dynamic t T.Text -> User -> AppState t -> m ()
 chatPanel dRouteUserName user appState = do
+
   let un = T.unpack $ _userName user
+
   elClass "div" divVerticalStyle $ do
     dyn_ $ ffor (wsStateDyn appState) $ \case 
       NoConnection        -> el "div" $ text "No connection."
@@ -108,7 +110,9 @@ chatPanel dRouteUserName user appState = do
 
         performEvent_ $ ffor eWSMess $ \m -> liftIO $ do
           putStrLn $ un <> " FE: sending message: " ++ show m
-          wsSendTrigger ws (A.encode m) 
+          wsSendTrigger ws (A.encode m)
+          -- BUG: lookup in backend Websocket
+          putStrLn $ un <> " FE: AFTER wsSendTrigger"
 
         let evmWSMessage = A.decode . BSL.fromStrict <$> (_webSocket_recv $ wsConn ws)
         dChatMessages <- foldDyn (:) [] $ feMessage <$> evmWSMessage
