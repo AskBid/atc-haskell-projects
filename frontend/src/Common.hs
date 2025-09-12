@@ -45,13 +45,15 @@ linkStyle :: Text
 linkStyle = "underline text-blue-600 hover:text-blue-800"
 
 data AppState t = AppState 
-  { wsConn :: Dynamic t (WebsocketState t)
-  , evWsSend :: Event t BSL.ByteString
-  , wsSendTrigger :: BSL.ByteString -> IO ()
-  , evWsClose :: Event t ()
-  , wsCloseTrigger :: () -> IO ()
-  , loggedAs :: Dynamic t LoginState
+  { wsState       :: Dynamic t (WebsocketState t)
+  , loggedAs      :: Dynamic t LoginState
   , loggedTrigger :: LoginState -> IO ()
+  }
+
+data WSConnection t = WSConnection
+  { wsConn         :: WebSocket t
+  , wsSendTrigger  :: BSL.ByteString -> IO ()
+  , wsCloseTrigger :: () -> IO ()
   }
 
 data LoginState 
@@ -61,13 +63,13 @@ data LoginState
 
 data WebsocketState t
   = NoConnection 
-  | PublicConnection (WebSocket t)
-  | AuthConnection (WebSocket t)
+  | PublicConnection (WSConnection t)
+  | AuthConnection (WSConnection t)
 
 -- | as in the case of the login page, we don't care of what type
 --   of socket we are getting, we just need a socket, this gets rid
 --   of the differentiation between the two.
-getWS :: WebsocketState t -> Maybe (WebSocket t)
+getWS :: WebsocketState t -> Maybe (WSConnection t)
 getWS = \case
   PublicConnection ws -> Just ws
   AuthConnection ws   -> Just ws

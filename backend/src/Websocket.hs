@@ -50,6 +50,7 @@ wsHandler tvarConns tvarConnsPub user pgConn pending = do
           Just (NewMessage msg') -> do
             putStrLn "BE: Public Message received."
             wsConns' <- atomically $ readTVar tvarConns
+            putStrLn $ "BE: CONNECTIONs: " <> (show $ Prelude.length wsConns')
             forM_ wsConns' $ \(_, wsConn') -> 
               WS.sendTextData wsConn' (A.encode (NewMessage msg'))
             putStrLn "BE: Public Message broadcastes."
@@ -57,7 +58,7 @@ wsHandler tvarConns tvarConnsPub user pgConn pending = do
             putStrLn "BE: Public Message saved on DB."
             return ()
           Just (NewPrivate msg') -> do 
-            putStrLn "BE: Private Message received."
+            putStrLn "BE: Private Message received." 
             broadcastPrivate pgConn tvarConns msg'
           _ -> putStrLn "BE: TODO case for different type of WSMessage"
   finally loop $ do 
@@ -110,6 +111,7 @@ broadcastConnectedUsers tvarConns tvarConnsPub = do
   putStrLn $ "BE: -------------------- broadcastConnectedUsers"
   conns <- atomically $ readTVar tvarConns
   connsPublic <- atomically $ readTVar tvarConnsPub
+  putStrLn $ "BE: CONNECTIONs: " <> (show $ Prelude.length conns)
   let connectedUsers = fst <$> conns
   forM_ conns $ 
     \(user, wsConn) -> do

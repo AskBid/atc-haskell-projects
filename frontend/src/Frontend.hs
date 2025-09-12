@@ -66,10 +66,10 @@ frontend = Frontend
 
         let appState = AppState 
               { wsConn = dConn
-              , evWsSend = evWsSend'
-              , wsSendTrigger = wsSendTrigger'
-              , evWsClose = evWsClose'
-              , wsCloseTrigger = wsCloseTrigger'
+              -- , evWsSend = evWsSend'
+              -- , wsSendTrigger = wsSendTrigger'
+              -- , evWsClose = evWsClose'
+              -- , wsCloseTrigger = wsCloseTrigger'
               , loggedAs = dLogged
               , loggedTrigger = loggedTrigger'
               }
@@ -89,17 +89,28 @@ frontend = Frontend
                                  WebscocketRoute_User :/ (_userName u)
                   fullUrl = "ws://localhost:8000" <> url
                   -- TODO use Document.Local to find protocol and host address.
+                  (evSend, triggerSend)   <- newTriggerEvent
+                  (evClose, triggerClose) <- newTriggerEvent
+
               ws <- webSocket fullUrl $ def
                       & webSocketConfig_reconnect .~ False 
-                      & webSocketConfig_send .~ ((:[]) <$> evWsSend appState)
+                      & webSocketConfig_send .~ ((:[]) <$> evSend)
                       -- ^ evWsSend will then be triggered in the interface location
                       --   where we need it.
-                      & webSocketConfig_close .~ ((1000, "User closed WebSocket.") <$ evWsClose appState)
+                      & webSocketConfig_close .~ ((1000, "User closed WebSocket.") 
+                        <$ evClose)
+
+              let wsConnection = WSConnection
+                { wsConn         :: ws
+                , wsSendTrigger  :: triggerSend
+                , wsCloseTrigger :: triggerClose
+                }
 
               performEvent_ $ ffor (_webSocket_recv ws) $ \msg ->
                 liftIO $ putStrLn ("FE: WS recv (Auth): " <> show msg)
 
-              pure (AuthConnection ws)
+              pure (AuthConnection wsConnection)
+
 
             LoggedOut -> do
               let url = getUrl $ FullRoute_Backend 
@@ -107,14 +118,25 @@ frontend = Frontend
                                  WebscocketRoute_Main :/ ()
                   fullUrl = "ws://localhost:8000" <> url
                   -- TODO use Document.Local to find protocol and host address.
+                  (evSend, triggerSend)   <- newTriggerEvent
+                  (evClose, triggerClose) <- newTriggerEvent
+
               ws <- webSocket fullUrl $ def
                       & webSocketConfig_reconnect .~ False
-                      & webSocketConfig_send .~ ((:[]) <$> evWsSend appState)
+                      & webSocketConfig_send .~ ((:[]) <$> evSend)
+                      & webSocketConfig_close .~ ((1000, "User closed WebSocket.") 
+                        <$ evClose)
+
+              let wsConnection = WSConnection
+                { wsConn         :: ws
+                , wsSendTrigger  :: triggerSend
+                , wsCloseTrigger :: triggerClose
+                }
 
               performEvent_ $ ffor (_webSocket_recv ws) $ \msg ->
                 liftIO $ putStrLn ("FE: WS recv (Public): " <> show msg)
 
-              pure (PublicConnection ws)
+              pure (PublicConnection wsConnection)
         -- --
         -- Dynamically setting the AppState WebSocket
         ---------------------------------------------

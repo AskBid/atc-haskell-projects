@@ -97,13 +97,17 @@ chatPanel dRouteUserName user appState = do
             dMessText = _inputElement_value elInpMess
             dWSMess = join $ ffor dIsPrivate $ \isPrivate -> 
               if isPrivate 
-              then NewPrivate <$> (mkPrivateFEMessage user <$> dRouteUserName <*> dMessText)
+              then NewPrivate <$> 
+                (mkPrivateFEMessage user <$> dRouteUserName <*> dMessText)
               else NewMessage <$> (mkPublicFEMessage user <$> dMessText)
             -- ^ Event does not have Applicative, but Dynamic does.
             eWSMess = tagPromptlyDyn dWSMess eSend
             evEmptyInput = "" <$ eWSMess
-            
-        performEvent_ $ (liftIO . wsSendTrigger appState . A.encode) <$> eWSMess
+
+        performEvent_ $ ffor eWSMess $ \m -> liftIO $ do
+          putStrLn $ "FE: sending message: " ++ show m
+          wsSendTrigger appState (A.encode m) 
+
         let evmWSMessage = A.decode . BSL.fromStrict <$> _webSocket_recv ws
         dChatMessages <- foldDyn (:) [] $ feMessage <$> evmWSMessage 
         elClass "div" "flex flex-col gap-0 p-4" $ void $ do
