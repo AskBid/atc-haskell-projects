@@ -200,6 +200,8 @@ frontend = Frontend
       return ()
   }
 
+-- | method used in the clients connected column bar to render the 
+-- connected users
 listUsers 
   :: ( MonadHold t m 
      , Reflex t
@@ -223,7 +225,7 @@ listUsers eNames = do
               \bg-white hover:bg-fuchsia-400 hover:text-white \
               \transition-colors duration-100"
             ) $ text username'
-
+ 
 requestWithCredentialsAndDecode 
   :: ( MonadJSM (Performable m)
      , PerformEvent t m 
@@ -243,6 +245,7 @@ requestWithCredentialsAndDecode route event = do
     Right Nothing  -> LoggedOut
     Right (Just u) -> LoggedIn u
 
+-- | Button used to when appState as logged in state to redirect to api/logout
 logoutButton 
   :: ( DomBuilder t m 
      , MonadJSM (Performable m)
