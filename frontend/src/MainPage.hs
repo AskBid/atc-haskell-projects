@@ -40,8 +40,8 @@ mainPage
 mainPage appState = do
     elClass "div" divVerticalStyle $ do
       -- the whole login interface depends on the dynamic wesocket.
-      dyn_ $ ffor (wsConn appState) $ \wsState -> 
-        case getWS wsState of
+      dyn_ $ ffor (wsState appState) $ \wsState' ->
+        case getWS wsState' of
           Nothing -> el "div" $ text "Loading… (waiting for WebSocket)"
           Just ws -> loginInterface ws appState
           -- we are not sure if when LoginState changed if the 
@@ -54,7 +54,7 @@ loginInterface
      , Prerender t m
      , SetRoute t (R FrontendRoute) (Client m)
      )
-  => WebSocket t -> AppState t -> m ()
+  => WSConnection t -> AppState t -> m ()
 loginInterface ws appState = do
 
   prerender_ blank $ mdo
@@ -76,10 +76,10 @@ loginInterface ws appState = do
         dCredentials = Credentials <$> dName <*> dPwd
 
     performEvent_ $ ffor eName $ \typedSoFar -> 
-      liftIO $ (wsSendTrigger appState) $ (BSL.fromStrict . ET.encodeUtf8) typedSoFar
+      liftIO $ (wsSendTrigger ws) $ (BSL.fromStrict . ET.encodeUtf8) typedSoFar
 
     -- Receive ws messages.
-    let eRecvRaw = _webSocket_recv ws
+    let eRecvRaw = _webSocket_recv $ wsConn ws
         eWSMessage = DM.fromMaybe NoMessage <$> A.decode . BSL.fromStrict <$> eRecvRaw
     dWSMessage <- holdDyn NoMessage eWSMessage 
 

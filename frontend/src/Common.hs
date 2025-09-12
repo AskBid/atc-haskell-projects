@@ -68,7 +68,8 @@ data WebsocketState t
 
 -- | as in the case of the login page, we don't care of what type
 --   of socket we are getting, we just need a socket, this gets rid
---   of the differentiation between the two.
+--   of the differentiation between the Publ and Auth and Just gives us
+--   a socket if we have it.
 getWS :: WebsocketState t -> Maybe (WSConnection t)
 getWS = \case
   PublicConnection ws -> Just ws

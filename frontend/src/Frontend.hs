@@ -61,16 +61,10 @@ frontend = Frontend
         -------------------------------------
         -- setting up Event for send WebscoketState
         --
-        (evWsSend', wsSendTrigger') <- newTriggerEvent
-        (evWsClose', wsCloseTrigger') <- newTriggerEvent
 
         let appState = AppState 
-              { wsConn = dConn
-              -- , evWsSend = evWsSend'
-              -- , wsSendTrigger = wsSendTrigger'
-              -- , evWsClose = evWsClose'
-              -- , wsCloseTrigger = wsCloseTrigger'
-              , loggedAs = dLogged
+              { wsState       = dConn
+              , loggedAs      = dLogged
               , loggedTrigger = loggedTrigger'
               }
         
@@ -89,8 +83,8 @@ frontend = Frontend
                                  WebscocketRoute_User :/ (_userName u)
                   fullUrl = "ws://localhost:8000" <> url
                   -- TODO use Document.Local to find protocol and host address.
-                  (evSend, triggerSend)   <- newTriggerEvent
-                  (evClose, triggerClose) <- newTriggerEvent
+              (evSend, triggerSend)   <- newTriggerEvent
+              (evClose, triggerClose) <- newTriggerEvent
 
               ws <- webSocket fullUrl $ def
                       & webSocketConfig_reconnect .~ False 
@@ -101,10 +95,10 @@ frontend = Frontend
                         <$ evClose)
 
               let wsConnection = WSConnection
-                { wsConn         :: ws
-                , wsSendTrigger  :: triggerSend
-                , wsCloseTrigger :: triggerClose
-                }
+                    { wsConn         = ws
+                    , wsSendTrigger  = triggerSend
+                    , wsCloseTrigger = triggerClose
+                    }
 
               performEvent_ $ ffor (_webSocket_recv ws) $ \msg ->
                 liftIO $ putStrLn ("FE: WS recv (Auth): " <> show msg)
@@ -118,8 +112,8 @@ frontend = Frontend
                                  WebscocketRoute_Main :/ ()
                   fullUrl = "ws://localhost:8000" <> url
                   -- TODO use Document.Local to find protocol and host address.
-                  (evSend, triggerSend)   <- newTriggerEvent
-                  (evClose, triggerClose) <- newTriggerEvent
+              (evSend, triggerSend)   <- newTriggerEvent
+              (evClose, triggerClose) <- newTriggerEvent
 
               ws <- webSocket fullUrl $ def
                       & webSocketConfig_reconnect .~ False
@@ -128,10 +122,10 @@ frontend = Frontend
                         <$ evClose)
 
               let wsConnection = WSConnection
-                { wsConn         :: ws
-                , wsSendTrigger  :: triggerSend
-                , wsCloseTrigger :: triggerClose
-                }
+                    { wsConn         = ws
+                    , wsSendTrigger  = triggerSend
+                    , wsCloseTrigger = triggerClose
+                    }
 
               performEvent_ $ ffor (_webSocket_recv ws) $ \msg ->
                 liftIO $ putStrLn ("FE: WS recv (Public): " <> show msg)
@@ -189,10 +183,10 @@ frontend = Frontend
 
               elClass "h1" "text-green-500 font-bold" $ text "Connected Users"
               elClass "div" divConnectedUsers $ do 
-                dyn_ $ ffor (wsConn appState) $ \ws -> case getWS ws of
+                dyn_ $ ffor (wsState appState) $ \ws -> case getWS ws of
                   Nothing  -> pure ()
                   Just ws' -> do 
-                    let eRecvRaw = _webSocket_recv ws'
+                    let eRecvRaw = _webSocket_recv $ wsConn ws'
                         eWSMessage = DM.fromMaybe NoMessage 
                                      <$> A.decode . BSL.fromStrict 
                                      <$> eRecvRaw
@@ -254,6 +248,7 @@ logoutButton
      , MonadJSM (Performable m)
      , PerformEvent t m
      , TriggerEvent t m 
+     , PostBuild t m
      ) 
   => AppState t -> m ()
 logoutButton appState = do 
@@ -267,4 +262,8 @@ logoutButton appState = do
   -- ^ I am here using User solely to be able to reuse @requestWithCredentialsAndDecode@
   --   but we are only interested that the events fires if the statusCheck was filtered
   performEvent_ $ (liftIO $ loggedTrigger appState $ LoggedOut) <$ evSucc
-  performEvent_ $ (liftIO $ wsCloseTrigger appState $ ()) <$ evSucc
+  dyn_ $ ffor (wsState appState) $ \wsState' -> 
+    case getWS wsState' of 
+      Nothing -> pure ()
+      Just ws -> 
+        performEvent_ $ (liftIO $ (wsCloseTrigger ws) $ ()) <$ evSucc

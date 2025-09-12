@@ -81,13 +81,15 @@ chatPanel dRouteUserName user appState = do
           then "class" =: buttonPrivateStyle
           else "class" =: buttonStyle
 
-    dyn_ $ ffor (wsConn appState) $ \case 
+    dyn_ $ ffor (wsState appState) $ \case 
       NoConnection        -> el "div" $ text "No connection."
+
       PublicConnection _  -> el "div" $ text "Loading..."
-      AuthConnection ws   -> mdo 
+      -- Loading just in case page renders before dynamic switched from pub to auth
+      AuthConnection ws   -> mdo
         elClass "label" labelStyle $ text "Message:"
         
-        elInpMess <- inputElement $ def 
+        elInpMess <- inputElement $ def
           & initialAttributes .~ ("class" =: inputStyle)
           & inputElementConfig_setValue .~ evEmptyInput
 
@@ -95,9 +97,9 @@ chatPanel dRouteUserName user appState = do
 
         let eSend = domEvent Click elBtnSend
             dMessText = _inputElement_value elInpMess
-            dWSMess = join $ ffor dIsPrivate $ \isPrivate -> 
-              if isPrivate 
-              then NewPrivate <$> 
+            dWSMess = join $ ffor dIsPrivate $ \isPrivate ->
+              if isPrivate
+              then NewPrivate <$>
                 (mkPrivateFEMessage user <$> dRouteUserName <*> dMessText)
               else NewMessage <$> (mkPublicFEMessage user <$> dMessText)
             -- ^ Event does not have Applicative, but Dynamic does.
@@ -106,12 +108,12 @@ chatPanel dRouteUserName user appState = do
 
         performEvent_ $ ffor eWSMess $ \m -> liftIO $ do
           putStrLn $ "FE: sending message: " ++ show m
-          wsSendTrigger appState (A.encode m) 
+          wsSendTrigger ws (A.encode m) 
 
-        let evmWSMessage = A.decode . BSL.fromStrict <$> _webSocket_recv ws
-        dChatMessages <- foldDyn (:) [] $ feMessage <$> evmWSMessage 
+        let evmWSMessage = A.decode . BSL.fromStrict <$> (_webSocket_recv $ wsConn ws)
+        dChatMessages <- foldDyn (:) [] $ feMessage <$> evmWSMessage
         elClass "div" "flex flex-col gap-0 p-4" $ void $ do
-          simpleList dChatMessages $ \dMsg -> 
+          simpleList dChatMessages $ \dMsg ->
             elClass "div" "flex items-start p-0 " $ dynText dMsg
 
 
