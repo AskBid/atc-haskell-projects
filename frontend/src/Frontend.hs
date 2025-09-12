@@ -63,7 +63,7 @@ frontend = Frontend
         --
 
         let appState = AppState 
-              { wsState       = dConn
+              { wsStateDyn    = dConn
               , loggedAs      = dLogged
               , loggedTrigger = loggedTrigger'
               }
@@ -94,7 +94,7 @@ frontend = Frontend
                       & webSocketConfig_close .~ ((1000, "User closed WebSocket.") 
                         <$ evClose)
 
-              let wsConnection = WSConnection
+              let wsConnection = WSConfig
                     { wsConn         = ws
                     , wsSendTrigger  = triggerSend
                     , wsCloseTrigger = triggerClose
@@ -121,7 +121,7 @@ frontend = Frontend
                       & webSocketConfig_close .~ ((1000, "User closed WebSocket.") 
                         <$ evClose)
 
-              let wsConnection = WSConnection
+              let wsConnection = WSConfig
                     { wsConn         = ws
                     , wsSendTrigger  = triggerSend
                     , wsCloseTrigger = triggerClose
@@ -183,7 +183,7 @@ frontend = Frontend
 
               elClass "h1" "text-green-500 font-bold" $ text "Connected Users"
               elClass "div" divConnectedUsers $ do 
-                dyn_ $ ffor (wsState appState) $ \ws -> case getWS ws of
+                dyn_ $ ffor (wsStateDyn appState) $ \ws -> case getWS ws of
                   Nothing  -> pure ()
                   Just ws' -> do 
                     let eRecvRaw = _webSocket_recv $ wsConn ws'
@@ -262,7 +262,7 @@ logoutButton appState = do
   -- ^ I am here using User solely to be able to reuse @requestWithCredentialsAndDecode@
   --   but we are only interested that the events fires if the statusCheck was filtered
   performEvent_ $ (liftIO $ loggedTrigger appState $ LoggedOut) <$ evSucc
-  dyn_ $ ffor (wsState appState) $ \wsState' -> 
+  dyn_ $ ffor (wsStateDyn appState) $ \wsState' -> 
     case getWS wsState' of 
       Nothing -> pure ()
       Just ws -> 

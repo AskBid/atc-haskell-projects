@@ -40,7 +40,7 @@ mainPage
 mainPage appState = do
     elClass "div" divVerticalStyle $ do
       -- the whole login interface depends on the dynamic wesocket.
-      dyn_ $ ffor (wsState appState) $ \wsState' ->
+      dyn_ $ ffor (wsStateDyn appState) $ \wsState' ->
         case getWS wsState' of
           Nothing -> el "div" $ text "Loading… (waiting for WebSocket)"
           Just ws -> loginInterface ws appState
@@ -54,7 +54,7 @@ loginInterface
      , Prerender t m
      , SetRoute t (R FrontendRoute) (Client m)
      )
-  => WSConnection t -> AppState t -> m ()
+  => WSConfig t -> AppState t -> m ()
 loginInterface ws appState = do
 
   prerender_ blank $ mdo

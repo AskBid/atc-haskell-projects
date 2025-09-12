@@ -45,12 +45,12 @@ linkStyle :: Text
 linkStyle = "underline text-blue-600 hover:text-blue-800"
 
 data AppState t = AppState 
-  { wsState       :: Dynamic t (WebsocketState t)
+  { wsStateDyn    :: Dynamic t (WebsocketState t)
   , loggedAs      :: Dynamic t LoginState
   , loggedTrigger :: LoginState -> IO ()
   }
 
-data WSConnection t = WSConnection
+data WSConfig t = WSConfig
   { wsConn         :: WebSocket t
   , wsSendTrigger  :: BSL.ByteString -> IO ()
   , wsCloseTrigger :: () -> IO ()
@@ -63,14 +63,14 @@ data LoginState
 
 data WebsocketState t
   = NoConnection 
-  | PublicConnection (WSConnection t)
-  | AuthConnection (WSConnection t)
+  | PublicConnection (WSConfig t)
+  | AuthConnection (WSConfig t)
 
 -- | as in the case of the login page, we don't care of what type
 --   of socket we are getting, we just need a socket, this gets rid
 --   of the differentiation between the Publ and Auth and Just gives us
 --   a socket if we have it.
-getWS :: WebsocketState t -> Maybe (WSConnection t)
+getWS :: WebsocketState t -> Maybe (WSConfig t)
 getWS = \case
   PublicConnection ws -> Just ws
   AuthConnection ws   -> Just ws

@@ -81,7 +81,7 @@ chatPanel dRouteUserName user appState = do
           then "class" =: buttonPrivateStyle
           else "class" =: buttonStyle
 
-    dyn_ $ ffor (wsState appState) $ \case 
+    dyn_ $ ffor (wsStateDyn appState) $ \case 
       NoConnection        -> el "div" $ text "No connection."
 
       PublicConnection _  -> el "div" $ text "Loading..."
