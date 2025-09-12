@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DerivingStrategies #-}
 
 module Common.Api where
 
@@ -16,7 +17,10 @@ import Schema
 data Credentials = Credentials
   { username :: Text
   , password :: Text
-  } deriving (Show, Generic, FromJSON, ToJSON)
+  } deriving stock Show
+    deriving stock Generic
+    deriving anyclass FromJSON
+    deriving anyclass ToJSON
 
 -- | Type for frontend, tweets are followed from a list of users that covers
 --   all the owners of all tweets.
@@ -26,7 +30,10 @@ data TweetsOwnersResp = TweetsOwnersResp
   { tweets :: [Entity Tweet]
   , users :: [Entity User]
   , parentTweet :: Maybe (Entity Tweet)
-  } deriving (Show, Generic, FromJSON, ToJSON)
+  } deriving stock Show
+    deriving stock Generic
+    deriving anyclass FromJSON
+    deriving anyclass ToJSON
 
 textToInt64 :: Text -> Maybe Int64
 textToInt64 = readMaybe . unpack

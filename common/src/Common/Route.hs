@@ -11,6 +11,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE DerivingStrategies #-} 
 
 module Common.Route where
 
@@ -46,7 +47,9 @@ data Api
   | Api_PostsByUser Text
   | Api_PostReplies Text
   | Api_SubmitPost
-  deriving (Show, Eq, Ord)
+  deriving stock Show
+  deriving stock Eq
+  deriving stock Ord
 
 apiRouteEncoder 
   :: (MonadError Text parse, MonadError Text check) 
