@@ -145,10 +145,10 @@ backendHandlers conns pubConns pgConn = \case
     case users of
       [] -> do
         modifyResponse $ setResponseStatus 401 "Unauthorized"
-        liftIO $ putStrLn "BE: nothing happenninng user not found..../////////"
+        liftIO $ putStrLn "BE: nothing happenninng user not found."
         writeBS "401 - Unauthorized"
       (u:_) -> do
-        liftIO $ putStrLn "Route's User found... going to sender's Auth..."
+        liftIO $ putStrLn "BE: Route's User found... going to sender's Auth..."
         -- is user authenticated or visiting?
         mUsername <- verifyJWT
         case mUsername of

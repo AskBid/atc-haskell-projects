@@ -101,7 +101,9 @@ frontend = Frontend
                     }
 
               performEvent_ $ ffor (_webSocket_recv ws) $ \msg ->
-                liftIO $ putStrLn ("FE: WS recv (Auth): " <> show msg)
+                liftIO $ putStrLn (( T.unpack $ _userName u ) 
+                                  <> " FE: WS recv (Auth): " 
+                                  <> show msg ) 
 
               pure (AuthConnection wsConnection)
 

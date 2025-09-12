@@ -66,27 +66,27 @@ chatPanel
      ) 
   => Dynamic t T.Text -> User -> AppState t -> m ()
 chatPanel dRouteUserName user appState = do
+  let un = T.unpack $ _userName user
   elClass "div" divVerticalStyle $ do
-
-    let dIsPrivate = ffor dRouteUserName $ \name -> 
-          not $ _userName user == name
-
-        dButtonText = join $ ffor dIsPrivate $ \isPrivate ->
-          if isPrivate
-          then ffor dRouteUserName $ \name -> "Send Private to " <> name
-          else constDyn "Send >"
-        
-        dButtonStyle = ffor dIsPrivate $ \isPrivate -> 
-          if isPrivate
-          then "class" =: buttonPrivateStyle
-          else "class" =: buttonStyle
-
     dyn_ $ ffor (wsStateDyn appState) $ \case 
       NoConnection        -> el "div" $ text "No connection."
 
       PublicConnection _  -> el "div" $ text "Loading..."
       -- Loading just in case page renders before dynamic switched from pub to auth
       AuthConnection ws   -> mdo
+
+        let dIsPrivate = ffor dRouteUserName $ \name -> not $ _userName user == name
+
+            dButtonText = join $ ffor dIsPrivate $ \isPrivate ->
+              if isPrivate
+              then ffor dRouteUserName $ \name -> "Send Private to " <> name
+              else constDyn "Send >"
+
+            dButtonStyle = ffor dIsPrivate $ \isPrivate -> 
+              if isPrivate
+              then "class" =: buttonPrivateStyle
+              else "class" =: buttonStyle
+
         elClass "label" labelStyle $ text "Message:"
         
         elInpMess <- inputElement $ def
@@ -107,7 +107,7 @@ chatPanel dRouteUserName user appState = do
             evEmptyInput = "" <$ eWSMess
 
         performEvent_ $ ffor eWSMess $ \m -> liftIO $ do
-          putStrLn $ "FE: sending message: " ++ show m
+          putStrLn $ un <> " FE: sending message: " ++ show m
           wsSendTrigger ws (A.encode m) 
 
         let evmWSMessage = A.decode . BSL.fromStrict <$> (_webSocket_recv $ wsConn ws)

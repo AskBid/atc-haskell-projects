@@ -27,19 +27,28 @@ wsHandler :: TVar [NamedConn]
 wsHandler tvarConns tvarConnsPub user pgConn pending = do 
   let req = WS.pendingRequest pending
       path = WS.requestPath req
+      un = T.unpack $ _userName user
 
   putStrLn $ "BE: Request path: " <> show path
   wsConn <- WS.acceptRequest pending
   -- TODO send tvarConns to this wsConn only.
   wsConns <- liftIO $ atomically $ readTVar tvarConns
   let newNamedConn = (user, wsConn)
-  let wsConnsPlusThis = case elem user (fst <$> wsConns) of
-        True  -> wsConns
-        False -> newNamedConn : wsConns
-  liftIO $ atomically $ writeTVar tvarConns wsConnsPlusThis
+  -- let wsConnsPlusThis = case elem user (fst <$> wsConns) of
+  --       True  -> wsConns
+  --       False -> newNamedConn : wsConns
+  -- liftIO $ atomically $ writeTVar tvarConns wsConnsPlusThis
+  wsConns <- atomically $ readTVar tvarConns
+  forM_ wsConns $ \(u, oldConn) ->
+    when (u == user) $ WS.sendClose oldConn ("Closing old connection for " 
+      <> _userName user)
+
+  atomically $ modifyTVar' tvarConns $ \conns ->
+    (user, wsConn) : Prelude.filter ((/= user) . fst) conns
+
   _ <- broadcastConnectedUsers tvarConns tvarConnsPub
 
-  putStrLn $ "BE: -------------------- Socket cycle start ..."
+  putStrLn $ "BE: -------------------- Socket cycle start ..." <> un
   let loop = forever $ do
         putStrLn $  "BE: " <> T.unpack (_userName user) 
                  <> " -------------------- Socket cycle new round ..."
@@ -48,24 +57,28 @@ wsHandler tvarConns tvarConnsPub user pgConn pending = do
 
         case msg of 
           Just (NewMessage msg') -> do
-            putStrLn "BE: Public Message received."
+            putStrLn $ "BE: Public Message received." <> un
             wsConns' <- atomically $ readTVar tvarConns
-            putStrLn $ "BE: CONNECTIONs: " <> (show $ Prelude.length wsConns')
+            putStrLn $ un <> ": BE: CONNECTIONs: " <> (show $ (fst <$> wsConns')) 
             forM_ wsConns' $ \(_, wsConn') -> 
               WS.sendTextData wsConn' (A.encode (NewMessage msg'))
-            putStrLn "BE: Public Message broadcastes."
-            insertFromFEMessage msg' pgConn 
-            putStrLn "BE: Public Message saved on DB."
+            putStrLn $ "BE: Public Message broadcastes. - " <> un
+            -- insertFromFEMessage msg' pgConn 
+            putStrLn $ "BE: Public Message saved on DB. - " <> un
             return ()
           Just (NewPrivate msg') -> do 
-            putStrLn "BE: Private Message received." 
+            putStrLn $ "BE: Private Message received. - " <> un
             broadcastPrivate pgConn tvarConns msg'
           _ -> putStrLn "BE: TODO case for different type of WSMessage"
-  finally loop $ do 
+  -- finally loop $ do 
+  --   atomically $ modifyTVar' tvarConns (Prelude.filter ((/= user) . fst))
+  --   _ <- broadcastConnectedUsers tvarConns tvarConnsPub
+  --   putStrLn $ "BE: " <> T.unpack (_userName user) <> " WebSocket connection closed"
+  --   WS.sendClose wsConn ("BE: " <> _userName user <> " WebSocket closed")
+  finally loop $ do
     atomically $ modifyTVar' tvarConns (Prelude.filter ((/= user) . fst))
     _ <- broadcastConnectedUsers tvarConns tvarConnsPub
     putStrLn $ "BE: " <> T.unpack (_userName user) <> " WebSocket connection closed"
-    WS.sendClose wsConn ("BE: " <> _userName user <> " WebSocket closed")
 
 -- | WebSocket solely used for the login/signup forms to give
 --   feedback on user existance and online users (the other websocket)
@@ -115,8 +128,10 @@ broadcastConnectedUsers tvarConns tvarConnsPub = do
   let connectedUsers = fst <$> conns
   forM_ conns $ 
     \(user, wsConn) -> do
-      liftIO $ putStrLn $ T.unpack "BE: broadcasting users connections to: " <> (T.unpack $ _userName user)
-      liftIO $ putStrLn $ T.unpack "BE: sent connected users: " <> show connectedUsers  
+      liftIO $ putStrLn $ T.unpack "BE: broadcasting users connections to: " 
+        <> (T.unpack $ _userName user)
+      liftIO $ putStrLn $ T.unpack "BE: sent connected users: " 
+        <> show connectedUsers  
       WS.sendTextData wsConn (A.encode (ConnectedClients connectedUsers))
   forM_ connsPublic $ 
     \(_, wsConn) -> 
