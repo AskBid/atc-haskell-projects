@@ -10,3 +10,6 @@
 - [ ] Logged in user can delete its own tweets
 - [ ] Logged user can modify its profile
 - [ ] in profile's page, also replies from the user should appear with access to the tweet they reply to.
+- [ ] extrapolate posting-tweet-interface to be commonised between post (MainPage) and reply (TweetPage)
+- [ ] add Parser (backend only or frontend too?) to add extra security and error messages to login and tweet posting
+
