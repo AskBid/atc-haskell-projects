@@ -42,30 +42,30 @@ wsHandler tvarConns tvarConnsPub user pgConn pending = do
 
   _ <- broadcastConnectedUsers tvarConns tvarConnsPub
 
-  putStrLn $ "BE: -------------------- Socket cycle start ..." <> un
+  -- putStrLn $ "BE: -------------------- Socket cycle start ..." <> un
   let loop = forever $ do
-        putStrLn $  "BE: " <> T.unpack (_userName user) 
-                 <> " -------------------- Socket cycle new round ..."
+        -- putStrLn $  "BE: " <> T.unpack (_userName user) 
+                 -- <> " -------------------- Socket cycle new round ..."
         msgJSON <- WSC.receiveData wsConn
         -- BUG: here sometime the loop gets stuck, and even though frontend sends
         -- a message, here is not received anymore. But if other user sends a message it 
         -- works for all clients.
-        putStrLn "BE: after receive data"
+        -- putStrLn "BE: after receive data"
         let msg = A.decode msgJSON :: Maybe WSMessage
 
         case msg of 
           Just (NewMessage msg') -> do
-            putStrLn $ "BE: Public Message received. " <> un
+            -- putStrLn $ "BE: Public Message received. " <> un
             wsConns' <- atomically $ readTVar tvarConns
-            putStrLn $ un <> ": BE: CONNECTIONs: " <> (show $ (fst <$> wsConns')) 
+            -- putStrLn $ un <> ": BE: CONNECTIONs: " <> (show $ (fst <$> wsConns')) 
             forM_ wsConns' $ \(_, wsConn') -> 
               WS.sendTextData wsConn' (A.encode (NewMessage msg'))
-            putStrLn $ "BE: Public Message broadcastes. - " <> un
+            -- putStrLn $ "BE: Public Message broadcastes. - " <> un
             -- insertFromFEMessage msg' pgConn 
-            putStrLn $ "BE: Public Message saved on DB. - " <> un
+            -- putStrLn $ "BE: Public Message saved on DB. - " <> un
             return ()
           Just (NewPrivate msg') -> do 
-            putStrLn $ "BE: Private Message received. - " <> un
+            -- putStrLn $ "BE: Private Message received. - " <> un
             broadcastPrivate pgConn tvarConns msg'
           _ -> putStrLn "BE: TODO case for different type of WSMessage"
   finally loop $ do

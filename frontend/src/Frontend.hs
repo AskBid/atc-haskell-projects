@@ -99,11 +99,15 @@ frontend = Frontend
                     , wsSendTrigger  = triggerSend
                     , wsCloseTrigger = triggerClose
                     }
-
-              performEvent_ $ ffor (_webSocket_recv ws) $ \msg ->
-                liftIO $ putStrLn (( T.unpack $ _userName u ) 
-                                  <> " FE: WS recv (Auth): " 
-                                  <> show msg ) 
+              -- TODO NOTE I havent tested throughtly but it seem that the performEvent
+              -- below was the cause of a jacking of the send message that was appearing
+              -- randomly. This recv may contribute to conentions situation. 
+              -- Also possible I was just tricked into some external issue.
+              --
+              -- performEvent_ $ ffor (_webSocket_recv ws) $ \msg ->
+              --   liftIO $ putStrLn (( T.unpack $ _userName u ) 
+              --                     <> " FE: WS recv (Auth): " 
+              --                     <> show msg ) 
 
               pure (AuthConnection wsConnection)
 
@@ -129,9 +133,9 @@ frontend = Frontend
                     , wsCloseTrigger = triggerClose
                     }
 
-              performEvent_ $ ffor (_webSocket_recv ws) $ \msg ->
-                liftIO $ putStrLn ("FE: WS recv (Public): " <> show msg)
-
+              -- performEvent_ $ ffor (_webSocket_recv ws) $ \msg ->
+              --   liftIO $ putStrLn ("FE: WS recv (Public): " <> show msg)
+              
               pure (PublicConnection wsConnection)
         -- --
         -- Dynamically setting the AppState WebSocket
