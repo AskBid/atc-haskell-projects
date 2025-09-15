@@ -1,1 +1,2 @@
-Ghcid has stopped.
+<no location info>: error:
+    module ‘Frontend’ cannot be found locally
