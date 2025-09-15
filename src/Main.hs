@@ -5,7 +5,7 @@ module Main where
 import Control.Monad.State (StateT(runStateT))
 
 import Interface           (multiplayer, loop)
-import Interface.AppState  (AppState)
+import Interface.AppState  (AppState(..))
 import Game                (mkGame)
 import Board               (Player(..))
 
